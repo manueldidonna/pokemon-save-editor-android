@@ -12,7 +12,6 @@ import androidx.ui.layout.*
 import androidx.ui.material.Emphasis
 import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
-import androidx.ui.material.ripple.ripple
 import androidx.ui.res.imageResource
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
@@ -23,12 +22,14 @@ import com.manueldidonna.redhex.common.PreviewScreen
 data class PokemonPreview(
     val slot: Int,
     val nickname: String,
-    val level: Int
+    val level: Int,
+    val nature: String
 )
 
 @Composable
-fun PokemonCard(name: String, level: Int) {
-    val emphasis = EmphasisAmbient.current.run { if (level > 0) medium else disabled }
+fun PokemonCard(name: String, level: Int, nature: String) {
+    val isEmpty = name.isEmpty()
+    val emphasis = EmphasisAmbient.current.run { if (!isEmpty) medium else disabled }
     Row(
         modifier = Modifier.fillMaxWidth().preferredHeight(56.dp),
         verticalGravity = Alignment.CenterVertically
@@ -41,16 +42,22 @@ fun PokemonCard(name: String, level: Int) {
         )
         Text(
             modifier = Modifier.padding(start = 24.dp, end = 24.dp),
-            text = name,
+            text = name.ifEmpty { "Empty Slot" },
             color = emphasis.emphasize(MaterialTheme.colors.onSurface),
             style = MaterialTheme.typography.body1
         )
-        if (level > 0)
+        if (!isEmpty) {
             CardLabel(
                 modifier = Modifier.padding(end = 8.dp),
-                text = "Lv. $level",
+                text = "L. $level",
                 emphasis = emphasis
             )
+            CardLabel(
+                text = nature,
+                emphasis = emphasis,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
     }
 }
 
@@ -78,6 +85,6 @@ private fun CardLabel(modifier: Modifier = Modifier, text: String, emphasis: Emp
 @Composable
 private fun PreviewPokemonCard() {
     PreviewScreen(isLightTheme = true) {
-        PokemonCard(name = "PIKACHU", level = 10)
+        PokemonCard(name = "PIKACHU", level = 10, nature = "Adamant")
     }
 }

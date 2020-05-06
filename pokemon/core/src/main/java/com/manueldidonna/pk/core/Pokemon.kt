@@ -18,6 +18,7 @@ interface Pokemon {
     val nickname: String
     val level: Int
     val experiencePoints: Int
+    val natureId: Int
 
     val iV: IndividualValues
 

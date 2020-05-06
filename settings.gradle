@@ -1,3 +1,4 @@
+include ':pokemon:resources'
 include ':pokemon:rby'
 include ':pokemon:core'
 include ':app'

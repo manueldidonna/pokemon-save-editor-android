@@ -13,6 +13,8 @@ import com.manueldidonna.pk.core.Box
 import com.manueldidonna.pk.core.ObservableBox
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
+import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.redhex.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.DialogItem
 import com.manueldidonna.redhex.common.DialogMenu
 import com.manueldidonna.redhex.dividerColor
@@ -26,22 +28,23 @@ private data class HomeState(
 
 @Composable
 fun HomeScreen(saveData: SaveData) {
+    val pokemonResources = PokemonResourcesAmbient.current
     val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
 
     val currentBox by stateFor(state.currentBoxIndex) {
         ObservableBox(saveData.getWriteableBox(state.currentBoxIndex))
     }
 
-    val pokemonPreviews = stateFor(currentBox) { getPokemonPreviews(currentBox) }
+    val pokemonPreviews = stateFor(currentBox) { getPokemonPreviews(currentBox, pokemonResources) }
 
     currentBox.onChange = {
-        pokemonPreviews.value = getPokemonPreviews(currentBox)
+        pokemonPreviews.value = getPokemonPreviews(currentBox, pokemonResources)
     }
 
     VerticalScroller {
         Column {
             BoxHeader(
-                modifier = Modifier.padding(top = 32.dp, bottom = 16.dp),
+                modifier = Modifier.padding(top = 32.dp, bottom = 12.dp),
                 boxName = currentBox.name,
                 onBack = {
                     saveData.currentBoxIndex--
@@ -70,13 +73,18 @@ fun HomeScreen(saveData: SaveData) {
             }
         )
     }
-
 }
 
-private fun getPokemonPreviews(box: Box): List<PokemonPreview> {
+private fun getPokemonPreviews(box: Box, resources: PokemonResources): List<PokemonPreview> {
     return List(box.pokemonCounts) { i ->
-        box.getPokemon(i)
-            .run { PokemonPreview(position.slot, nickname.ifEmpty { "Empty slot" }, level) }
+        box.getPokemon(i).run {
+            PokemonPreview(
+                slot = position.slot,
+                nickname = nickname,
+                level = level,
+                nature = resources.natures.getNatureById(natureId)
+            )
+        }
     }
 }
 
@@ -84,7 +92,7 @@ private fun getPokemonPreviews(box: Box): List<PokemonPreview> {
 private fun PokemonList(pokemon: List<PokemonPreview>, onSelection: (slot: Int) -> Unit) {
     pokemon.forEach {
         Clickable(onClick = { onSelection(it.slot) }, modifier = Modifier.ripple()) {
-            PokemonCard(name = it.nickname, level = it.level)
+            PokemonCard(name = it.nickname, level = it.level, nature = it.nature)
         }
         Divider(color = dividerColor())
     }

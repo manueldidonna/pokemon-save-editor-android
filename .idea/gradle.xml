@@ -16,6 +16,7 @@
             <option value="$PROJECT_DIR$/pokemon" />
             <option value="$PROJECT_DIR$/pokemon/core" />
             <option value="$PROJECT_DIR$/pokemon/rby" />
+            <option value="$PROJECT_DIR$/pokemon/resources" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

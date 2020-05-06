@@ -1,12 +1,10 @@
 package com.manueldidonna.redhex
 
 import android.os.Bundle
-import androidx.activity.result.ActivityResultRegistry
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.Model
 import androidx.compose.Providers
-import androidx.compose.staticAmbientOf
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Icon
@@ -19,9 +17,9 @@ import androidx.ui.material.icons.twotone.Home
 import androidx.ui.material.icons.twotone.Settings
 import androidx.ui.savedinstancestate.savedInstanceState
 import com.manueldidonna.pk.core.SaveData
+import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.home.HomeScreen
 
-val ActivityResultRegistryAmbient = staticAmbientOf<ActivityResultRegistry>()
 
 @Model
 object MainState {
@@ -34,7 +32,8 @@ class MainActivity : AppCompatActivity() {
         setContent {
             MaterialTheme(lightColorPalette()) {
                 Providers(
-                    ActivityResultRegistryAmbient provides activityResultRegistry
+                    ActivityResultRegistryAmbient provides activityResultRegistry,
+                    PokemonResourcesAmbient provides PokemonResources.English
                 ) {
                     HandleScreens()
                 }
