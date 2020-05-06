@@ -32,7 +32,7 @@ internal class Pokemon(private val data: UByteArray, box: Int, slot: Int) : Poke
         get() = data[0x03].toInt()
 
     override val experiencePoints: Int
-        get() = data.readBigEndianInt(0xE) shr 8
+        get() = data.readBigEndianInt(0xE) ushr 8
 
     /**
      * This value doesn't exist in gen1 but the pokemon bank derives it from the exp. points
