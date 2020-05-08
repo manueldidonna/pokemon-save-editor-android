@@ -1,23 +1,30 @@
 package com.manueldidonna.redhex.home
 
 import androidx.compose.*
+import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.Clickable
-import androidx.ui.foundation.VerticalScroller
-import androidx.ui.layout.Column
-import androidx.ui.layout.padding
+import androidx.ui.core.zIndex
+import androidx.ui.foundation.*
+import androidx.ui.layout.*
 import androidx.ui.material.Divider
+import androidx.ui.material.IconButton
+import androidx.ui.material.MaterialTheme
+import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.twotone.ChevronLeft
+import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.material.ripple.ripple
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Box
-import com.manueldidonna.pk.core.ObservableBox
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
+import com.manueldidonna.pk.core.setCoercedBoxIndex
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.DialogItem
 import com.manueldidonna.redhex.common.DialogMenu
 import com.manueldidonna.redhex.dividerColor
+import com.manueldidonna.redhex.home.HomeAction.*
+import com.manueldidonna.redhex.translucentSurfaceColor
 
 @Model
 private data class HomeState(
@@ -26,40 +33,56 @@ private data class HomeState(
     var selectedPokemonIndex: Int = -1
 )
 
+private sealed class HomeAction {
+    object IncreaseBoxIndex : HomeAction()
+    object DecreaseBoxIndex : HomeAction()
+    data class DeleteSlot(val slot: Int) : HomeAction()
+}
+
 @Composable
 fun HomeScreen(saveData: SaveData) {
     val pokemonResources = PokemonResourcesAmbient.current
     val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
 
     val currentBox by stateFor(state.currentBoxIndex) {
-        ObservableBox(saveData.getWriteableBox(state.currentBoxIndex))
+        saveData.getWriteableBox(state.currentBoxIndex)
     }
 
     val pokemonPreviews = stateFor(currentBox) { getPokemonPreviews(currentBox, pokemonResources) }
 
-    currentBox.onChange = {
-        pokemonPreviews.value = getPokemonPreviews(currentBox, pokemonResources)
-    }
-
-    VerticalScroller {
-        Column {
-            BoxHeader(
-                modifier = Modifier.padding(top = 32.dp, bottom = 12.dp),
-                boxName = currentBox.name,
-                onBack = {
-                    saveData.currentBoxIndex--
-                    state.currentBoxIndex--
-                },
-                onForward = {
-                    saveData.currentBoxIndex++
-                    state.currentBoxIndex++
-                }
-            )
-            PokemonList(pokemon = pokemonPreviews.value) { slot ->
-                state.selectedPokemonIndex = slot
+    fun executeAction(action: HomeAction) {
+        when (action) {
+            IncreaseBoxIndex -> {
+                state.currentBoxIndex = saveData.setCoercedBoxIndex(saveData.currentBoxIndex + 1)
+            }
+            DecreaseBoxIndex -> {
+                state.currentBoxIndex = saveData.setCoercedBoxIndex(saveData.currentBoxIndex - 1)
+            }
+            is DeleteSlot -> {
+                currentBox.deletePokemon(action.slot)
+                pokemonPreviews.value = getPokemonPreviews(currentBox, pokemonResources)
             }
         }
     }
+
+    Box {
+        VerticalScroller {
+            Column {
+                Spacer(modifier = Modifier.preferredHeight(64.dp))
+                PokemonList(pokemon = pokemonPreviews.value) { slot ->
+                    state.selectedPokemonIndex = slot
+                }
+                Spacer(modifier = Modifier.preferredHeight(16.dp))
+            }
+        }
+        HomeToolbar(
+            modifier = Modifier.preferredHeight(56.dp),
+            title = currentBox.name,
+            onBack = { executeAction(DecreaseBoxIndex) },
+            onForward = { executeAction(IncreaseBoxIndex) }
+        )
+    }
+
     if (state.selectedPokemonIndex != -1) {
         ContextualActions(
             isPokemonEmpty = currentBox.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
@@ -68,9 +91,7 @@ fun HomeScreen(saveData: SaveData) {
                 state.movingPokemonPosition =
                     Pokemon.Position(state.currentBoxIndex, state.selectedPokemonIndex)
             },
-            deletePokemon = {
-                currentBox.deletePokemon(state.selectedPokemonIndex)
-            }
+            deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) }
         )
     }
 }
@@ -81,10 +102,44 @@ private fun getPokemonPreviews(box: Box, resources: PokemonResources): List<Poke
             PokemonPreview(
                 slot = position.slot,
                 nickname = nickname,
-                level = level,
-                nature = resources.natures.getNatureById(natureId)
+                labels = listOf("L. $level", resources.natures.getNatureById(natureId))
             )
         }
+    }
+}
+
+@Composable
+private fun HomeToolbar(
+    modifier: Modifier = Modifier,
+    title: String,
+    onBack: () -> Unit,
+    onForward: () -> Unit
+) {
+    Column(
+        modifier = modifier.zIndex(8f).drawBackground(color = translucentSurfaceColor()),
+        verticalArrangement = Arrangement.Center,
+        horizontalGravity = Alignment.CenterHorizontally
+    ) {
+        Row(
+            verticalGravity = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.TwoTone.ChevronLeft, tint = MaterialTheme.colors.primary)
+            }
+            Text(
+                modifier = Modifier
+                    .preferredWidthIn(minWidth = 140.dp)
+                    .wrapContentWidth(Alignment.CenterHorizontally),
+                text = title,
+                style = MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.primary)
+            )
+            IconButton(onClick = onForward) {
+                Icon(Icons.TwoTone.ChevronRight, tint = MaterialTheme.colors.primary)
+            }
+        }
+        Divider(color = dividerColor())
     }
 }
 
@@ -92,9 +147,8 @@ private fun getPokemonPreviews(box: Box, resources: PokemonResources): List<Poke
 private fun PokemonList(pokemon: List<PokemonPreview>, onSelection: (slot: Int) -> Unit) {
     pokemon.forEach {
         Clickable(onClick = { onSelection(it.slot) }, modifier = Modifier.ripple()) {
-            PokemonCard(name = it.nickname, level = it.level, nature = it.nature)
+            PokemonCard(name = it.nickname, labels = it.labels)
         }
-        Divider(color = dividerColor())
     }
 }
 

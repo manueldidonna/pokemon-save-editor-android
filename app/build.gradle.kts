@@ -53,5 +53,7 @@ dependencies {
     implementation(Libs.AndroidX.Compose.material)
     implementation(Libs.AndroidX.Compose.layout)
     implementation(Libs.AndroidX.Compose.savedInstanceState)
+    implementation(Libs.AndroidX.Compose.materialIcons)
     implementation(Libs.Android.materialComponents)
+    implementation(Libs.KotlinX.coroutinesAndroid)
 }

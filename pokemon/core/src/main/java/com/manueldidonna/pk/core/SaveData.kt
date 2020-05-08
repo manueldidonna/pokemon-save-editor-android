@@ -14,7 +14,16 @@ interface SaveData {
     }
 }
 
-fun SaveData.getCurrentBox(): Box = getBox(currentBoxIndex)
+/**
+ * If [value] is greater than [SaveData.boxCounts] go back to the first box
+ * If [value] is lower than zero, go to the last box
+ *
+ * @return the new current box index
+ */
+fun SaveData.setCoercedBoxIndex(value: Int): Int {
+    currentBoxIndex = if (value >= boxCounts) 0 else if (value < 0) boxCounts - 1 else value
+    return currentBoxIndex
+}
 
 fun SaveData.deletePokemon(position: Pokemon.Position) {
     getWriteableBox(position.box).deletePokemon(position.slot)

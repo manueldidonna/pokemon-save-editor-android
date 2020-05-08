@@ -22,12 +22,11 @@ import com.manueldidonna.redhex.common.PreviewScreen
 data class PokemonPreview(
     val slot: Int,
     val nickname: String,
-    val level: Int,
-    val nature: String
+    val labels: List<String>
 )
 
 @Composable
-fun PokemonCard(name: String, level: Int, nature: String) {
+fun PokemonCard(name: String, labels: List<String>) {
     val isEmpty = name.isEmpty()
     val emphasis = EmphasisAmbient.current.run { if (!isEmpty) medium else disabled }
     Row(
@@ -46,18 +45,14 @@ fun PokemonCard(name: String, level: Int, nature: String) {
             color = emphasis.emphasize(MaterialTheme.colors.onSurface),
             style = MaterialTheme.typography.body1
         )
-        if (!isEmpty) {
-            CardLabel(
-                modifier = Modifier.padding(end = 8.dp),
-                text = "L. $level",
-                emphasis = emphasis
-            )
-            CardLabel(
-                text = nature,
-                emphasis = emphasis,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        }
+        if (!isEmpty && labels.isNotEmpty())
+            labels.forEach { label ->
+                CardLabel(
+                    text = label,
+                    emphasis = emphasis,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
     }
 }
 
@@ -85,6 +80,6 @@ private fun CardLabel(modifier: Modifier = Modifier, text: String, emphasis: Emp
 @Composable
 private fun PreviewPokemonCard() {
     PreviewScreen(isLightTheme = true) {
-        PokemonCard(name = "PIKACHU", level = 10, nature = "Adamant")
+        PokemonCard(name = "PIKACHU", labels = listOf("L. 3", "Adamant"))
     }
 }
