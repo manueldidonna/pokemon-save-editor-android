@@ -1,6 +1,7 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.pk.rby.utils.getGameBoySpecies
 import com.manueldidonna.pk.rby.utils.getGameBoyString
 import com.manueldidonna.pk.rby.utils.readBigEndianInt
 import com.manueldidonna.pk.rby.utils.readBigEndianUShort
@@ -23,7 +24,7 @@ internal class Pokemon(private val data: UByteArray, box: Int, slot: Int) : Poke
     override val position by lazy { Pokemon.Position(box, slot) }
 
     override val speciesId: Int
-        get() = data[0].toInt()
+        get() = getGameBoySpecies(data[0].toInt())
 
     override val nickname: String
         get() = getGameBoyString(data, startOffset = 0x2C, stringLength = 11, isJapanese = false)

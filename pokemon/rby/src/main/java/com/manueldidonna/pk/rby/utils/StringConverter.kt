@@ -8,7 +8,8 @@ internal fun getGameBoyString(
     stringLength: Int,
     isJapanese: Boolean = false
 ): String = StringBuilder().apply {
-    val dictionary: Map<Int, Char> = if (!isJapanese) RBY2U_U else throw IllegalStateException()
+    val dictionary: Map<Int, Char> =
+        if (!isJapanese) GameCharactersToInternational else throw IllegalStateException()
     for (i in 0 until stringLength) {
         val c: Char = dictionary[data[startOffset + i].toInt()] ?: break
         append(c.sanitize())
@@ -25,7 +26,8 @@ internal fun setGameBoyString(
         " String length must be equal or lower of the output data size"
     }
 
-    val dictionary: Map<Char, Int> = if (!isJapanese) U2RBY_U else throw IllegalStateException()
+    val dictionary: Map<Char, Int> =
+        if (!isJapanese) InternationalToGameCharacters else throw IllegalStateException()
 
     if (value.startsWith(G1TradeOT)) // handle TRAINER
         return ubyteArrayOf(dictionary[G1TradeOT]!!.toUByte(), 0x50u)
@@ -49,7 +51,7 @@ private fun Char.sanitize() = when (this) {
     else -> this
 }
 
-private val RBY2U_U: Map<Int, Char> = mapOf(
+private val GameCharactersToInternational: Map<Int, Char> = mapOf(
     // 0x50 to G1Terminator,Dictionary
     0x5D to G1TradeOT,
     0x7F to ' ',
@@ -142,7 +144,7 @@ private val RBY2U_U: Map<Int, Char> = mapOf(
     0xFF to '9'
 )
 
-private val U2RBY_U: Map<Char, Int> = mapOf(
+private val InternationalToGameCharacters: Map<Char, Int> = mapOf(
     G1TradeOT to 0x5D, // TRAINER (Localized per ROM)
     ' ' to 0x7F,
     'A' to 0x80,

@@ -13,8 +13,9 @@ internal class PokemonWriter(
 ) : PokemonWriter {
 
     override fun speciesId(value: Int): PokemonWriter = apply {
-        data[speciesIdOffset] = value.toUByte()
-        data[dataOffset] = value.toUByte()
+        // TODO: value must be a national id. Convert to  g1 species id. Set type 1 and 2
+        // data[speciesIdOffset] = value.toUByte()
+        // data[dataOffset] = value.toUByte()
     }
 
     override fun trainerId(value: UInt): PokemonWriter = apply {
