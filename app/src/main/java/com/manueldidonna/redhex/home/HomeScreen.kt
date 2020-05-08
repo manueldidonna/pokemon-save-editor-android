@@ -13,6 +13,7 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.material.ripple.ripple
+import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Box
 import com.manueldidonna.pk.core.Pokemon
@@ -22,6 +23,7 @@ import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.DialogItem
 import com.manueldidonna.redhex.common.DialogMenu
+import com.manueldidonna.redhex.common.PreviewScreen
 import com.manueldidonna.redhex.dividerColor
 import com.manueldidonna.redhex.home.HomeAction.*
 import com.manueldidonna.redhex.translucentSurfaceColor
@@ -40,7 +42,7 @@ private sealed class HomeAction {
 }
 
 @Composable
-fun HomeScreen(saveData: SaveData) {
+fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
     val pokemonResources = PokemonResourcesAmbient.current
     val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
 
@@ -65,10 +67,10 @@ fun HomeScreen(saveData: SaveData) {
         }
     }
 
-    Box {
+    Box(modifier = modifier) {
         VerticalScroller {
             Column {
-                Spacer(modifier = Modifier.preferredHeight(64.dp))
+                Spacer(modifier = Modifier.preferredHeight(72.dp))
                 PokemonList(pokemon = pokemonPreviews.value) { slot ->
                     state.selectedPokemonIndex = slot
                 }
@@ -76,7 +78,9 @@ fun HomeScreen(saveData: SaveData) {
             }
         }
         HomeToolbar(
-            modifier = Modifier.preferredHeight(56.dp),
+            // TODO: there is a bug with zIndex. Check again in dev-12
+            // It doesn't receive cliks if positioned before the views that it overlaps
+            modifier = Modifier.preferredHeight(56.dp).zIndex(8f),
             title = currentBox.name,
             onBack = { executeAction(DecreaseBoxIndex) },
             onForward = { executeAction(IncreaseBoxIndex) }
@@ -116,7 +120,7 @@ private fun HomeToolbar(
     onForward: () -> Unit
 ) {
     Column(
-        modifier = modifier.zIndex(8f).drawBackground(color = translucentSurfaceColor()),
+        modifier = modifier.drawBackground(color = translucentSurfaceColor()),
         verticalArrangement = Arrangement.Center,
         horizontalGravity = Alignment.CenterHorizontally
     ) {
@@ -130,7 +134,7 @@ private fun HomeToolbar(
             }
             Text(
                 modifier = Modifier
-                    .preferredWidthIn(minWidth = 140.dp)
+                    .preferredWidthIn(minWidth = 150.dp)
                     .wrapContentWidth(Alignment.CenterHorizontally),
                 text = title,
                 style = MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.primary)
@@ -163,5 +167,18 @@ private fun ContextualActions(
         if (!isPokemonEmpty)
             DialogItem(text = "Delete pokemon", onClick = deletePokemon)
         DialogItem(text = "Move pokemon", onClick = movePokemon)
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewHomeToolbar() {
+    PreviewScreen {
+        HomeToolbar(
+            modifier = Modifier.preferredHeight(56.dp),
+            title = "Box 1",
+            onBack = {},
+            onForward = {}
+        )
     }
 }

@@ -14,8 +14,8 @@ import androidx.ui.core.Modifier
 import androidx.ui.foundation.Text
 import androidx.ui.layout.fillMaxSize
 import androidx.ui.layout.wrapContentSize
+import androidx.ui.material.Button
 import androidx.ui.material.MaterialTheme
-import androidx.ui.material.OutlinedButton
 import androidx.ui.material.Surface
 import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.tooling.preview.Preview
@@ -34,7 +34,7 @@ fun LoadSaveDataScreen() {
         }
     )
     Surface(color = MaterialTheme.colors.background, modifier = Modifier.fillMaxSize()) {
-        OutlinedButton(
+        Button(
             modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center),
             onClick = { launchIntent = true }
         ) {

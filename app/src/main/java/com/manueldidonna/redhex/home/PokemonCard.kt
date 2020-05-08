@@ -79,7 +79,7 @@ private fun CardLabel(modifier: Modifier = Modifier, text: String, emphasis: Emp
 @Preview
 @Composable
 private fun PreviewPokemonCard() {
-    PreviewScreen(isLightTheme = true) {
+    PreviewScreen {
         PokemonCard(name = "PIKACHU", labels = listOf("L. 3", "Adamant"))
     }
 }

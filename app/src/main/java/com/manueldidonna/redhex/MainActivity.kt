@@ -7,15 +7,19 @@ import androidx.compose.Model
 import androidx.compose.Providers
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.layout.Column
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.material.*
+import androidx.ui.foundation.*
+import androidx.ui.graphics.toArgb
+import androidx.ui.layout.padding
+import androidx.ui.material.BottomNavigation
+import androidx.ui.material.BottomNavigationItem
+import androidx.ui.material.MaterialTheme
+import androidx.ui.material.Surface
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Home
 import androidx.ui.material.icons.twotone.Settings
 import androidx.ui.savedinstancestate.savedInstanceState
+import androidx.ui.tooling.preview.Preview
+import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.home.HomeScreen
@@ -30,26 +34,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(lightColorPalette()) {
+            MaterialTheme(if (isSystemInDarkTheme()) DarkColors else LightColors) {
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
                     PokemonResourcesAmbient provides PokemonResources.English
                 ) {
-                    HandleScreens()
+                    window.statusBarColor = MaterialTheme.colors.surface.toArgb()
+                    ActivityScreen()
                 }
             }
         }
     }
 
     @Composable
-    private fun HandleScreens() {
+    private fun ActivityScreen() {
         val saveData: SaveData? = MainState.saveData
-        if (saveData == null)
+        if (saveData == null) {
             LoadSaveDataScreen()
-        else {
-            WrapWithBottomNavigation { destination ->
+        } else {
+            SurfaceWithBottomNavigation { destination, modifier ->
                 when (destination) {
-                    BottomDestination.Home -> HomeScreen(saveData)
+                    BottomDestination.Home -> HomeScreen(modifier, saveData)
                     BottomDestination.Settings -> SettingsScreen()
                 }
             }
@@ -61,15 +66,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    private fun WrapWithBottomNavigation(content: @Composable() (BottomDestination) -> Unit) {
+    private fun SurfaceWithBottomNavigation(
+        content: @Composable() (BottomDestination, Modifier) -> Unit
+    ) {
         val selectedDestinationName = savedInstanceState { BottomDestination.Home.name }
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Surface(modifier = Modifier.weight(1f)) {
-                content(destination)
+        Box(gravity = ContentGravity.BottomCenter) {
+            Surface {
+                content(destination, Modifier.padding(bottom = 56.dp))
             }
-            BottomNavigation {
+            BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
                 BottomNavigationItem(
                     icon = { Icon(asset = Icons.TwoTone.Home) },
                     text = { Text(text = "Home") },
