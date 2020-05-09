@@ -1,7 +1,10 @@
 package com.manueldidonna.pk.core
 
 /**
- * [Pokemon] represents a read-only entity. To edit pokemon data use [PokemonWriter]
+ * [Pokemon] represents a read-only entity. Its data will never change.
+ *
+ * An immutable [Pokemon] cannot be casted to [MutablePokemon].
+ * Each [Pokemon] implementation must enforces this rule.
  */
 interface Pokemon {
     val position: Position
@@ -29,5 +32,34 @@ interface Pokemon {
         val specialAttack: Int
         val specialDefense: Int
         val speed: Int
+    }
+}
+
+/**
+ * [MutablePokemon] allows to mutate the pokemon data via a [MutablePokemon.Mutator],
+ * it makes explicit the desire to modify the pokemon's data.
+ *
+ * [MutablePokemon] doesn't represent a specific pokemon, it will always reflects
+ * the current data values at [position].
+ * Ex: if you delete the pokemon at [position], also [MutablePokemon] instance data will be erased.
+ *
+ * A [MutablePokemon] can be under casted to [Pokemon] but it wan't became immutable,
+ * it will continue to reflects any data changes at [position].
+ * *
+ * To get a real immutable instance use [Box.getPokemon]
+ *
+ * TODO: add a function like "asPokemon()" to convert MutablePokemon to Pokemon
+ */
+interface MutablePokemon : Pokemon {
+    val mutator: Mutator
+
+    /**
+     * A [Mutator] makes explicit the desire to modify the pokemon's data
+     */
+    interface Mutator {
+        fun speciesId(value: Int): Mutator
+        fun nickname(value: String): Mutator
+        fun trainerId(value: UInt): Mutator
+        fun trainerName(value: String): Mutator
     }
 }

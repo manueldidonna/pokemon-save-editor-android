@@ -1,9 +1,14 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.WriteableBox
+import com.manueldidonna.pk.core.MutableBox
+import com.manueldidonna.pk.core.SaveData as CoreSaveData
+import com.manueldidonna.pk.core.Box as CoreBox
 
-internal class SaveData(private val data: UByteArray) : SaveData {
+internal class SaveData(private val data: UByteArray) : CoreSaveData {
+
+    companion object {
+        private const val CurrentBoxOffset = 0x30C0
+    }
 
     override val boxCounts: Int = 12
 
@@ -16,22 +21,22 @@ internal class SaveData(private val data: UByteArray) : SaveData {
             val newBoxOffset = getBoxDataOffset(value)
             data[0x284C] = (data[0x284C] and 0x80u) or (value and 0x7F).toUByte()
             val oldBoxOffset = getBoxDataOffset(oldValue)
-            data.copyInto(data, oldBoxOffset, CURRENT_BOX_OFS, CURRENT_BOX_OFS + BOX_SIZE)
-            data.copyInto(data, CURRENT_BOX_OFS, newBoxOffset, newBoxOffset + BOX_SIZE)
+            data.copyInto(data, oldBoxOffset, CurrentBoxOffset, CurrentBoxOffset + BoxSize)
+            data.copyInto(data, CurrentBoxOffset, newBoxOffset, newBoxOffset + BoxSize)
         }
 
-    override fun getBox(index: Int): Box {
+    override fun getBox(index: Int): CoreBox {
         val boxDataOffset = getBoxDataOffset(index)
-        return Box(data.copyOfRange(boxDataOffset, boxDataOffset + BOX_SIZE), 0, index)
+        return Box(data.copyOfRange(boxDataOffset, boxDataOffset + BoxSize), 0, index)
     }
 
-    override fun getWriteableBox(index: Int): WriteableBox {
+    override fun getMutableBox(index: Int): MutableBox {
         return Box(data, getBoxDataOffset(index), index)
     }
 
     private fun getBoxDataOffset(index: Int): Int {
         require(index in 0..11) { " Box index must be 0-11" }
-        return if (index == currentBoxIndex) CURRENT_BOX_OFS else {
+        return if (index == currentBoxIndex) CurrentBoxOffset else {
             if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
         }
     }
@@ -53,10 +58,5 @@ internal class SaveData(private val data: UByteArray) : SaveData {
             checksum += data[i].toInt()
         data[0x3523] = checksum.toUByte() xor 0xFFu
         return data
-    }
-
-    companion object {
-        private const val BOX_SIZE = 0x462
-        private const val CURRENT_BOX_OFS = 0x30C0
     }
 }

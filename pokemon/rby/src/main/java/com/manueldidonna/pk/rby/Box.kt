@@ -1,6 +1,8 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.WriteableBox
+import com.manueldidonna.pk.core.MutableBox
+import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**
  * 0x00 0x1 - pokemon counts (value: 0 - 19)
@@ -14,7 +16,7 @@ internal class Box(
     private val data: UByteArray,
     private val startOffset: Int,
     override val index: Int
-) : WriteableBox {
+) : MutableBox {
 
     // TODO: translate 'Box'
     override val name: String = "Box ${index + 1}"
@@ -29,10 +31,22 @@ internal class Box(
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
 
-    override fun getPokemon(slot: Int): Pokemon {
+    override fun getPokemon(slot: Int): CorePokemon {
         require(slot in 0..20) { "Pokemon position must be 0-20" }
+        return Pokemon.newImmutableInstance(exportPokemonToBytes(slot), index, slot)
+    }
 
-        return Pokemon(data = exportPokemonToBytes(slot), box = index, slot = slot)
+    override fun getMutablePokemon(slot: Int): MutablePokemon {
+        require(startOffset != 0) { "This box instance is read-only" }
+        require(slot in 0..20) { "Pokemon position must be 0-20" }
+        return Pokemon(
+            data = data,
+            startOffset = slot.dataOfs,
+            trainerNameOffset = slot.trainerNameOfs,
+            pokemonNameOffset = slot.nameOfs,
+            box = index,
+            slot = slot
+        )
     }
 
     override fun exportPokemonToBytes(slot: Int): UByteArray {
@@ -40,29 +54,22 @@ internal class Box(
 
         // I treat it as an empty location
         if (slot > currentPokemonCounts - 1)
-            return UByteArray(FULL_PK_SIZE)
+            return UByteArray(PokemonDataSize + NameSize * 2)
 
-        return UByteArray(FULL_PK_SIZE).apply {
+        return UByteArray(PokemonDataSize + NameSize * 2).apply {
             // Copy Pokemon Box Data
             slot.dataOfs.let { ofs ->
-                data.copyInto(this, 0, ofs, ofs + PK_DATA_SIZE)
+                data.copyInto(this, 0, ofs, ofs + PokemonDataSize)
             }
             // Copy Trainer Name
             slot.trainerNameOfs.let { ofs ->
-                data.copyInto(this, PK_DATA_SIZE, ofs, ofs + NAME_SIZE)
+                data.copyInto(this, PokemonDataSize, ofs, ofs + NameSize)
             }
             // Copy Pokemon Name
             slot.nameOfs.let { ofs ->
-                data.copyInto(this, PK_DATA_SIZE + NAME_SIZE, ofs, ofs + NAME_SIZE)
+                data.copyInto(this, PokemonDataSize + NameSize, ofs, ofs + NameSize)
             }
         }
-    }
-
-    override fun getPokemonWriter(slot: Int): PokemonWriter {
-        require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0..20) { "Pokemon position must be 0-20" }
-
-        return PokemonWriter(data, slot.speciesOfs, slot.dataOfs, slot.trainerNameOfs, slot.nameOfs)
     }
 
     override fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean {
@@ -78,14 +85,17 @@ internal class Box(
 
         val coercedSlot = slot.coerceAtMost(currentPokemonCounts - 1)
 
-        data[coercedSlot.speciesOfs] = Pokemon(bytes, index, slot).speciesId.toUByte()
+        // verify the correctness of the data
+        val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, slot)
+
+        data[coercedSlot.speciesOfs] = immutablePokemon.speciesId.toUByte()
         bytes.apply {
             // Set Pokemon Box Data
-            copyInto(data, coercedSlot.dataOfs, 0, PK_DATA_SIZE)
+            copyInto(data, coercedSlot.dataOfs, 0, PokemonDataSize)
             // Set Trainer Name
-            copyInto(data, coercedSlot.trainerNameOfs, PK_DATA_SIZE, PK_DATA_SIZE + NAME_SIZE)
+            copyInto(data, coercedSlot.trainerNameOfs, PokemonDataSize, PokemonDataSize + NameSize)
             // Set Pokemon Names
-            copyInto(data, coercedSlot.nameOfs, PK_DATA_SIZE + NAME_SIZE)
+            copyInto(data, coercedSlot.nameOfs, PokemonDataSize + NameSize)
         }
         return true
     }
@@ -112,14 +122,14 @@ internal class Box(
 
             val startSlot = slot + 1
 
-            movePokemonData(slot.dataOfs, startSlot.dataOfs, 19.dataOfs, PK_DATA_SIZE)
+            movePokemonData(slot.dataOfs, startSlot.dataOfs, 19.dataOfs, PokemonDataSize)
             movePokemonData(
                 slot.trainerNameOfs,
                 startSlot.trainerNameOfs,
                 19.trainerNameOfs,
-                NAME_SIZE
+                NameSize
             )
-            movePokemonData(slot.nameOfs, startSlot.nameOfs, 19.nameOfs, NAME_SIZE)
+            movePokemonData(slot.nameOfs, startSlot.nameOfs, 19.nameOfs, NameSize)
         }
 
         /**
@@ -129,21 +139,13 @@ internal class Box(
             data.fill(0u, start, start + size)
         }
 
-        erasePokemonData(19.dataOfs, PK_DATA_SIZE)
-        erasePokemonData(19.trainerNameOfs, NAME_SIZE)
-        erasePokemonData(19.nameOfs, NAME_SIZE)
+        erasePokemonData(19.dataOfs, PokemonDataSize)
+        erasePokemonData(19.trainerNameOfs, NameSize)
+        erasePokemonData(19.nameOfs, NameSize)
     }
 
     private val Int.speciesOfs: Int get() = startOffset + 0x1 + this
-    private val Int.dataOfs: Int get() = startOffset + 0x16 + (PK_DATA_SIZE * this)
-    private val Int.trainerNameOfs: Int get() = startOffset + TRAINER_NAME_OFFSET + (NAME_SIZE * this)
-    private val Int.nameOfs: Int get() = startOffset + PK_NAME_OFFSET + (NAME_SIZE * this)
-
-    companion object {
-        private const val FULL_PK_SIZE = 0x37
-        private const val PK_DATA_SIZE = 0x21
-        private const val NAME_SIZE = 0xb
-        private const val PK_NAME_OFFSET = 0x386
-        private const val TRAINER_NAME_OFFSET = 0x2AA
-    }
+    private val Int.dataOfs: Int get() = startOffset + 0x16 + (PokemonDataSize * this)
+    private val Int.trainerNameOfs: Int get() = startOffset + 0x2AA + (NameSize * this)
+    private val Int.nameOfs: Int get() = startOffset + 0x386 + (NameSize * this)
 }
