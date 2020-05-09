@@ -22,11 +22,15 @@ class DialogScope(val dismiss: () -> Unit) {
 
 @Composable
 fun DialogMenu(dismiss: () -> Unit, content: @Composable() DialogScope.() -> Unit) {
+    val currentColors = MaterialTheme.colors
+    val currentTypography = MaterialTheme.typography
     Dialog(onCloseRequest = dismiss) {
-        val currentColors = MaterialTheme.colors
-        val currentTypography = MaterialTheme.typography
         MaterialTheme(colors = currentColors, typography = currentTypography) {
-            Surface(modifier = Modifier.preferredWidth(280.dp), shape = RoundedCornerShape(8.dp)) {
+            Surface(
+                modifier = Modifier.preferredWidth(280.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = 2.dp
+            ) {
                 val scope = remember(dismiss) {
                     DialogScope(
                         dismiss
