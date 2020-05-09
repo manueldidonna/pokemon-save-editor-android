@@ -7,7 +7,6 @@ import androidx.compose.Composable
 import androidx.compose.onDispose
 import androidx.compose.remember
 import androidx.ui.core.LifecycleOwnerAmbient
-import com.manueldidonna.redhex.ActivityResultRegistryAmbient
 
 @Suppress("NOTHING_TO_INLINE")
 @Composable

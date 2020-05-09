@@ -56,4 +56,5 @@ dependencies {
     implementation(Libs.AndroidX.Compose.materialIcons)
     implementation(Libs.Android.materialComponents)
     implementation(Libs.KotlinX.coroutinesAndroid)
+    implementation(Libs.Android.coil)
 }

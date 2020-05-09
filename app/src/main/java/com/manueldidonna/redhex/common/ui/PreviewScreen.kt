@@ -1,10 +1,10 @@
-package com.manueldidonna.redhex.common
+package com.manueldidonna.redhex.common.ui
 
 import androidx.compose.Composable
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.drawBackground
 import androidx.ui.material.*
-import com.manueldidonna.redhex.LightColors
+import com.manueldidonna.redhex.common.ui.LightColors
 
 @Composable
 fun PreviewScreen(

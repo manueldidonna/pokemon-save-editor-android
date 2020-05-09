@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.common
+package com.manueldidonna.redhex.common.ui
 
 import androidx.compose.Composable
 import androidx.compose.remember
@@ -27,7 +27,11 @@ fun DialogMenu(dismiss: () -> Unit, content: @Composable() DialogScope.() -> Uni
         val currentTypography = MaterialTheme.typography
         MaterialTheme(colors = currentColors, typography = currentTypography) {
             Surface(modifier = Modifier.preferredWidth(280.dp), shape = RoundedCornerShape(8.dp)) {
-                val scope = remember(dismiss) { DialogScope(dismiss) }
+                val scope = remember(dismiss) {
+                    DialogScope(
+                        dismiss
+                    )
+                }
                 Column(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)) {
                     scope.content()
                 }

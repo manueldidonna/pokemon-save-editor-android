@@ -13,20 +13,21 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.material.ripple.ripple
-import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Box
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.core.setCoercedBoxIndex
 import com.manueldidonna.pk.resources.PokemonResources
-import com.manueldidonna.redhex.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.DialogItem
-import com.manueldidonna.redhex.common.DialogMenu
-import com.manueldidonna.redhex.common.PreviewScreen
+import com.manueldidonna.redhex.common.PokemonResourcesAmbient
+import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
+import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
+import com.manueldidonna.redhex.common.ui.DialogItem
+import com.manueldidonna.redhex.common.ui.DialogMenu
 import com.manueldidonna.redhex.dividerColor
 import com.manueldidonna.redhex.home.HomeAction.*
 import com.manueldidonna.redhex.translucentSurfaceColor
+import java.io.File
 
 @Model
 private data class HomeState(
@@ -44,13 +45,17 @@ private sealed class HomeAction {
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
     val pokemonResources = PokemonResourcesAmbient.current
+    val spritesRetriever = PokemonSpritesRetrieverAmbient.current
+
     val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
 
     val currentBox by stateFor(state.currentBoxIndex) {
         saveData.getWriteableBox(state.currentBoxIndex)
     }
 
-    val pokemonPreviews = stateFor(currentBox) { getPokemonPreviews(currentBox, pokemonResources) }
+    val pokemonPreviews = stateFor(currentBox) {
+        getPokemonPreviews(currentBox, pokemonResources, spritesRetriever)
+    }
 
     fun executeAction(action: HomeAction) {
         when (action) {
@@ -62,7 +67,8 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
             }
             is DeleteSlot -> {
                 currentBox.deletePokemon(action.slot)
-                pokemonPreviews.value = getPokemonPreviews(currentBox, pokemonResources)
+                pokemonPreviews.value =
+                    getPokemonPreviews(currentBox, pokemonResources, spritesRetriever)
             }
         }
     }
@@ -92,22 +98,31 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
             isPokemonEmpty = currentBox.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
             dismiss = { state.selectedPokemonIndex = -1 },
             movePokemon = {
-                state.movingPokemonPosition =
-                    Pokemon.Position(state.currentBoxIndex, state.selectedPokemonIndex)
+                state.movingPokemonPosition = Pokemon.Position(
+                    box = state.currentBoxIndex,
+                    slot = state.selectedPokemonIndex
+                )
             },
             deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) }
         )
     }
 }
 
-private fun getPokemonPreviews(box: Box, resources: PokemonResources): List<PokemonPreview> {
+private fun getPokemonPreviews(
+    box: Box,
+    resources: PokemonResources,
+    spritesRetriever: PokemonSpritesRetriever
+): List<PokemonPreview?> {
     return List(box.pokemonCounts) { i ->
         box.getPokemon(i).run {
-            PokemonPreview(
-                slot = position.slot,
-                nickname = nickname,
-                labels = listOf("L. $level", resources.natures.getNatureById(natureId))
-            )
+            // TODO: add isEmpty: Boolean to Pokemon
+            if (nickname.isEmpty() || speciesId == 0) null else {
+                PokemonPreview(
+                    nickname = nickname,
+                    labels = listOf("L. $level", resources.natures.getNatureById(natureId)),
+                    sprite = File(spritesRetriever.getSpritesPathFromId(speciesId))
+                )
+            }
         }
     }
 }
@@ -148,10 +163,10 @@ private fun HomeToolbar(
 }
 
 @Composable
-private fun PokemonList(pokemon: List<PokemonPreview>, onSelection: (slot: Int) -> Unit) {
-    pokemon.forEach {
-        Clickable(onClick = { onSelection(it.slot) }, modifier = Modifier.ripple()) {
-            PokemonCard(name = it.nickname, labels = it.labels)
+private fun PokemonList(pokemon: List<PokemonPreview?>, onSelection: (slot: Int) -> Unit) {
+    pokemon.forEachIndexed { index, pk ->
+        Clickable(onClick = { onSelection(index) }, modifier = Modifier.ripple()) {
+            PokemonCard(preview = pk)
         }
     }
 }
@@ -167,18 +182,5 @@ private fun ContextualActions(
         if (!isPokemonEmpty)
             DialogItem(text = "Delete pokemon", onClick = deletePokemon)
         DialogItem(text = "Move pokemon", onClick = movePokemon)
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewHomeToolbar() {
-    PreviewScreen {
-        HomeToolbar(
-            modifier = Modifier.preferredHeight(56.dp),
-            title = "Box 1",
-            onBack = {},
-            onForward = {}
-        )
     }
 }

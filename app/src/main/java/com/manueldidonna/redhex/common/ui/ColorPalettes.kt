@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex
+package com.manueldidonna.redhex.common.ui
 
 import androidx.ui.graphics.Color
 import androidx.ui.material.darkColorPalette

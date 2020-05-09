@@ -28,6 +28,7 @@ object Libs {
     object Android {
         const val materialComponents = "com.google.android.material:material:1.2.0-alpha05"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
+        const val coil = "io.coil-kt:coil:0.10.1"
     }
 
     object AndroidX {

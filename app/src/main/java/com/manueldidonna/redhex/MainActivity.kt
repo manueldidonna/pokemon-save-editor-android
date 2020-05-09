@@ -18,10 +18,15 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Home
 import androidx.ui.material.icons.twotone.Settings
 import androidx.ui.savedinstancestate.savedInstanceState
-import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
+import com.manueldidonna.redhex.common.PokemonResourcesAmbient
+import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
+import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
+import com.manueldidonna.redhex.common.ui.DarkColors
+import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.home.HomeScreen
 
 
@@ -37,7 +42,8 @@ class MainActivity : AppCompatActivity() {
             MaterialTheme(if (isSystemInDarkTheme()) DarkColors else LightColors) {
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
-                    PokemonResourcesAmbient provides PokemonResources.English
+                    PokemonResourcesAmbient provides PokemonResources.English,
+                    PokemonSpritesRetrieverAmbient provides PokemonSpritesRetriever.from(this)
                 ) {
                     window.statusBarColor = MaterialTheme.colors.surface.toArgb()
                     ActivityScreen()
