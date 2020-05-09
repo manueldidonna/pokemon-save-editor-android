@@ -54,9 +54,9 @@ internal class Box(
 
         // I treat it as an empty location
         if (slot > currentPokemonCounts - 1)
-            return UByteArray(PokemonDataSize + NameSize * 2)
+            return UByteArray(PokemonSize)
 
-        return UByteArray(PokemonDataSize + NameSize * 2).apply {
+        return UByteArray(PokemonSize).apply {
             // Copy Pokemon Box Data
             slot.dataOfs.let { ofs ->
                 data.copyInto(this, 0, ofs, ofs + PokemonDataSize)

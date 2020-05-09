@@ -42,15 +42,19 @@ private sealed class HomeAction {
     data class DeleteSlot(val slot: Int) : HomeAction()
 }
 
+interface HomeEvents {
+    fun showPokemonDetails(position: Pokemon.Position)
+}
+
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
+fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: HomeEvents) {
     val pokemonResources = PokemonResourcesAmbient.current
     val spritesRetriever = PokemonSpritesRetrieverAmbient.current
 
     val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
 
     val currentBox by stateFor(state.currentBoxIndex) {
-        saveData.getWriteableBox(state.currentBoxIndex)
+        saveData.getMutableBox(state.currentBoxIndex)
     }
 
     val pokemonPreviews = stateFor(currentBox) {
@@ -103,7 +107,15 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData) {
                     slot = state.selectedPokemonIndex
                 )
             },
-            deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) }
+            deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) },
+            viewPokemon = {
+                listener.showPokemonDetails(
+                    Pokemon.Position(
+                        state.currentBoxIndex,
+                        state.selectedPokemonIndex
+                    )
+                )
+            }
         )
     }
 }
@@ -176,9 +188,11 @@ private fun ContextualActions(
     isPokemonEmpty: Boolean,
     dismiss: () -> Unit,
     movePokemon: () -> Unit,
-    deletePokemon: () -> Unit
+    deletePokemon: () -> Unit,
+    viewPokemon: () -> Unit
 ) {
     DialogMenu(dismiss = dismiss) {
+        DialogItem(text = "View pokemon", onClick = viewPokemon)
         if (!isPokemonEmpty)
             DialogItem(text = "Delete pokemon", onClick = deletePokemon)
         DialogItem(text = "Move pokemon", onClick = movePokemon)

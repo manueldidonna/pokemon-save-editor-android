@@ -43,9 +43,9 @@ interface Pokemon {
  * the current data values at [position].
  * Ex: if you delete the pokemon at [position], also [MutablePokemon] instance data will be erased.
  *
- * A [MutablePokemon] can be under casted to [Pokemon] but it wan't became immutable,
+ * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
  * it will continue to reflects any data changes at [position].
- * *
+ *
  * To get a real immutable instance use [Box.getPokemon]
  *
  * TODO: add a function like "asPokemon()" to convert MutablePokemon to Pokemon
@@ -61,5 +61,7 @@ interface MutablePokemon : Pokemon {
         fun nickname(value: String): Mutator
         fun trainerId(value: UInt): Mutator
         fun trainerName(value: String): Mutator
+        fun experiencePoints(value: Int): Mutator
+        fun level(value: Int): Mutator
     }
 }

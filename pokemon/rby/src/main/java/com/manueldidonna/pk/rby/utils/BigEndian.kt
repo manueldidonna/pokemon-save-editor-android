@@ -22,6 +22,15 @@ internal fun UByteArray.writeBidEndianShort(offset: Int, value: Short) {
     this[offset + 1] = value.toUByte()
 }
 
+internal fun UByteArray.writeBidEndianInt(offset: Int, value: Int, write3Bytes: Boolean = false) {
+    require(size >= offset)
+    this[offset] = (value ushr 24).toUByte()
+    this[offset + 1] = (value ushr 16).toUByte()
+    this[offset + 2] = (value ushr 8).toUByte()
+    if (!write3Bytes)
+        this[offset + 3] = value.toUByte()
+}
+
 internal fun UByteArray.readBigEndianInt(offset: Int): Int {
     var value = 0
     value = value or (this[offset].toInt() shl 24)

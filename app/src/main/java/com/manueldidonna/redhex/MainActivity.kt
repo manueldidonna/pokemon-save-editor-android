@@ -19,6 +19,7 @@ import androidx.ui.material.icons.twotone.Home
 import androidx.ui.material.icons.twotone.Settings
 import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
+import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
@@ -27,6 +28,9 @@ import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
 import com.manueldidonna.redhex.common.ui.DarkColors
 import com.manueldidonna.redhex.common.ui.LightColors
+import com.manueldidonna.redhex.details.PokemonDetailsEvents
+import com.manueldidonna.redhex.details.PokemonDetailsScreen
+import com.manueldidonna.redhex.home.HomeEvents
 import com.manueldidonna.redhex.home.HomeScreen
 
 
@@ -35,7 +39,20 @@ object MainState {
     var saveData: SaveData? = null
 }
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
+
+    @Model
+    private class RouteState {
+        var route: Route = Route.Root
+
+        sealed class Route {
+            object Root : Route()
+            data class Details(val position: Pokemon.Position) : Route()
+        }
+    }
+
+    private val routeState = RouteState()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -58,13 +75,32 @@ class MainActivity : AppCompatActivity() {
         if (saveData == null) {
             LoadSaveDataScreen()
         } else {
-            SurfaceWithBottomNavigation { destination, modifier ->
-                when (destination) {
-                    BottomDestination.Home -> HomeScreen(modifier, saveData)
-                    BottomDestination.Settings -> SettingsScreen()
+            val route = routeState.route
+            if (route is RouteState.Route.Details) {
+                val (box, slot) = route.position
+                Surface {
+                    PokemonDetailsScreen(
+                        pokemon = saveData.getMutableBox(box).getMutablePokemon(slot),
+                        listener = this
+                    )
+                }
+            } else {
+                SurfaceWithBottomNavigation { destination, modifier ->
+                    when (destination) {
+                        BottomDestination.Home -> HomeScreen(modifier, saveData, this)
+                        BottomDestination.Settings -> SettingsScreen()
+                    }
                 }
             }
         }
+    }
+
+    override fun showPokemonDetails(position: Pokemon.Position) {
+        routeState.route = RouteState.Route.Details(position)
+    }
+
+    override fun goBackToPokemonList() {
+        routeState.route = RouteState.Route.Root
     }
 
     private enum class BottomDestination {

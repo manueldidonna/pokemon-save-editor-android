@@ -1,7 +1,11 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.utils.getExperienceGroup
+import com.manueldidonna.pk.core.utils.getExperiencePoints
+import com.manueldidonna.pk.rby.utils.getGameBoySpecies
 import com.manueldidonna.pk.rby.utils.setGameBoyString
+import com.manueldidonna.pk.rby.utils.writeBidEndianInt
 import com.manueldidonna.pk.rby.utils.writeBidEndianShort
 
 internal class PokemonMutator(
@@ -33,5 +37,17 @@ internal class PokemonMutator(
 
     override fun trainerName(value: String): MutablePokemon.Mutator = apply {
         setGameBoyString(value, 7, false, outputDataSize = 11).copyInto(data, trainerNameOffset)
+    }
+
+    override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
+        data.writeBidEndianInt(dataOffset + 0xE, value shl 8, write3Bytes = true)
+    }
+
+    override fun level(value: Int): MutablePokemon.Mutator = apply {
+        val coercedLevel = value.coerceIn(1, 100)
+        data[dataOffset + 0x3] = coercedLevel.toUByte()
+
+        val speciesId = getGameBoySpecies(data[dataOffset].toInt()) // TODO: this is an hack
+        experiencePoints(getExperiencePoints(value, getExperienceGroup(speciesId)))
     }
 }
