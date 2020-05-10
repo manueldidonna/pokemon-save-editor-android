@@ -51,7 +51,7 @@ internal class PokemonMutator(
     override fun moveId(id: Int, moveIndex: Int): MutablePokemon.Mutator = apply {
         require(moveIndex in 0..3) { "Move index must be in 0..3" }
         data[dataOffset + 0x08 + moveIndex] = id.toUByte()
-        movePowerPoints(moveIndex, 0, id)
+        movePowerPoints(moveIndex = moveIndex, moveId = id, points = 0)
     }
 
     override fun movePowerPoints(

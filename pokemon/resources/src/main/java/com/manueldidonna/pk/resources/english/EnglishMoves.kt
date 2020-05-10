@@ -5,7 +5,7 @@ import com.manueldidonna.pk.resources.PokemonResources
 internal class EnglishMoves : PokemonResources.Moves {
 
     private val moves = arrayOf(
-        "None",
+        "-------",
         "Pound",
         "Karate Chop",
         "Double Slap",
