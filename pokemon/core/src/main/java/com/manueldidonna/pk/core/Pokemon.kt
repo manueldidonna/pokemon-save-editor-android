@@ -23,6 +23,13 @@ interface Pokemon {
     val experiencePoints: Int
     val natureId: Int
 
+    val moves: Moves
+
+    interface Moves {
+        fun getId(index: Int): Int
+        fun getPowerPoints(index: Int): Int
+    }
+
     val iV: IndividualValues
 
     interface IndividualValues {
@@ -63,5 +70,11 @@ interface MutablePokemon : Pokemon {
         fun trainerName(value: String): Mutator
         fun experiencePoints(value: Int): Mutator
         fun level(value: Int): Mutator
+        fun moveId(id: Int, moveIndex: Int): Mutator
+        /**
+         * Points should be coerced to the maximum allowed value
+         * Pass -1 as moveId to ignore the maximum allowed points of a specific move
+         */
+        fun movePowerPoints(moveIndex: Int,moveId: Int, points: Int): Mutator
     }
 }

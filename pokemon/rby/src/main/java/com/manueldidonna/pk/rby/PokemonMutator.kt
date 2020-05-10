@@ -3,10 +3,7 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.utils.getExperienceGroup
 import com.manueldidonna.pk.core.utils.getExperiencePoints
-import com.manueldidonna.pk.rby.utils.getGameBoySpecies
-import com.manueldidonna.pk.rby.utils.setGameBoyString
-import com.manueldidonna.pk.rby.utils.writeBidEndianInt
-import com.manueldidonna.pk.rby.utils.writeBidEndianShort
+import com.manueldidonna.pk.rby.utils.*
 
 internal class PokemonMutator(
     private val data: UByteArray,
@@ -49,5 +46,22 @@ internal class PokemonMutator(
 
         val speciesId = getGameBoySpecies(data[dataOffset].toInt()) // TODO: this is an hack
         experiencePoints(getExperiencePoints(value, getExperienceGroup(speciesId)))
+    }
+
+    override fun moveId(id: Int, moveIndex: Int): MutablePokemon.Mutator = apply {
+        require(moveIndex in 0..3) { "Move index must be in 0..3" }
+        data[dataOffset + 0x08 + moveIndex] = id.toUByte()
+        movePowerPoints(moveIndex, 0, id)
+    }
+
+    override fun movePowerPoints(
+        moveIndex: Int,
+        moveId: Int,
+        points: Int
+    ): MutablePokemon.Mutator = apply {
+        require(moveIndex in 0..3) { "Move index must be in 0..3" }
+        val ppIndex = dataOffset + 0X1D + moveIndex
+        val realPoints = if (moveId > 0) getPoiwerPoints(moveId) else points.coerceAtMost(63)
+        data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
     }
 }

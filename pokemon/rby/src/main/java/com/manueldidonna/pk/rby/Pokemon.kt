@@ -10,9 +10,19 @@ import com.manueldidonna.pk.rby.utils.readBigEndianUShort
 /**
  * 0x00 0x1 - species ID
  * 0x03 0x1 - level
+ * 0x08 0x1 - Index number of move 1
+ * 0x09 0x1 - Index number of move 2
+ * 0x0A 0x1 - Index number of move 3
+ * 0x0B 0x1 - Index number of move 4
  * 0x0C 0x2 - trainer ID
  * 0x0E 0x3 - experience points
  * 0x1b 0x2 - ivs (4 bits for each IV excluding HP)
+ * ------------------------
+ * (2 bits for applied pp-ups, 6 bits for current PPs)
+ * 0x1D	0x1 - Move 1's PP values
+ * 0x1E	0x1 - Move 2's PP values
+ * 0x1F	0x1 - Move 3's PP values
+ * 0x20	0x1 - Move 4's PP values
  * ------------------------
  * 0x21 0xb - trainer name
  * 0x2C 0xb - pokemon name
@@ -23,7 +33,7 @@ import com.manueldidonna.pk.rby.utils.readBigEndianUShort
  */
 internal class Pokemon(
     private val data: UByteArray,
-    private val startOffset: Int = 0,
+    private val startOffset: Int,
     private val trainerNameOffset: Int,
     private val pokemonNameOffset: Int,
     box: Int,
@@ -72,6 +82,20 @@ internal class Pokemon(
 
     override val trainerName: String
         get() = getGameBoyString(data, trainerNameOffset, stringLength = 11, isJapanese = false)
+
+    override val moves: Pokemon.Moves by lazy {
+        object : Pokemon.Moves {
+            override fun getId(index: Int): Int {
+                require(index in 0..3) { "Move index must be in 0..3" }
+                return data[startOffset + 0x08 + index].toInt()
+            }
+
+            override fun getPowerPoints(index: Int): Int {
+                require(index in 0..3) { "Move index must be in 0..3" }
+                return data[startOffset + 0x1D + index].toInt() and 0x3F
+            }
+        }
+    }
 
     /**
      * [Pokemon.IndividualValues.specialDefense] and [Pokemon.IndividualValues.specialAttack] are equal

@@ -27,7 +27,7 @@ fun DialogMenu(dismiss: () -> Unit, content: @Composable() DialogScope.() -> Uni
     Dialog(onCloseRequest = dismiss) {
         MaterialTheme(colors = currentColors, typography = currentTypography) {
             Surface(
-                modifier = Modifier.preferredWidth(280.dp),
+                modifier = Modifier.preferredWidth(280.dp).padding(top = 48.dp, bottom = 48.dp),
                 shape = RoundedCornerShape(8.dp),
                 elevation = 2.dp
             ) {

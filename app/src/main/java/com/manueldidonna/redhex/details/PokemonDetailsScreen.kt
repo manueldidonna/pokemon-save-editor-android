@@ -6,18 +6,14 @@ import androidx.compose.setValue
 import androidx.compose.state
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.*
 import androidx.ui.layout.*
-import androidx.ui.material.IconButton
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Slider
-import androidx.ui.material.TopAppBar
+import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ArrowBack
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.redhex.dividerColor
 import kotlin.math.roundToInt
 
 interface PokemonDetailsEvents {
@@ -41,19 +37,41 @@ fun PokemonDetailsScreen(
             title = { Text(text = "Edit pokemon") }
         )
         VerticalScroller {
-            Column(modifier = Modifier.padding(start = 24.dp, end = 24.dp)) {
-                Spacer(modifier = Modifier.preferredHeight(16.dp))
+            Column {
+                Species(pokemon = pokemon)
                 Experience(pokemon = pokemon)
-                Spacer(modifier = Modifier.preferredHeight(16.dp))
+                Divider(color = dividerColor())
+                PokemonMoves(pokemon)
             }
         }
     }
 }
 
 @Composable
+private fun Species(pokemon: MutablePokemon) {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(24.dp),
+        backgroundColor = MaterialTheme.colors.primary,
+        gravity = ContentGravity.Center,
+        padding = 8.dp,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Text(
+            text = pokemon.nickname,
+            color = MaterialTheme.colors.onPrimary,
+            style = MaterialTheme.typography.body1
+        )
+    }
+}
+
+
+@Composable
 private fun Experience(pokemon: MutablePokemon) {
     var level by state { pokemon.level.toFloat() }
-    Row(verticalGravity = Alignment.CenterVertically) {
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
+    ) {
         Text(
             text = "Level",
             modifier = Modifier.padding(end = 8.dp).preferredWidth(48.dp),
@@ -61,7 +79,10 @@ private fun Experience(pokemon: MutablePokemon) {
         )
         Text(
             text = level.roundToInt().toString(),
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp).preferredWidth(24.dp),
+            modifier = Modifier
+                .padding(start = 8.dp, end = 8.dp)
+                .preferredWidth(24.dp)
+                .wrapContentWidth(Alignment.CenterHorizontally),
             style = MaterialTheme.typography.subtitle2
         )
         Slider(
@@ -72,5 +93,4 @@ private fun Experience(pokemon: MutablePokemon) {
             onValueChangeEnd = { pokemon.mutator.level(level.roundToInt()) }
         )
     }
-
 }
