@@ -18,7 +18,7 @@ inline fun <I, O> PrepareActivityContract(
     val lifecycleOwner = LifecycleOwnerAmbient.current
     val registry = ActivityResultRegistryAmbient.current
 
-    val launcher: ActivityResultLauncher<I> = remember(registry, lifecycleOwner) {
+    val launcher: ActivityResultLauncher<I> = remember(contract, registry) {
         registry.register(contractKey, lifecycleOwner, contract, activityResultCallback)
     }
     onDispose {

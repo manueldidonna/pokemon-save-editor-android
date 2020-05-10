@@ -2,6 +2,7 @@ package com.manueldidonna.redhex
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.activity.invoke
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,13 +49,15 @@ fun LoadSaveDataScreen() {
 }
 
 private fun createSaveData(uri: Uri?, context: Context) {
+    Log.d("savedata", "preuri")
+
     if (uri == null) return
     context.contentResolver.openInputStream(uri).use { input ->
+        Log.d("savedata", "preinput")
+
         if (input == null) return
-        val saveData = RBYSaveDataFactory
-            .createSaveData(input.readBytes().toUByteArray())
-            ?: return
-        MainState.saveData = saveData
+        MainState.saveData = RBYSaveDataFactory.createSaveData(input.readBytes().toUByteArray())
+        Log.d("savedata", MainState.saveData?.toString() ?: "")
     }
 }
 
