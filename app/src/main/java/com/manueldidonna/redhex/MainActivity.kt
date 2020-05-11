@@ -9,6 +9,7 @@ import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.*
 import androidx.ui.graphics.toArgb
+import androidx.ui.layout.fillMaxSize
 import androidx.ui.layout.padding
 import androidx.ui.material.BottomNavigation
 import androidx.ui.material.BottomNavigationItem
@@ -32,7 +33,6 @@ import com.manueldidonna.redhex.details.PokemonDetailsEvents
 import com.manueldidonna.redhex.details.PokemonDetailsScreen
 import com.manueldidonna.redhex.home.HomeEvents
 import com.manueldidonna.redhex.home.HomeScreen
-
 
 @Model
 object MainState {
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
 
         Box(gravity = ContentGravity.BottomCenter) {
-            Surface {
+            Surface(modifier = Modifier.fillMaxSize()) {
                 content(destination, Modifier.padding(bottom = 56.dp))
             }
             BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {

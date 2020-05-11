@@ -33,7 +33,11 @@ fun PokemonCard(preview: PokemonPreview?) {
         modifier = Modifier.fillMaxWidth().preferredHeight(56.dp),
         verticalGravity = Alignment.CenterVertically
     ) {
-        LoadPokemonSprite(emphasis = emphasis, data = preview?.sprite)
+        if (preview == null) {
+            PokeballPlaceholder(emphasis = emphasis)
+        } else {
+            LoadPokemonSprite(data = preview.sprite)
+        }
         Text(
             modifier = Modifier.padding(end = 24.dp),
             text = preview?.nickname ?: "Empty Slot",
@@ -52,24 +56,31 @@ fun PokemonCard(preview: PokemonPreview?) {
 }
 
 @Composable
-private fun LoadPokemonSprite(emphasis: Emphasis, data: Any?) {
-    val image = if (data == null) null else LoadImage(data = data)
-    val spacerWidth = Modifier.preferredWidth(if (image == null) 24.dp else 16.dp)
-    Spacer(modifier = spacerWidth)
+private fun LoadPokemonSprite(data: Any) {
+    val image = LoadImage(data = data)
     if (image != null) {
+        Spacer(modifier = Modifier.preferredWidth(16.dp))
         Image(
             modifier = Modifier.preferredWidth(48.dp).aspectRatio(4f / 3f),
             asset = image,
             contentScale = ContentScale.Crop
         )
+        Spacer(modifier = Modifier.preferredWidth(16.dp))
     } else {
-        Image(
-            modifier = Modifier.preferredSize(32.dp),
-            colorFilter = ColorFilter.tint(emphasis.emphasize(MaterialTheme.colors.onSurface)),
-            asset = imageResource(R.drawable.pokeball_s)
-        )
+        // empty space until the image is loaded
+        Spacer(modifier = Modifier.preferredWidth(80.dp))
     }
-    Spacer(modifier = spacerWidth)
+}
+
+@Composable
+private fun PokeballPlaceholder(emphasis: Emphasis) {
+    Spacer(modifier = Modifier.preferredWidth(24.dp))
+    Image(
+        modifier = Modifier.preferredSize(32.dp),
+        colorFilter = ColorFilter.tint(emphasis.emphasize(MaterialTheme.colors.onSurface)),
+        asset = imageResource(R.drawable.pokeball_s)
+    )
+    Spacer(modifier = Modifier.preferredWidth(24.dp))
 }
 
 @Composable

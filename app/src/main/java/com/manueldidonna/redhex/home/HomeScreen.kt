@@ -1,6 +1,5 @@
 package com.manueldidonna.redhex.home
 
-import android.util.Log
 import androidx.compose.Composable
 import androidx.compose.Model
 import androidx.compose.getValue
@@ -97,7 +96,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         }
     }
 
-    Box(modifier = modifier.fillMaxHeight()) {
+    Box(modifier = modifier) {
         VerticalScroller {
             Column {
                 Spacer(modifier = Modifier.preferredHeight(72.dp))
