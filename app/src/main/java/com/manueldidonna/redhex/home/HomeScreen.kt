@@ -1,6 +1,10 @@
 package com.manueldidonna.redhex.home
 
-import androidx.compose.*
+import android.util.Log
+import androidx.compose.Composable
+import androidx.compose.Model
+import androidx.compose.getValue
+import androidx.compose.stateFor
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
@@ -13,11 +17,11 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.material.ripple.ripple
+import androidx.ui.savedinstancestate.Saver
+import androidx.ui.savedinstancestate.SaverScope
+import androidx.ui.savedinstancestate.rememberSavedInstanceState
 import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.Box
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.setCoercedBoxIndex
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
@@ -31,7 +35,7 @@ import java.io.File
 
 @Model
 private data class HomeState(
-    var currentBoxIndex: Int,
+    var currentStorageIndex: StorageIndex,
     var movingPokemonPosition: Pokemon.Position? = null,
     var selectedPokemonIndex: Int = -1
 )
@@ -51,33 +55,49 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
     val pokemonResources = PokemonResourcesAmbient.current
     val spritesRetriever = PokemonSpritesRetrieverAmbient.current
 
-    val state = remember { HomeState(currentBoxIndex = saveData.currentBoxIndex) }
+    val state = rememberSavedInstanceState(saver = object : Saver<HomeState, Int> {
+        override fun restore(value: Int): HomeState? {
+            return HomeState(currentStorageIndex = StorageIndex(value))
+        }
 
-    val currentBox by stateFor(state.currentBoxIndex) {
-        saveData.getMutableBox(state.currentBoxIndex)
+        override fun SaverScope.save(value: HomeState): Int? {
+            return value.currentStorageIndex.value
+        }
+    }) {
+        HomeState(currentStorageIndex = StorageIndex(saveData.currentBoxIndex))
     }
 
-    val pokemonPreviews = stateFor(currentBox) {
-        getPokemonPreviews(currentBox, pokemonResources, spritesRetriever)
+    val currentStorage by stateFor(state.currentStorageIndex.value) {
+        saveData.getMutableStorage(state.currentStorageIndex)
+    }
+
+    val pokemonPreviews = stateFor(currentStorage) {
+        getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
     }
 
     fun executeAction(action: HomeAction) {
         when (action) {
             IncreaseBoxIndex -> {
-                state.currentBoxIndex = saveData.setCoercedBoxIndex(saveData.currentBoxIndex + 1)
+                val newIndex = state.currentStorageIndex.nextIndex(saveData.boxCounts)
+                if (!newIndex.isParty)
+                    saveData.currentBoxIndex = newIndex.value
+                state.currentStorageIndex = newIndex
             }
             DecreaseBoxIndex -> {
-                state.currentBoxIndex = saveData.setCoercedBoxIndex(saveData.currentBoxIndex - 1)
+                val newIndex = state.currentStorageIndex.previousIndex(saveData.boxCounts)
+                if (!newIndex.isParty)
+                    saveData.currentBoxIndex = newIndex.value
+                state.currentStorageIndex = newIndex
             }
             is DeleteSlot -> {
-                currentBox.deletePokemon(action.slot)
+                currentStorage.deletePokemon(action.slot)
                 pokemonPreviews.value =
-                    getPokemonPreviews(currentBox, pokemonResources, spritesRetriever)
+                    getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
             }
         }
     }
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxHeight()) {
         VerticalScroller {
             Column {
                 Spacer(modifier = Modifier.preferredHeight(72.dp))
@@ -91,7 +111,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
             // TODO: there is a bug with zIndex. Check again in dev-12
             // It doesn't receive cliks if positioned before the views that it overlaps
             modifier = Modifier.preferredHeight(56.dp).zIndex(8f),
-            title = currentBox.name,
+            title = currentStorage.name,
             onBack = { executeAction(DecreaseBoxIndex) },
             onForward = { executeAction(IncreaseBoxIndex) }
         )
@@ -99,11 +119,11 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 
     if (state.selectedPokemonIndex != -1) {
         ContextualActions(
-            isPokemonEmpty = currentBox.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
+            isPokemonEmpty = currentStorage.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
             dismiss = { state.selectedPokemonIndex = -1 },
             movePokemon = {
                 state.movingPokemonPosition = Pokemon.Position(
-                    box = state.currentBoxIndex,
+                    index = state.currentStorageIndex,
                     slot = state.selectedPokemonIndex
                 )
             },
@@ -111,7 +131,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
             viewPokemon = {
                 listener.showPokemonDetails(
                     Pokemon.Position(
-                        state.currentBoxIndex,
+                        state.currentStorageIndex,
                         state.selectedPokemonIndex
                     )
                 )
@@ -121,12 +141,12 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 }
 
 private fun getPokemonPreviews(
-    box: Box,
+    storage: Storage,
     resources: PokemonResources,
     spritesRetriever: PokemonSpritesRetriever
 ): List<PokemonPreview?> {
-    return List(box.pokemonCounts) { i ->
-        box.getPokemon(i).run {
+    return List(storage.pokemonCounts) { i ->
+        storage.getPokemon(i).run {
             // TODO: add isEmpty: Boolean to Pokemon
             if (nickname.isEmpty() || speciesId == 0) null else {
                 PokemonPreview(

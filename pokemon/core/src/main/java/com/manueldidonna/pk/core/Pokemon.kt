@@ -10,7 +10,7 @@ interface Pokemon {
     val position: Position
 
     data class Position(
-        val box: Int,
+        val index: StorageIndex,
         val slot: Int
     )
 

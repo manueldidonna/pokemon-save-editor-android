@@ -181,5 +181,4 @@ internal class EnglishMoves : PokemonResources.Moves {
     override fun getAllMoves(): List<String> {
         return moves.toList()
     }
-
 }

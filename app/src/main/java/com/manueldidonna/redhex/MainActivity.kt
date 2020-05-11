@@ -77,10 +77,10 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
         } else {
             val route = routeState.route
             if (route is RouteState.Route.Details) {
-                val (box, slot) = route.position
+                val (index, slot) = route.position
                 Surface {
                     PokemonDetailsScreen(
-                        pokemon = saveData.getMutableBox(box).getMutablePokemon(slot),
+                        pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
                         listener = this
                     )
                 }

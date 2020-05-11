@@ -9,7 +9,8 @@ internal class PokemonMutator(
     private val data: UByteArray,
     private val dataOffset: Int,
     private val trainerNameOffset: Int,
-    private val pokemonNameOffset: Int
+    private val pokemonNameOffset: Int,
+    private val isPartyPokemon: Boolean
 ) : MutablePokemon.Mutator {
 
     init {
@@ -43,7 +44,9 @@ internal class PokemonMutator(
     override fun level(value: Int): MutablePokemon.Mutator = apply {
         val coercedLevel = value.coerceIn(1, 100)
         data[dataOffset + 0x3] = coercedLevel.toUByte()
-
+        if(isPartyPokemon) {
+            data[dataOffset + 0x21] = coercedLevel.toUByte()
+        }
         val speciesId = getGameBoySpecies(data[dataOffset].toInt()) // TODO: this is an hack
         experiencePoints(getExperiencePoints(value, getExperienceGroup(speciesId)))
     }

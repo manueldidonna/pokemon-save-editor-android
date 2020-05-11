@@ -1,8 +1,10 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MutableBox
+import com.manueldidonna.pk.core.MutableStorage
+import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.isParty
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
-import com.manueldidonna.pk.core.Box as CoreBox
+import com.manueldidonna.pk.core.Storage as CoreStorage
 
 internal class SaveData(private val data: UByteArray) : CoreSaveData {
 
@@ -15,7 +17,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     override var currentBoxIndex: Int
         get() = (data[0x284C] and 0x7Fu).toInt()
         set(value) {
-            require(value in 0..11) { " Box index must be 0-11" }
+            require(value in 0..11) { " Box index must be 0-11 but is $value" }
             if (value == currentBoxIndex) return
             val oldValue = currentBoxIndex
             val newBoxOffset = getBoxDataOffset(value)
@@ -25,13 +27,16 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
             data.copyInto(data, CurrentBoxOffset, newBoxOffset, newBoxOffset + BoxSize)
         }
 
-    override fun getBox(index: Int): CoreBox {
-        val boxDataOffset = getBoxDataOffset(index)
-        return Box(data.copyOfRange(boxDataOffset, boxDataOffset + BoxSize), 0, index)
+    override fun getStorage(index: StorageIndex): CoreStorage {
+        val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
+        val size = if (index.isParty) PartySize else BoxSize
+        val pokemonCounts = if (index.isParty) 6 else 20
+        return Storage(data.copyOfRange(dataOffset, dataOffset + size), 0, index, pokemonCounts)
     }
 
-    override fun getMutableBox(index: Int): MutableBox {
-        return Box(data, getBoxDataOffset(index), index)
+    override fun getMutableStorage(index: StorageIndex): MutableStorage {
+        val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
+        return Storage(data, dataOffset, index, if (index.isParty) 6 else 20)
     }
 
     private fun getBoxDataOffset(index: Int): Int {

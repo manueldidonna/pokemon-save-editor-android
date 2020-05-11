@@ -2,6 +2,10 @@ package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.core.utils.getExperienceGroup
+import com.manueldidonna.pk.core.utils.getLevel
 import com.manueldidonna.pk.rby.utils.getGameBoySpecies
 import com.manueldidonna.pk.rby.utils.getGameBoyString
 import com.manueldidonna.pk.rby.utils.readBigEndianInt
@@ -24,6 +28,8 @@ import com.manueldidonna.pk.rby.utils.readBigEndianUShort
  * 0x1F	0x1 - Move 3's PP values
  * 0x20	0x1 - Move 4's PP values
  * ------------------------
+ * 0x21 0x1 - level (exclusive of the pokemon in the party. @see [level])
+ * ------------------------
  * 0x21 0xb - trainer name
  * 0x2C 0xb - pokemon name
  *
@@ -36,13 +42,13 @@ internal class Pokemon(
     private val startOffset: Int,
     private val trainerNameOffset: Int,
     private val pokemonNameOffset: Int,
-    box: Int,
+    private val index: StorageIndex,
     slot: Int
 ) : MutablePokemon {
 
     companion object {
-        fun newImmutableInstance(data: UByteArray, box: Int, slot: Int): Pokemon {
-            return Pokemon(data, 0, PokemonDataSize, PokemonDataSize + NameSize, box, slot)
+        fun newImmutableInstance(data: UByteArray, index: StorageIndex, slot: Int): Pokemon {
+            return Pokemon(data, 0, PokemonDataSize, PokemonDataSize + NameSize, index, slot)
         }
     }
 
@@ -54,10 +60,10 @@ internal class Pokemon(
 
     override val mutator: MutablePokemon.Mutator by lazy {
         require(startOffset != 0) { "This Pokemon instance is read-only" }
-        PokemonMutator(data, startOffset, trainerNameOffset, pokemonNameOffset)
+        PokemonMutator(data, startOffset, trainerNameOffset, pokemonNameOffset, index.isParty)
     }
 
-    override val position by lazy { Pokemon.Position(box, slot) }
+    override val position by lazy { Pokemon.Position(index, slot) }
 
     override val speciesId: Int
         get() = getGameBoySpecies(data[startOffset].toInt())
@@ -66,7 +72,16 @@ internal class Pokemon(
         get() = getGameBoyString(data, pokemonNameOffset, stringLength = 11, isJapanese = false)
 
     override val level: Int
-        get() = data[startOffset + 0x3].toInt()
+        get() {
+            return when {
+                // fast path, box pokemon. Read from the level offset
+                !index.isParty -> data[startOffset + 0x3].toInt()
+                // mutable pokemon, read value in the party-only level offset
+                startOffset != 0 -> data[startOffset + 0x21].toInt()
+                // not mutable, party offsets aren't available. Calculate the level from the exp
+                else -> getLevel(experiencePoints, getExperienceGroup(speciesId))
+            }
+        }
 
     override val experiencePoints: Int
         get() = data.readBigEndianInt(startOffset + 0xE) ushr 8

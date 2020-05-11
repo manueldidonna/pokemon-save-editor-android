@@ -5,9 +5,9 @@ interface SaveData {
 
     var currentBoxIndex: Int
 
-    fun getBox(index: Int): Box
+    fun getStorage(index: StorageIndex): Storage
 
-    fun getMutableBox(index: Int): MutableBox
+    fun getMutableStorage(index: StorageIndex): MutableStorage
 
     fun exportToBytes(): UByteArray
 
@@ -16,35 +16,24 @@ interface SaveData {
     }
 }
 
-/**
- * If [value] is greater than [SaveData.boxCounts] go back to the first box
- * If [value] is lower than zero, go to the last box
- *
- * @return the new current box index
- */
-fun SaveData.setCoercedBoxIndex(value: Int): Int {
-    currentBoxIndex = if (value >= boxCounts) 0 else if (value < 0) boxCounts - 1 else value
-    return currentBoxIndex
-}
-
 fun SaveData.deletePokemon(position: Pokemon.Position) {
-    getMutableBox(position.box).deletePokemon(position.slot)
+    getMutableStorage(position.index).deletePokemon(position.slot)
 }
 
 fun SaveData.movePokemon(from: Pokemon.Position, to: Pokemon.Position) {
     if (from == to) return // do nothing
 
-    val fromBox = getMutableBox(from.box)
+    val fromBox = getMutableStorage(from.index)
     val fromData = fromBox.exportPokemonToBytes(from.slot) // not valid
     fromBox.deletePokemon(from.slot)
-    getMutableBox(to.box).importPokemonFromBytes(to.slot, fromData)
+    getMutableStorage(to.index).importPokemonFromBytes(to.slot, fromData)
 }
 
 fun SaveData.swapPokemon(first: Pokemon.Position, second: Pokemon.Position) {
     if (first == second) return // do nothing
 
-    val firstBox = getMutableBox(first.box)
-    val secondBox = getMutableBox(second.box)
+    val firstBox = getMutableStorage(first.index)
+    val secondBox = getMutableStorage(second.index)
     val firstData = firstBox.exportPokemonToBytes(first.slot)
     val secondData = secondBox.exportPokemonToBytes(second.slot)
     if (!firstBox.importPokemonFromBytes(first.slot, secondData)) {

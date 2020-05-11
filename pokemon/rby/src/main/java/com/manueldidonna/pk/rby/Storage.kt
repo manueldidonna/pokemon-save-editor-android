@@ -1,27 +1,28 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MutableBox
 import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokemon as CorePokemon
+import com.manueldidonna.pk.core.MutableStorage
+import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.isParty
 
 /**
- * 0x00 0x1 - pokemon counts (value: 0 - 19)
- * 0x01 0x1 - species ID (amount: 20. 0x01 - 0x15. Add 0xFF after the latest species id)
- * 0x15	0x1 - unused padding
- * 0x16	0x21 - pokemon data (amount: 20. @see [Pokemon])
- * 0x2AA 0xB - original trainer name (amount: 20)
- * 0x386 0xB - pokemon name (amount: 20. If it's different from the species name, it's a surname)
+ * Party and Box have the same structure. Box has 20 slots, Party has 6 slots.
+ *
+ * 0x00 0x1 - pokemon counts (value: 0 - 6/20)
+ * 0x01 0x1 - species ID (amount: n. of available slots. Add 0xFF after the latest species id)
+ * ---- 0x1 - unused padding (from the latest species id to the pokemon data offset)
+ * ----	0x21 - pokemon data (@see [Pokemon]) (ofs: P0x08, B0x16)
+ * ---- 0xB - original trainer name (ofs: P0x110, B0x2AA)
+ * ---- 0xB - pokemon name (ofs: P0x152, B0x386)
  */
-internal class Box(
+internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
-    override val index: Int
-) : MutableBox {
+    override val index: StorageIndex,
+    override val pokemonCounts: Int
+) : MutableStorage {
 
-    // TODO: translate 'Box'
-    override val name: String = "Box ${index + 1}"
-
-    override val pokemonCounts: Int = 20
+    override val name = if (index.isParty) "PARTY" else "Box ${index.value + 1}"
 
     override var currentPokemonCounts: Int
         get() = data[startOffset].toInt()
@@ -31,26 +32,26 @@ internal class Box(
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
 
-    override fun getPokemon(slot: Int): CorePokemon {
-        require(slot in 0..20) { "Pokemon position must be 0-20" }
+    override fun getPokemon(slot: Int): com.manueldidonna.pk.core.Pokemon {
+        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
         return Pokemon.newImmutableInstance(exportPokemonToBytes(slot), index, slot)
     }
 
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0..20) { "Pokemon position must be 0-20" }
+        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
         return Pokemon(
             data = data,
             startOffset = slot.dataOfs,
             trainerNameOffset = slot.trainerNameOfs,
             pokemonNameOffset = slot.nameOfs,
-            box = index,
+            index = index,
             slot = slot
         )
     }
 
     override fun exportPokemonToBytes(slot: Int): UByteArray {
-        require(slot in 0..20) { "Pokemon slot must be 0-20" }
+        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
 
         // I treat it as an empty location
         if (slot > currentPokemonCounts - 1)
@@ -74,7 +75,7 @@ internal class Box(
 
     override fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0..20) { "Pokemon slot must be 0-20" }
+        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
 
         if (bytes.all { it == 0.toUByte() })
             return false // empty pk
@@ -88,7 +89,7 @@ internal class Box(
         // verify the correctness of the data
         val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, slot)
 
-        data[coercedSlot.speciesOfs] = immutablePokemon.speciesId.toUByte()
+        data[startOffset + 0x1 + coercedSlot] = immutablePokemon.speciesId.toUByte()
         bytes.apply {
             // Set Pokemon Box Data
             copyInto(data, coercedSlot.dataOfs, 0, PokemonDataSize)
@@ -102,10 +103,12 @@ internal class Box(
 
     override fun deletePokemon(slot: Int) {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0..20) { "Pokemon slot must be 0-20" }
+        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
 
         if (slot >= currentPokemonCounts)
             return // empty slot
+
+        val endSlot = pokemonCounts - 1
 
         // Decrease pokemon counts and check if the selected slot is lower than the last empty slot
         // In gen 1 there couldn't be empty slots between the pokemon in the box
@@ -122,14 +125,14 @@ internal class Box(
 
             val startSlot = slot + 1
 
-            movePokemonData(slot.dataOfs, startSlot.dataOfs, 19.dataOfs, PokemonDataSize)
+            movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs, PokemonDataSize)
             movePokemonData(
                 slot.trainerNameOfs,
                 startSlot.trainerNameOfs,
-                19.trainerNameOfs,
+                endSlot.trainerNameOfs,
                 NameSize
             )
-            movePokemonData(slot.nameOfs, startSlot.nameOfs, 19.nameOfs, NameSize)
+            movePokemonData(slot.nameOfs, startSlot.nameOfs, endSlot.nameOfs, NameSize)
         }
 
         /**
@@ -139,13 +142,19 @@ internal class Box(
             data.fill(0u, start, start + size)
         }
 
-        erasePokemonData(19.dataOfs, PokemonDataSize)
-        erasePokemonData(19.trainerNameOfs, NameSize)
-        erasePokemonData(19.nameOfs, NameSize)
+        erasePokemonData(endSlot.dataOfs, PokemonDataSize)
+        erasePokemonData(endSlot.trainerNameOfs, NameSize)
+        erasePokemonData(endSlot.nameOfs, NameSize)
     }
 
-    private val Int.speciesOfs: Int get() = startOffset + 0x1 + this
-    private val Int.dataOfs: Int get() = startOffset + 0x16 + (PokemonDataSize * this)
-    private val Int.trainerNameOfs: Int get() = startOffset + 0x2AA + (NameSize * this)
-    private val Int.nameOfs: Int get() = startOffset + 0x386 + (NameSize * this)
+    // don't use this value to export/import pokemon. Use PokemonDataSize instead
+    private val pokemonSize = if (index.isParty) PokemonPartyDataSize else PokemonDataSize
+
+    private val trainerNameOffset = startOffset + if (index.isParty) 0x110 else 0x2AA
+    private val nameOffset = startOffset + if (index.isParty) 0x152 else 0x386
+    private val dataOffset = startOffset + if (index.isParty) 0x8 else 0x16
+
+    private val Int.dataOfs: Int get() = dataOffset + (pokemonSize * this)
+    private val Int.trainerNameOfs: Int get() = trainerNameOffset + (NameSize * this)
+    private val Int.nameOfs: Int get() = nameOffset + (NameSize * this)
 }
