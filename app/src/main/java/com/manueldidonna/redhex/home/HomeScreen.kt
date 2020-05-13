@@ -43,6 +43,7 @@ private sealed class HomeAction {
     object IncreaseBoxIndex : HomeAction()
     object DecreaseBoxIndex : HomeAction()
     data class DeleteSlot(val slot: Int) : HomeAction()
+    data class SwapPokemon(val first: Pokemon.Position, val second: Pokemon.Position) : HomeAction()
 }
 
 interface HomeEvents {
@@ -93,6 +94,11 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
                 pokemonPreviews.value =
                     getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
             }
+            is SwapPokemon -> {
+                saveData.swapPokemon(action.first, action.second)
+                pokemonPreviews.value =
+                    getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
+            }
         }
     }
 
@@ -121,10 +127,16 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
             isPokemonEmpty = currentStorage.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
             dismiss = { state.selectedPokemonIndex = -1 },
             movePokemon = {
-                state.movingPokemonPosition = Pokemon.Position(
+                val position = Pokemon.Position(
                     index = state.currentStorageIndex,
                     slot = state.selectedPokemonIndex
                 )
+                if (state.movingPokemonPosition != null) {
+                    executeAction(SwapPokemon(state.movingPokemonPosition!!, position))
+                    state.movingPokemonPosition = null
+                } else {
+                    state.movingPokemonPosition = position
+                }
             },
             deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) },
             viewPokemon = {

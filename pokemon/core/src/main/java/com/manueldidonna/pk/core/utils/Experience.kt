@@ -22,14 +22,14 @@ fun getExperienceGroup(speciesId: Int): ExperienceGroup {
     }
 }
 
-fun getLevel(experiencePoints: Int, group: ExperienceGroup): Int {
+fun getLevel(experience: Int, group: ExperienceGroup): Int {
     // fast path for level 100
-    if (experiencePoints >= ExperiencePointsPerGrowth[99 * 6 + group.value])
+    if (experience >= ExperiencePointsPerGrowth[99 * 6 + group.value])
         return 100
 
     // Iterate upwards to find the level
     var level = 0
-    while (experiencePoints >= ExperiencePointsPerGrowth[level * 6 + group.value])
+    while (experience >= ExperiencePointsPerGrowth[level * 6 + group.value])
         ++level
     return level
 }

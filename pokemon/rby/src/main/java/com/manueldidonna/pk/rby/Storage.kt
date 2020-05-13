@@ -98,6 +98,11 @@ internal class Storage(
             // Set Pokemon Names
             copyInto(data, coercedSlot.nameOfs, PokemonDataSize + NameSize)
         }
+        getMutablePokemon(slot).run {
+            data[startOffset + 0x1 + coercedSlot] = speciesId.toUByte()
+            // recalculate level from exp if pokemon is moved from party to box
+            mutator.experiencePoints(experiencePoints)
+        }
         return true
     }
 

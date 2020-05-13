@@ -5,11 +5,9 @@ import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.isParty
 import com.manueldidonna.pk.core.utils.getExperienceGroup
+import com.manueldidonna.pk.core.utils.getExperiencePoints
 import com.manueldidonna.pk.core.utils.getLevel
-import com.manueldidonna.pk.rby.utils.getGameBoySpecies
-import com.manueldidonna.pk.rby.utils.getGameBoyString
-import com.manueldidonna.pk.rby.utils.readBigEndianInt
-import com.manueldidonna.pk.rby.utils.readBigEndianUShort
+import com.manueldidonna.pk.rby.utils.*
 
 /**
  * 0x00 0x1 - species ID
@@ -56,11 +54,6 @@ internal class Pokemon(
         require(startOffset != 0 || data.size == PokemonSize) {
             "This instance is neither mutable or immutable"
         }
-    }
-
-    override val mutator: MutablePokemon.Mutator by lazy {
-        require(startOffset != 0) { "This Pokemon instance is read-only" }
-        PokemonMutator(data, startOffset, trainerNameOffset, pokemonNameOffset, index.isParty)
     }
 
     override val position by lazy { Pokemon.Position(index, slot) }
@@ -137,6 +130,71 @@ internal class Pokemon(
 
             override val specialDefense: Int
                 get() = specialAttack
+        }
+    }
+
+    override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
+
+    inner class Mutator : MutablePokemon.Mutator {
+
+        init {
+            require(startOffset != 0) { "This Pokemon instance is read-only" }
+        }
+
+        override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
+            // TODO: value must be a national id. Convert to  g1 species id. Set type 1 and 2
+            // data[speciesIdOffset] = value.toUByte()
+            // data[dataOffset] = value.toUByte()
+        }
+
+        override fun trainerId(value: UInt): MutablePokemon.Mutator = apply {
+            data.writeBidEndianShort(startOffset + 0xC, value.toShort())
+        }
+
+        override fun nickname(value: String): MutablePokemon.Mutator = apply {
+            setGameBoyString(value, 10, false, 11).copyInto(data, pokemonNameOffset)
+        }
+
+        override fun trainerName(value: String): MutablePokemon.Mutator = apply {
+            setGameBoyString(value, 7, false, 11).copyInto(data, trainerNameOffset)
+        }
+
+        override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
+            data.writeBidEndianInt(startOffset + 0xE, value shl 8, write3Bytes = true)
+            val newLevel = getLevel(value, getExperienceGroup(speciesId))
+            if (newLevel != level) {
+                level(newLevel)
+            }
+        }
+
+        override fun level(value: Int): MutablePokemon.Mutator = apply {
+            val coercedLevel = value.coerceIn(1, 100)
+            data[startOffset + 0x3] = coercedLevel.toUByte()
+            if (index.isParty) {
+                data[startOffset + 0x21] = coercedLevel.toUByte()
+            }
+            val experienceGroup = getExperienceGroup(speciesId)
+            val levelFromExp = getLevel(experiencePoints, experienceGroup)
+            if (levelFromExp != value) {
+                experiencePoints(getExperiencePoints(value, experienceGroup))
+            }
+        }
+
+        override fun moveId(id: Int, moveIndex: Int): MutablePokemon.Mutator = apply {
+            require(moveIndex in 0..3) { "Move index must be in 0..3" }
+            data[startOffset + 0x08 + moveIndex] = id.toUByte()
+            movePowerPoints(moveIndex = moveIndex, moveId = id, points = 0)
+        }
+
+        override fun movePowerPoints(
+            moveIndex: Int,
+            moveId: Int,
+            points: Int
+        ): MutablePokemon.Mutator = apply {
+            require(moveIndex in 0..3) { "Move index must be in 0..3" }
+            val ppIndex = startOffset + 0X1D + moveIndex
+            val realPoints = if (moveId > 0) getPoiwerPoints(moveId) else points.coerceAtMost(63)
+            data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
         }
     }
 }

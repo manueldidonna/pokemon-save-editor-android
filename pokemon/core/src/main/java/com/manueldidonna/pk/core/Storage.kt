@@ -25,7 +25,7 @@ inline val StorageIndex.isParty: Boolean get() = value == StorageIndex.Party.val
 
 inline class StorageIndex(val value: Int) {
 
-    inline fun nextIndex(boxCounts: Int): StorageIndex {
+    fun nextIndex(boxCounts: Int): StorageIndex {
         return when (value) {
             Party.value -> StorageIndex(0)
             in 0 until boxCounts - 1 -> StorageIndex(value + 1)
@@ -33,7 +33,7 @@ inline class StorageIndex(val value: Int) {
         }
     }
 
-    inline fun previousIndex(boxCounts: Int): StorageIndex {
+    fun previousIndex(boxCounts: Int): StorageIndex {
         return when (value) {
             Party.value -> StorageIndex(boxCounts - 1)
             in 1 until boxCounts -> StorageIndex(value - 1)
