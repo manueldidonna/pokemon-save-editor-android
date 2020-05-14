@@ -41,7 +41,7 @@ fun PokemonDetailsScreen(
                 Species(pokemon = pokemon)
                 Experience(pokemon = pokemon)
                 Divider(color = dividerColor())
-                PokemonMoves(pokemon)
+                PokemonMovesEditor(pokemon)
             }
         }
     }

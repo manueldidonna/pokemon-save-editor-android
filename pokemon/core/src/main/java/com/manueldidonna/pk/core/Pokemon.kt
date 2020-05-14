@@ -28,6 +28,7 @@ interface Pokemon {
     interface Moves {
         fun getId(index: Int): Int
         fun getPowerPoints(index: Int): Int
+        fun getUps(index: Int): Int
     }
 
     val iV: IndividualValues
@@ -75,6 +76,8 @@ interface MutablePokemon : Pokemon {
          * Points should be coerced to the maximum allowed value
          * Pass -1 as moveId to ignore the maximum allowed points of a specific move
          */
-        fun movePowerPoints(moveIndex: Int,moveId: Int, points: Int): Mutator
+        fun movePowerPoints(moveIndex: Int, moveId: Int, points: Int): Mutator
+
+        fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
     }
 }

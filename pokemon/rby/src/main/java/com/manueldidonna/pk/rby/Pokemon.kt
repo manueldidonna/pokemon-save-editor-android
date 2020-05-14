@@ -102,6 +102,11 @@ internal class Pokemon(
                 require(index in 0..3) { "Move index must be in 0..3" }
                 return data[startOffset + 0x1D + index].toInt() and 0x3F
             }
+
+            override fun getUps(index: Int): Int {
+                require(index in 0..3) { "Move index must be in 0..3" }
+                return (data[startOffset + 0x1D + index].toInt() and 0xC0) ushr 6
+            }
         }
     }
 
@@ -193,8 +198,23 @@ internal class Pokemon(
         ): MutablePokemon.Mutator = apply {
             require(moveIndex in 0..3) { "Move index must be in 0..3" }
             val ppIndex = startOffset + 0X1D + moveIndex
-            val realPoints = if (moveId > 0) getPoiwerPoints(moveId) else points.coerceAtMost(63)
+            val realPoints = if (moveId > 0) getPoiwerPoints(moveId) else points.coerceIn(0, 63)
             data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
+        }
+
+        override fun movePowerPointUps(
+            moveIndex: Int,
+            moveId: Int,
+            ups: Int
+        ): MutablePokemon.Mutator = apply {
+            require(moveIndex in 0..3) { "Move index must be in 0..3" }
+            val coercedUps = ups.coerceIn(0, 3)
+            val upsIndex = startOffset + 0X1D + moveIndex
+            data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((coercedUps and 0x3) shl 6).toUByte()
+            if (moveId > 0) {
+                val points = getPoiwerPoints(moveId)
+                movePowerPoints(moveIndex, moveId = -1, points = points + (points * coercedUps / 5))
+            }
         }
     }
 }
