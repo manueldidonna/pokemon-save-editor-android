@@ -9,6 +9,8 @@ interface SaveData {
 
     fun getMutableStorage(index: StorageIndex): MutableStorage
 
+    fun getPokedex(): Pokedex
+
     fun exportToBytes(): UByteArray
 
     interface Factory {

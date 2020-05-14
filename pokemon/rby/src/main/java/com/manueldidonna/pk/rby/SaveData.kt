@@ -3,6 +3,7 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.MutableStorage
 import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 import com.manueldidonna.pk.core.Storage as CoreStorage
 
@@ -44,6 +45,10 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
         return if (index == currentBoxIndex) CurrentBoxOffset else {
             if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
         }
+    }
+
+    override fun getPokedex(): CorePokedex {
+        return Pokedex(data)
     }
 
     /**
