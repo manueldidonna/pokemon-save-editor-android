@@ -14,7 +14,13 @@ interface Pokedex {
         val speciesId: Int,
         val isSeen: Boolean,
         val isOwned: Boolean
-    )
+    ) {
+        companion object {
+            fun neverSeen(speciesId: Int) = Entry(speciesId, isSeen = false, isOwned = false)
+            fun onlySeen(speciesId: Int): Entry = Entry(speciesId, isSeen = true, isOwned = false)
+            fun owned(speciesId: Int): Entry = Entry(speciesId, isSeen = true, isOwned = true)
+        }
+    }
 }
 
 fun Pokedex.getAllEntries(): List<Pokedex.Entry> {

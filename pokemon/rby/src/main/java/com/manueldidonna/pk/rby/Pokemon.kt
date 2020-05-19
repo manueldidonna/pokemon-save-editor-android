@@ -3,15 +3,31 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.info.getExperienceGroup
+import com.manueldidonna.pk.core.info.getExperiencePoints
+import com.manueldidonna.pk.core.info.getLevel
 import com.manueldidonna.pk.core.isParty
-import com.manueldidonna.pk.core.utils.getExperienceGroup
-import com.manueldidonna.pk.core.utils.getExperiencePoints
-import com.manueldidonna.pk.core.utils.getLevel
+import com.manueldidonna.pk.rby.converter.getGameBoySpecies
+import com.manueldidonna.pk.rby.converter.getGameBoyString
+import com.manueldidonna.pk.rby.converter.getNationalSpecies
+import com.manueldidonna.pk.rby.converter.setGameBoyString
+import com.manueldidonna.pk.rby.info.*
 import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.rby.utils.NameSize
+import com.manueldidonna.pk.rby.utils.PokemonDataSize
+import com.manueldidonna.pk.rby.utils.PokemonSize
+import com.manueldidonna.pk.rby.utils.readBigEndianInt
+import com.manueldidonna.pk.rby.utils.readBigEndianUShort
+import com.manueldidonna.pk.rby.utils.writeBidEndianInt
+import com.manueldidonna.pk.rby.utils.writeBidEndianShort
 
 /**
  * 0x00 0x1 - species ID
+ * 0x01 0x2 - current HP
  * 0x03 0x1 - level
+ * 0x05 0x1 - type 1
+ * 0x06 0x1 - type 2
+ * 0x07 0x1 - catch rate/held item (for gen 2 compatibility)
  * 0x08 0x1 - Index number of move 1
  * 0x09 0x1 - Index number of move 2
  * 0x0A 0x1 - Index number of move 3
@@ -37,6 +53,7 @@ import com.manueldidonna.pk.rby.utils.*
  */
 internal class Pokemon(
     private val data: UByteArray,
+    private val speciesOffset: Int,
     private val startOffset: Int,
     private val trainerNameOffset: Int,
     private val pokemonNameOffset: Int,
@@ -46,7 +63,8 @@ internal class Pokemon(
 
     companion object {
         fun newImmutableInstance(data: UByteArray, index: StorageIndex, slot: Int): Pokemon {
-            return Pokemon(data, 0, PokemonDataSize, PokemonDataSize + NameSize, index, slot)
+            require(data.size == PokemonSize) { "Data size is different than $PokemonSize" }
+            return Pokemon(data, 0, 0, PokemonDataSize, PokemonDataSize + NameSize, index, slot)
         }
     }
 
@@ -59,7 +77,7 @@ internal class Pokemon(
     override val position by lazy { Pokemon.Position(index, slot) }
 
     override val speciesId: Int
-        get() = getGameBoySpecies(data[startOffset].toInt())
+        get() = getNationalSpecies(data[startOffset].toInt())
 
     override val nickname: String
         get() = getGameBoyString(data, pokemonNameOffset, stringLength = 11, isJapanese = false)
@@ -147,9 +165,19 @@ internal class Pokemon(
         }
 
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
-            // TODO: value must be a national id. Convert to  g1 species id. Set type 1 and 2
-            // data[speciesIdOffset] = value.toUByte()
-            // data[dataOffset] = value.toUByte()
+            require(value in 1..151) { "Not supported species id: $value" }
+            // set species id
+            data[speciesOffset] = getGameBoySpecies(value).toUByte()
+            data[startOffset] = getGameBoySpecies(value).toUByte()
+            // set cache rate
+            // TODO: catch rate doesn't change with evolution. Check it!
+            data[startOffset + 0x7] = getCatchRate(value).toUByte()
+            // set types
+            val firstType = getFirstType(value)
+            data[startOffset + 0x5] = firstType.value.toUByte()
+            data[startOffset + 0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
+            // set hp to 0 -- TODO: avoid to reset HP.
+            data.writeBidEndianShort(startOffset + 0x1, 0)
         }
 
         override fun trainerId(value: UInt): MutablePokemon.Mutator = apply {
@@ -198,7 +226,7 @@ internal class Pokemon(
         ): MutablePokemon.Mutator = apply {
             require(moveIndex in 0..3) { "Move index must be in 0..3" }
             val ppIndex = startOffset + 0X1D + moveIndex
-            val realPoints = if (moveId > 0) getPoiwerPoints(moveId) else points.coerceIn(0, 63)
+            val realPoints = if (moveId > 0) getPowerPoints(moveId) else points.coerceIn(0, 63)
             data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
         }
 
@@ -212,7 +240,7 @@ internal class Pokemon(
             val upsIndex = startOffset + 0X1D + moveIndex
             data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((coercedUps and 0x3) shl 6).toUByte()
             if (moveId > 0) {
-                val points = getPoiwerPoints(moveId)
+                val points = getPowerPoints(moveId)
                 movePowerPoints(moveIndex, moveId = -1, points = points + (points * coercedUps / 5))
             }
         }

@@ -3,6 +3,8 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.MutableStorage
 import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.rby.utils.BoxSize
+import com.manueldidonna.pk.rby.utils.PartySize
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 import com.manueldidonna.pk.core.Storage as CoreStorage

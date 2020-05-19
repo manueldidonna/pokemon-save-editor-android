@@ -1,7 +1,6 @@
-package com.manueldidonna.pk.rby.utils
+package com.manueldidonna.pk.rby.info
 
-// TODO: pp-ups: Int
-internal fun getPoiwerPoints(moveId: Int): Int {
+internal fun getPowerPoints(moveId: Int): Int {
     return MovePowerPoints[moveId].toInt()
 }
 

@@ -88,6 +88,7 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
                 Surface {
                     PokemonDetailsScreen(
                         pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
+                        pokedex = saveData.getPokedex(),
                         listener = this
                     )
                 }

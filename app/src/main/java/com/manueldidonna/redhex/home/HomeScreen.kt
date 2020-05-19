@@ -29,6 +29,7 @@ import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
 import com.manueldidonna.redhex.common.ui.DialogItem
 import com.manueldidonna.redhex.common.ui.DialogMenu
+import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import com.manueldidonna.redhex.home.HomeAction.*
 import java.io.File
@@ -116,7 +117,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         HomeToolbar(
             // TODO: there is a bug with zIndex. Check again in dev-12
             // It doesn't receive cliks if positioned before the views that it overlaps
-            modifier = Modifier.preferredHeight(56.dp).zIndex(8f).gravity(Alignment.TopCenter),
+            modifier = Modifier.preferredHeight(ToolbarHeight).zIndex(8f).gravity(Alignment.TopCenter),
             title = currentStorage.name,
             onBack = { executeAction(DecreaseBoxIndex) },
             onForward = { executeAction(IncreaseBoxIndex) }

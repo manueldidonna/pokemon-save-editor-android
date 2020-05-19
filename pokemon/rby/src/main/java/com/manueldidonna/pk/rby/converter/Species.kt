@@ -1,6 +1,10 @@
-package com.manueldidonna.pk.rby.utils
+package com.manueldidonna.pk.rby.converter
 
 internal fun getGameBoySpecies(valueToConvert: Int): Int {
+    return GameBoySpecies[valueToConvert].toInt()
+}
+
+internal fun getNationalSpecies(valueToConvert: Int): Int {
     return GlobalNationalSpecies[valueToConvert].toInt()
 }
 

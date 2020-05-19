@@ -49,9 +49,9 @@ fun PokedexScreen(modifier: Modifier = Modifier, pokedex: Pokedex) {
                 id = entry.speciesId,
                 onValueChange = {
                     val newEntry = when {
-                        entry.isOwned -> entry.copy(isSeen = false, isOwned = false)
-                        entry.isSeen -> entry.copy(isOwned = true)
-                        else -> entry.copy(isSeen = true)
+                        entry.isOwned -> Pokedex.Entry.neverSeen(entry.speciesId)
+                        entry.isSeen -> Pokedex.Entry.owned(entry.speciesId)
+                        else -> Pokedex.Entry.onlySeen(entry.speciesId)
                     }
                     pokedex.setEntry(newEntry)
                     entries[newEntry.speciesId - 1] = newEntry

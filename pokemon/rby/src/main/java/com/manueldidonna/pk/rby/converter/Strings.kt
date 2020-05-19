@@ -1,4 +1,4 @@
-package com.manueldidonna.pk.rby.utils
+package com.manueldidonna.pk.rby.converter
 
 private const val G1TradeOT = '*'
 

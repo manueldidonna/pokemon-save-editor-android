@@ -106,7 +106,7 @@ private fun MoveDetails(
     increasePoints: () -> Unit,
     decreasePoints: () -> Unit
 ) {
-    val emphasis = EmphasisAmbient.current.run { if (moveName.isNotEmpty()) medium else disabled }
+    val emphasis = EmphasisAmbient.current.run { if (moveName.isNotEmpty()) high else disabled }
     Row(
         verticalGravity = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -140,7 +140,7 @@ private fun PowerPointsCounter(points: Int, increase: (() -> Unit)?, decrease: (
             text = points.toString(),
             modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
             style = MaterialTheme.typography.body2,
-            color = EmphasisAmbient.current.medium.emphasize(MaterialTheme.colors.onSurface)
+            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface)
         )
         CounterButton(icon = Icons.TwoTone.Add, onClick = increase)
     }

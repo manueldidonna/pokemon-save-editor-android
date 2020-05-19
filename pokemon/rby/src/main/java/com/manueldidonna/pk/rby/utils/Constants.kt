@@ -1,4 +1,4 @@
-package com.manueldidonna.pk.rby
+package com.manueldidonna.pk.rby.utils
 
 internal const val BoxSize = 0x462
 

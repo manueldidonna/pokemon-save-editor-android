@@ -4,6 +4,10 @@ import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.MutableStorage
 import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.rby.utils.NameSize
+import com.manueldidonna.pk.rby.utils.PokemonDataSize
+import com.manueldidonna.pk.rby.utils.PokemonPartyDataSize
+import com.manueldidonna.pk.rby.utils.PokemonSize
 
 /**
  * Party and Box have the same structure. Box has 20 slots, Party has 6 slots.
@@ -42,6 +46,7 @@ internal class Storage(
         require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
         return Pokemon(
             data = data,
+            speciesOffset = startOffset + 1 + 1 * slot,
             startOffset = slot.dataOfs,
             trainerNameOffset = slot.trainerNameOfs,
             pokemonNameOffset = slot.nameOfs,
@@ -64,7 +69,9 @@ internal class Storage(
             }
             // Copy Trainer Name
             slot.trainerNameOfs.let { ofs ->
-                data.copyInto(this, PokemonDataSize, ofs, ofs + NameSize)
+                data.copyInto(this,
+                    PokemonDataSize, ofs, ofs + NameSize
+                )
             }
             // Copy Pokemon Name
             slot.nameOfs.let { ofs ->
@@ -92,9 +99,13 @@ internal class Storage(
         data[startOffset + 0x1 + coercedSlot] = immutablePokemon.speciesId.toUByte()
         bytes.apply {
             // Set Pokemon Box Data
-            copyInto(data, coercedSlot.dataOfs, 0, PokemonDataSize)
+            copyInto(data, coercedSlot.dataOfs, 0,
+                PokemonDataSize
+            )
             // Set Trainer Name
-            copyInto(data, coercedSlot.trainerNameOfs, PokemonDataSize, PokemonDataSize + NameSize)
+            copyInto(data, coercedSlot.trainerNameOfs,
+                PokemonDataSize, PokemonDataSize + NameSize
+            )
             // Set Pokemon Names
             copyInto(data, coercedSlot.nameOfs, PokemonDataSize + NameSize)
         }
@@ -130,14 +141,18 @@ internal class Storage(
 
             val startSlot = slot + 1
 
-            movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs, PokemonDataSize)
+            movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs,
+                PokemonDataSize
+            )
             movePokemonData(
                 slot.trainerNameOfs,
                 startSlot.trainerNameOfs,
                 endSlot.trainerNameOfs,
                 NameSize
             )
-            movePokemonData(slot.nameOfs, startSlot.nameOfs, endSlot.nameOfs, NameSize)
+            movePokemonData(slot.nameOfs, startSlot.nameOfs, endSlot.nameOfs,
+                NameSize
+            )
         }
 
         /**

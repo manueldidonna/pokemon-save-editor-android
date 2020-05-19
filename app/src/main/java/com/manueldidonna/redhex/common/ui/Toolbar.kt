@@ -8,8 +8,12 @@ import androidx.ui.foundation.drawBackground
 import androidx.ui.layout.*
 import androidx.ui.material.Divider
 import androidx.ui.material.MaterialTheme
+import androidx.ui.unit.Dp
+import androidx.ui.unit.dp
 import com.manueldidonna.redhex.dividerColor
 import com.manueldidonna.redhex.translucentSurfaceColor
+
+val ToolbarHeight: Dp = 56.dp
 
 @Composable
 fun TranslucentToolbar(
