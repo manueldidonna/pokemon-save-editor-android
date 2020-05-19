@@ -6,4 +6,6 @@ internal class EnglishPokemonResources : PokemonResources {
     override val natures: PokemonResources.Natures = EnglishNatures()
 
     override val moves: PokemonResources.Moves = EnglishMoves()
+
+    override val species: PokemonResources.Species = EnglishSpecies()
 }

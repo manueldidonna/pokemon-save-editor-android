@@ -12,7 +12,7 @@ object Libs {
 
     object Versions {
         const val kotlin = "1.3.70"
-        const val compose = "0.1.0-dev10"
+        const val compose = "0.1.0-dev11"
     }
 
     object Kotlin {
@@ -29,6 +29,7 @@ object Libs {
         const val materialComponents = "com.google.android.material:material:1.2.0-alpha05"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
         const val coil = "io.coil-kt:coil:0.10.1"
+        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.1"
     }
 
     object AndroidX {

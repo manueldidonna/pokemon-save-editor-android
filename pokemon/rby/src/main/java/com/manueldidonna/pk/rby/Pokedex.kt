@@ -2,15 +2,15 @@ package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 
+/**
+ * Pokemon are indexed by their usual Pokedex order,
+ * meaning the order is the same as in the National Pokedex.
+ * However, indexes begin counting at 0, rather than 1
+ */
 internal class Pokedex(private val data: UByteArray) : CorePokedex {
 
     override val pokemonCounts: Int = 151
 
-    /**
-     * Pokemon are indexed by their usual Pokedex order,
-     * meaning the order is the same as in the National Pokedex.
-     * However, indexes begin counting at 0, rather than 1
-     */
     override fun getEntry(speciesId: Int): CorePokedex.Entry {
         require(speciesId in 1..151) { "Species Id not supported: $speciesId" }
         val bitIndex = (speciesId - 1) and 7

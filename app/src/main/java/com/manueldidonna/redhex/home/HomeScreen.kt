@@ -7,9 +7,11 @@ import androidx.compose.stateFor
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
-import androidx.ui.foundation.*
+import androidx.ui.foundation.Clickable
+import androidx.ui.foundation.Icon
+import androidx.ui.foundation.Text
+import androidx.ui.foundation.VerticalScroller
 import androidx.ui.layout.*
-import androidx.ui.material.Divider
 import androidx.ui.material.IconButton
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
@@ -27,9 +29,8 @@ import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
 import com.manueldidonna.redhex.common.ui.DialogItem
 import com.manueldidonna.redhex.common.ui.DialogMenu
-import com.manueldidonna.redhex.dividerColor
+import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import com.manueldidonna.redhex.home.HomeAction.*
-import com.manueldidonna.redhex.translucentSurfaceColor
 import java.io.File
 
 @Model
@@ -102,10 +103,10 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         }
     }
 
-    Box(modifier = modifier) {
+    Stack(modifier = modifier) {
         VerticalScroller {
             Column {
-                Spacer(modifier = Modifier.preferredHeight(72.dp))
+                Spacer(modifier = Modifier.preferredHeight(56.dp))
                 PokemonList(pokemon = pokemonPreviews.value) { slot ->
                     state.selectedPokemonIndex = slot
                 }
@@ -115,7 +116,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         HomeToolbar(
             // TODO: there is a bug with zIndex. Check again in dev-12
             // It doesn't receive cliks if positioned before the views that it overlaps
-            modifier = Modifier.preferredHeight(56.dp).zIndex(8f),
+            modifier = Modifier.preferredHeight(56.dp).zIndex(8f).gravity(Alignment.TopCenter),
             title = currentStorage.name,
             onBack = { executeAction(DecreaseBoxIndex) },
             onForward = { executeAction(IncreaseBoxIndex) }
@@ -177,31 +178,19 @@ private fun HomeToolbar(
     onBack: () -> Unit,
     onForward: () -> Unit
 ) {
-    Column(
-        modifier = modifier.drawBackground(color = translucentSurfaceColor()),
-        verticalArrangement = Arrangement.Center,
-        horizontalGravity = Alignment.CenterHorizontally
-    ) {
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.TwoTone.ChevronLeft, tint = MaterialTheme.colors.primary)
-            }
-            Text(
-                modifier = Modifier
-                    .preferredWidthIn(minWidth = 150.dp)
-                    .wrapContentWidth(Alignment.CenterHorizontally),
-                text = title,
-                style = MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.primary)
-            )
-            IconButton(onClick = onForward) {
-                Icon(Icons.TwoTone.ChevronRight, tint = MaterialTheme.colors.primary)
-            }
+    TranslucentToolbar(modifier = modifier, horizontalArrangement = Arrangement.Center) {
+        IconButton(onClick = onBack) {
+            Icon(Icons.TwoTone.ChevronLeft, tint = MaterialTheme.colors.onSurface)
         }
-        Divider(color = dividerColor())
+        Text(
+            modifier = Modifier
+                .preferredWidthIn(minWidth = 150.dp)
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            text = title
+        )
+        IconButton(onClick = onForward) {
+            Icon(Icons.TwoTone.ChevronRight, tint = MaterialTheme.colors.onSurface)
+        }
     }
 }
 

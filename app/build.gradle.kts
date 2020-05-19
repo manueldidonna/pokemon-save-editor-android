@@ -57,4 +57,5 @@ dependencies {
     implementation(Libs.Android.materialComponents)
     implementation(Libs.KotlinX.coroutinesAndroid)
     implementation(Libs.Android.coil)
+    implementation(Libs.Android.accompanistCoil)
 }

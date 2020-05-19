@@ -16,6 +16,13 @@ interface PokemonResources {
         fun getAllMoves(): List<String>
     }
 
+    val species: Species
+
+    interface Species {
+        fun getSpeciesById(id: Int): String
+        fun getAllSpecies(): List<String>
+    }
+
     companion object {
         val English: PokemonResources = EnglishPokemonResources()
     }

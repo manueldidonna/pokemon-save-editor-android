@@ -16,3 +16,7 @@ interface Pokedex {
         val isOwned: Boolean
     )
 }
+
+fun Pokedex.getAllEntries(): List<Pokedex.Entry> {
+    return List(pokemonCounts) { getEntry(it + 1) }
+}

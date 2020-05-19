@@ -14,9 +14,9 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
 import androidx.ui.material.icons.twotone.Remove
 import androidx.ui.material.ripple.ripple
+import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
-import androidx.ui.unit.sp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
@@ -30,7 +30,7 @@ fun PokemonMovesEditor(pokemon: MutablePokemon) {
     var selectedMove by state { -1 }
     val moves = remember {
         val moves = pokemon.moves
-        modelListOf<Pair<String, Int>>(
+        modelListOf(
             resources.getMoveById(moves.getId(0)) to moves.getPowerPoints(0),
             resources.getMoveById(moves.getId(1)) to moves.getPowerPoints(1),
             resources.getMoveById(moves.getId(2)) to moves.getPowerPoints(2),
@@ -48,15 +48,10 @@ fun PokemonMovesEditor(pokemon: MutablePokemon) {
         moves[index] = moves[index].copy(second = pokemon.moves.getPowerPoints(index))
     }
 
-    Text(
-        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp, start = 24.dp),
-        text = "Moves",
-        color = EmphasisAmbient.current.medium.emphasize(MaterialTheme.colors.onSurface),
-        style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
-    )
+    MovesHeader()
     for (i in 0 until 4) {
         Clickable(onClick = { selectedMove = i }, modifier = Modifier.ripple()) {
-            MoveDetail(
+            MoveDetails(
                 moveName = moves[i].first,
                 points = moves[i].second,
                 upsCount = pokemon.moves.getUps(i),
@@ -78,18 +73,46 @@ fun PokemonMovesEditor(pokemon: MutablePokemon) {
 }
 
 @Composable
-private fun MoveDetail(
+private fun MovesHeader() {
+    val textStyle = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, bottom = 8.dp, start = RowStartPadding, end = RowEndPadding)
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = "Moves",
+            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface),
+            style = textStyle
+        )
+
+        Text(
+            modifier = Modifier.preferredWidth(CounterWidth)
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            text = "PP",
+            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface),
+            style = textStyle
+        )
+    }
+}
+
+@Composable
+private fun MoveDetails(
     moveName: String,
     points: Int,
     upsCount: Int,
     increasePoints: () -> Unit,
     decreasePoints: () -> Unit
 ) {
-    val emphasis = EmphasisAmbient.current.run { if (moveName.isNotEmpty()) high else medium }
+    val emphasis = EmphasisAmbient.current.run { if (moveName.isNotEmpty()) medium else disabled }
     Row(
         verticalGravity = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(start = 24.dp, end = 16.dp).preferredHeight(56.dp)
+        modifier = Modifier
+            .preferredHeight(56.dp)
+            .padding(start = RowStartPadding, end = RowEndPadding)
     ) {
         Text(
             modifier = Modifier.weight(1f),
@@ -108,13 +131,16 @@ private fun MoveDetail(
 
 @Composable
 private fun PowerPointsCounter(points: Int, increase: (() -> Unit)?, decrease: (() -> Unit)?) {
-    Row(verticalGravity = Alignment.CenterVertically) {
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier.preferredWidth(CounterWidth)
+    ) {
         CounterButton(icon = Icons.TwoTone.Remove, onClick = decrease)
         Text(
-            text = "$points PP",
-            modifier = Modifier.preferredWidth(60.dp).wrapContentWidth(Alignment.CenterHorizontally),
+            text = points.toString(),
+            modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
             style = MaterialTheme.typography.body2,
-            color = MaterialTheme.colors.onSurface
+            color = EmphasisAmbient.current.medium.emphasize(MaterialTheme.colors.onSurface)
         )
         CounterButton(icon = Icons.TwoTone.Add, onClick = increase)
     }
@@ -122,7 +148,7 @@ private fun PowerPointsCounter(points: Int, increase: (() -> Unit)?, decrease: (
 
 @Composable
 private fun CounterButton(icon: VectorAsset, onClick: (() -> Unit)?) {
-    val emphasis = EmphasisAmbient.current.run { if (onClick == null) disabled else high }
+    val emphasis = EmphasisAmbient.current.run { if (onClick != null) high else disabled }
     if (onClick != null) {
         IconButton(onClick = onClick) {
             Icon(asset = icon, tint = emphasis.emphasize(MaterialTheme.colors.onSurface))
@@ -150,15 +176,8 @@ private inline fun MovesChooser(
     }
 }
 
-@Preview(widthDp = 400)
-@Composable
-private fun PreviewMoveRow() {
-    PreviewScreen {
-        MoveDetail(
-            moveName = "Test move",
-            points = 3,
-            upsCount = 2,
-            increasePoints = {},
-            decreasePoints = {})
-    }
-}
+private val CounterWidth = 140.dp
+
+private val RowEndPadding = 16.dp
+
+private val RowStartPadding = 24.dp

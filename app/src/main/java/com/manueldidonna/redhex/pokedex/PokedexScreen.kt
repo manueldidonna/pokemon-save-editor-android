@@ -1,0 +1,116 @@
+package com.manueldidonna.redhex.pokedex
+
+import androidx.compose.Composable
+import androidx.compose.frames.ModelList
+import androidx.compose.remember
+import androidx.ui.core.Alignment
+import androidx.ui.core.Modifier
+import androidx.ui.foundation.Clickable
+import androidx.ui.foundation.Image
+import androidx.ui.foundation.Text
+import androidx.ui.graphics.ColorFilter
+import androidx.ui.layout.*
+import androidx.ui.material.EmphasisAmbient
+import androidx.ui.material.MaterialTheme
+import androidx.ui.material.ripple.ripple
+import androidx.ui.res.imageResource
+import androidx.ui.text.font.FontWeight
+import androidx.ui.unit.dp
+import com.manueldidonna.pk.core.Pokedex
+import com.manueldidonna.pk.core.getAllEntries
+import com.manueldidonna.redhex.R
+import com.manueldidonna.redhex.common.PokemonResourcesAmbient
+import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
+import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
+import com.manueldidonna.redhex.common.ui.Label
+import com.manueldidonna.redhex.common.ui.TranslucentToolbar
+import com.manueldidonna.redhex.common.ui.VerticalList
+import dev.chrisbanes.accompanist.coil.CoilImage
+import java.io.File
+
+@Composable
+fun PokedexScreen(modifier: Modifier = Modifier, pokedex: Pokedex) {
+    val species = PokemonResourcesAmbient.current.species
+    val entries = remember {
+        ModelList<Pokedex.Entry>().apply { addAll(pokedex.getAllEntries()) }
+    }
+
+    val spritesRetriever = PokemonSpritesRetrieverAmbient.current
+
+    Stack(modifier) {
+        VerticalList(data = entries) { entry ->
+            if (entry.speciesId == 1)
+                Spacer(modifier = Modifier.preferredHeight(56.dp))
+            PokedexEntry(
+                species = species.getSpeciesById(entry.speciesId),
+                spriteSource = File(spritesRetriever.getSpritesPathFromId(entry.speciesId)),
+                isSeen = entry.isSeen,
+                isOwned = entry.isOwned,
+                id = entry.speciesId,
+                onValueChange = {
+                    val newEntry = when {
+                        entry.isOwned -> entry.copy(isSeen = false, isOwned = false)
+                        entry.isSeen -> entry.copy(isOwned = true)
+                        else -> entry.copy(isSeen = true)
+                    }
+                    pokedex.setEntry(newEntry)
+                    entries[newEntry.speciesId - 1] = newEntry
+                }
+            )
+        }
+        TranslucentToolbar(
+            modifier = Modifier.preferredHeight(56.dp).gravity(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            val seenPercentage =
+                entries.count { it.isSeen }.toDouble() / pokedex.pokemonCounts * 100
+            Text(text = "${seenPercentage.toInt()}% Completed")
+        }
+    }
+}
+
+@Composable
+private fun PokedexEntry(
+    species: String,
+    spriteSource: Any,
+    id: Int,
+    isSeen: Boolean,
+    isOwned: Boolean,
+    onValueChange: () -> Unit
+) {
+    Clickable(onClick = onValueChange, modifier = Modifier.ripple()) {
+        Row(
+            verticalGravity = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().preferredHeight(56.dp)
+        ) {
+            val emphasis = EmphasisAmbient.current.run { if (!isSeen) disabled else medium }
+            Spacer(modifier = Modifier.preferredWidth(16.dp))
+            if (!isSeen) {
+                Image(
+                    modifier = Modifier.pokemonSpriteSize(),
+                    colorFilter = ColorFilter.tint(emphasis.emphasize(MaterialTheme.colors.onSurface)),
+                    asset = imageResource(R.drawable.pokeball_s)
+                )
+            } else {
+                CoilImage(data = spriteSource, modifier = Modifier.pokemonSpriteSize())
+            }
+            Text(
+                text = "#$id",
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp),
+                color = emphasis.emphasize(MaterialTheme.colors.onSurface),
+                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+            )
+            Text(
+                text = species,
+                color = emphasis.emphasize(MaterialTheme.colors.onSurface),
+                style = MaterialTheme.typography.body1
+            )
+            if (isOwned)
+                Label(
+                    modifier = Modifier.padding(start = 24.dp),
+                    text = "Owned",
+                    emphasis = emphasis
+                )
+        }
+    }
+}
