@@ -83,7 +83,7 @@ private fun MovesHeader() {
     ) {
         Text(
             modifier = Modifier.weight(1f),
-            text = "Moves",
+            text = "Current moves",
             color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface),
             style = textStyle
         )
