@@ -34,6 +34,19 @@ interface Pokemon {
     val iV: IndividualValues
 
     interface IndividualValues {
+        val maxAllowedValue: Int
+
+        val health: Int
+        val attack: Int
+        val defense: Int
+        val specialAttack: Int
+        val specialDefense: Int
+        val speed: Int
+    }
+
+    val ev: EffortValues
+
+    interface EffortValues {
         val health: Int
         val attack: Int
         val defense: Int

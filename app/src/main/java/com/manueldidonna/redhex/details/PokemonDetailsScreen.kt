@@ -38,7 +38,7 @@ fun PokemonDetailsScreen(
                 when (selectedTab) {
                     EditorTab.General -> PokemonGeneral(pokemon, pokedex)
                     EditorTab.Moves -> PokemonMoves(pokemon)
-                    EditorTab.Stats -> { }
+                    EditorTab.Stats -> PokemonStats(pokemon)
                 }
             }
         }
@@ -71,7 +71,7 @@ private fun EditorToolbar(
             backgroundColor = Color.Transparent
         )
         TabRow(
-            backgroundColor = translucentSurfaceColor(),
+            backgroundColor = Color.Transparent,
             items = tabs,
             selectedIndex = selectedIndex
         ) { index, tab ->

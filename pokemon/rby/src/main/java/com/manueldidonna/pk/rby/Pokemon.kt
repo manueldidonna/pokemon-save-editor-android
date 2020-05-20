@@ -28,6 +28,7 @@ import com.manueldidonna.pk.rby.utils.*
  * 0x0B 0x1 - Index number of move 4
  * 0x0C 0x2 - trainer ID
  * 0x0E 0x3 - experience points
+ * 0x11 0xA - evs (2 bytes for each EV: hp, attack, defense, speed & special)
  * 0x1b 0x2 - ivs (4 bits for each IV excluding HP)
  * ------------------------
  * (2 bits for applied pp-ups, 6 bits for current PPs)
@@ -57,7 +58,9 @@ internal class Pokemon(
 
     companion object {
         fun newImmutableInstance(data: UByteArray, index: StorageIndex, slot: Int): Pokemon {
-            require(data.size == PokemonSize) { "Data size is different than $PokemonSize" }
+            require(data.size == PokemonSize) {
+                "Data size is different than $PokemonSize"
+            }
             return Pokemon(data, 0, 0, PokemonDataSize, PokemonDataSize + NameSize, index, slot)
         }
     }
@@ -128,6 +131,8 @@ internal class Pokemon(
     override val iV: Pokemon.IndividualValues by lazy {
         object : Pokemon.IndividualValues {
 
+            override val maxAllowedValue: Int = 15
+
             private val DV16: Int = data.readBigEndianUShort(startOffset + 0x1b).toInt()
 
             override val health: Int
@@ -144,6 +149,28 @@ internal class Pokemon(
 
             override val specialAttack: Int
                 get() = DV16 shr 0 and 0xF
+
+            override val specialDefense: Int
+                get() = specialAttack
+        }
+    }
+
+    override val ev: Pokemon.EffortValues by lazy {
+        object : Pokemon.EffortValues {
+            override val health: Int
+                get() = data.readBigEndianUShort(startOffset + 0x11).toInt()
+
+            override val attack: Int
+                get() = data.readBigEndianUShort(startOffset + 0x13).toInt()
+
+            override val defense: Int
+                get() = data.readBigEndianUShort(startOffset + 0x15).toInt()
+
+            override val speed: Int
+                get() = data.readBigEndianUShort(startOffset + 0x17).toInt()
+
+            override val specialAttack: Int
+                get() = data.readBigEndianUShort(startOffset + 0x19).toInt()
 
             override val specialDefense: Int
                 get() = specialAttack
