@@ -1,8 +1,6 @@
 package com.manueldidonna.redhex.details
 
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.state
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.Text
@@ -17,6 +15,7 @@ import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.redhex.dividerColor
+import kotlin.math.roundToInt
 
 @Composable
 fun PokemonStats(pokemon: MutablePokemon) {
@@ -37,51 +36,107 @@ fun PokemonStats(pokemon: MutablePokemon) {
     }
 }
 
+
 @Composable
 private fun IndividualValuesEditorField(pokemon: MutablePokemon) {
-    val iv: Pokemon.IndividualValues by state { pokemon.iV }
+    var health by state(StructurallyEqual) { pokemon.iV.health }
+    var attack by state(StructurallyEqual) { pokemon.iV.attack }
+    var defense by state(StructurallyEqual) { pokemon.iV.defense }
+    var speed by state(StructurallyEqual) { pokemon.iV.speed }
+    var specialAttack by state(StructurallyEqual) { pokemon.iV.specialAttack }
+    var specialDefense by state(StructurallyEqual) { pokemon.iV.specialDefense }
 
-    for (i in 0 until 6) {
-        val ivWithName = iv[i]
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        ) {
-            Text(
-                text = ivWithName.first,
-                style = MaterialTheme.typography.subtitle1,
-                // TODO: remove this fixed width when table will be available again
-                modifier = Modifier.width(100.dp)
-            )
-            Text(
-                text = ivWithName.second.toString(),
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .width(40.dp)
-                    .wrapContentWidth(Alignment.CenterHorizontally),
-                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-            )
-            Slider(
-                modifier = Modifier.weight(1f),
-                value = ivWithName.second.toFloat(),
-                onValueChange = {
+    val maxAllowedValue = pokemon.iV.maxAllowedValue
 
-                },
-                valueRange = 1f..iv.maxAllowedValue.toFloat()
-            )
+    fun updateIvs() {
+        pokemon.iV.let {
+            health = it.health
+            attack = it.attack
+            defense = it.defense
+            speed = it.speed
+            specialAttack = it.specialAttack
+            specialDefense = it.specialDefense
         }
     }
+
+    IndividualValue(
+        name = "Health",
+        value = health,
+        maxValue = maxAllowedValue,
+        onValueChange = { health = it },
+        onChangeEnd = { pokemon.mutator.individualValues(health = health); updateIvs() }
+    )
+    IndividualValue(
+        name = "Attack",
+        value = attack,
+        maxValue = maxAllowedValue,
+        onValueChange = { attack = it },
+        onChangeEnd = { pokemon.mutator.individualValues(attack = attack); updateIvs() }
+    )
+    IndividualValue(
+        name = "Defense",
+        value = defense,
+        maxValue = maxAllowedValue,
+        onValueChange = { defense = it },
+        onChangeEnd = { pokemon.mutator.individualValues(defense = defense); updateIvs() }
+    )
+    IndividualValue(
+        name = "Speed",
+        value = speed,
+        maxValue = maxAllowedValue,
+        onValueChange = { speed = it },
+        onChangeEnd = { pokemon.mutator.individualValues(speed = speed); updateIvs() }
+    )
+    IndividualValue(
+        name = "Sp. Attack",
+        value = specialAttack,
+        maxValue = maxAllowedValue,
+        onValueChange = { specialAttack = it },
+        onChangeEnd = { pokemon.mutator.individualValues(specialAttack = specialAttack); updateIvs() }
+    )
+    IndividualValue(
+        name = "Sp. Defense",
+        value = specialDefense,
+        maxValue = maxAllowedValue,
+        onValueChange = { specialDefense = it },
+        onChangeEnd = { pokemon.mutator.individualValues(specialDefense = specialDefense); updateIvs() }
+    )
+
 }
 
-private operator fun Pokemon.IndividualValues.get(index: Int): Pair<String, Int> {
-    return when (index) {
-        0 -> Pair("Health", health)
-        1 -> Pair("Attack", attack)
-        2 -> Pair("Defense", defense)
-        3 -> Pair("Speed", speed)
-        4 -> Pair("Sp. Attack", specialAttack)
-        5 -> Pair("Sp. Defense", specialDefense)
-        else -> throw IllegalStateException("Bad index: $index")
+@Composable
+private fun IndividualValue(
+    name: String,
+    value: Int,
+    maxValue: Int,
+    onValueChange: (Int) -> Unit,
+    onChangeEnd: () -> Unit
+) {
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 24.dp)
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.subtitle1,
+            // TODO: remove this fixed width when table will be available again
+            modifier = Modifier.width(100.dp)
+        )
+        Text(
+            text = value.toString(),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .width(40.dp)
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
+        )
+        Slider(
+            modifier = Modifier.weight(1f),
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.roundToInt()) },
+            onValueChangeEnd = onChangeEnd,
+            valueRange = 1f..maxValue.toFloat()
+        )
     }
 }
 

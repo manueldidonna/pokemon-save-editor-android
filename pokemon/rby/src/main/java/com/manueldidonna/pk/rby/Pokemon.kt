@@ -133,7 +133,8 @@ internal class Pokemon(
 
             override val maxAllowedValue: Int = 15
 
-            private val DV16: Int = data.readBigEndianUShort(startOffset + 0x1b).toInt()
+            private val DV16: Int
+                get() = data.readBigEndianUShort(startOffset + 0x1b).toInt()
 
             override val health: Int
                 get() = (attack and 1 shl 3) or (defense and 1 shl 2) or (speed and 1 shl 1) or (specialAttack and 1 shl 0)
@@ -269,6 +270,34 @@ internal class Pokemon(
                 val points = getPowerPoints(moveId)
                 movePowerPoints(moveIndex, moveId = -1, points = points + (points * coercedUps / 5))
             }
+        }
+
+        /**
+         * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
+         * If both are greater than -1, [specialDefense] will override [specialAttack]
+         */
+        override fun individualValues(
+            health: Int,
+            attack: Int,
+            defense: Int,
+            speed: Int,
+            specialAttack: Int,
+            specialDefense: Int
+        ) {
+            // health is ignored, in gen 1 it's determined by the other ivs
+            var totalIVs = data.readBigEndianUShort(startOffset + 0x1b).toInt()
+            fun setValue(value: Int, shiftAmount: Int) {
+                if (value >= 0) {
+                    totalIVs = (totalIVs and (0xF shl shiftAmount).inv()) or
+                            (value.coerceAtMost(0xF) shl shiftAmount)
+                }
+            }
+            setValue(attack, shiftAmount = 12)
+            setValue(defense, shiftAmount = 8)
+            setValue(speed, shiftAmount = 4)
+            setValue(specialAttack, shiftAmount = 0)
+            setValue(specialDefense, shiftAmount = 0)
+            data.writeBidEndianShort(startOffset + 0x1B, totalIVs.toShort())
         }
     }
 }

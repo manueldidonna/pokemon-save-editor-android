@@ -92,5 +92,14 @@ interface MutablePokemon : Pokemon {
         fun movePowerPoints(moveIndex: Int, moveId: Int, points: Int): Mutator
 
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
+
+        fun individualValues(
+            health: Int = -1,
+            attack: Int = -1,
+            defense: Int = -1,
+            speed: Int = -1,
+            specialAttack: Int = -1,
+            specialDefense: Int = -1
+        )
     }
 }
