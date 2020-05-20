@@ -19,7 +19,7 @@ fun Modifier.pokemonSpriteSize(): Modifier {
     return preferredSize(PokemonSpriteSize.width, PokemonSpriteSize.height)
 }
 
-val PokemonSpriteSize: Size = Size(48.dp, 32.dp)
+val PokemonSpriteSize: Size = Size(40.dp, 32.dp)
 
 class PokemonSpritesRetriever private constructor(private val spritesFolderPath: String) {
 
