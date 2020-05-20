@@ -14,18 +14,15 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
 import androidx.ui.material.icons.twotone.Remove
 import androidx.ui.material.ripple.ripple
-import androidx.ui.text.font.FontWeight
-import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.resources.PokemonResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.ui.DialogItem
 import com.manueldidonna.redhex.common.ui.DialogMenu
-import com.manueldidonna.redhex.common.ui.PreviewScreen
 
 @Composable
-fun PokemonMovesEditor(pokemon: MutablePokemon) {
+fun PokemonMoves(pokemon: MutablePokemon) {
     val resources = PokemonResourcesAmbient.current.moves
     var selectedMove by state { -1 }
     val moves = remember {
@@ -48,7 +45,6 @@ fun PokemonMovesEditor(pokemon: MutablePokemon) {
         moves[index] = moves[index].copy(second = pokemon.moves.getPowerPoints(index))
     }
 
-    MovesHeader()
     for (i in 0 until 4) {
         Clickable(onClick = { selectedMove = i }, modifier = Modifier.ripple()) {
             MoveDetails(
@@ -69,32 +65,6 @@ fun PokemonMovesEditor(pokemon: MutablePokemon) {
             moves[selectedMove] =
                 resources.getMoveById(moveId) to pokemon.moves.getPowerPoints(selectedMove)
         }
-    }
-}
-
-@Composable
-private fun MovesHeader() {
-    val textStyle = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-    Row(
-        verticalGravity = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 8.dp, start = RowStartPadding, end = RowEndPadding)
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "Current moves",
-            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface),
-            style = textStyle
-        )
-
-        Text(
-            modifier = Modifier.preferredWidth(CounterWidth)
-                .wrapContentWidth(Alignment.CenterHorizontally),
-            text = "PP",
-            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface),
-            style = textStyle
-        )
     }
 }
 
