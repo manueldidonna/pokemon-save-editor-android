@@ -6,6 +6,7 @@ import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.info.getExperienceGroup
 import com.manueldidonna.pk.core.info.getExperiencePoints
 import com.manueldidonna.pk.core.info.getLevel
+import com.manueldidonna.pk.core.info.sanitizeExperiencePoints
 import com.manueldidonna.pk.core.isParty
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getGameBoyString
@@ -13,13 +14,6 @@ import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.converter.setGameBoyString
 import com.manueldidonna.pk.rby.info.*
 import com.manueldidonna.pk.rby.utils.*
-import com.manueldidonna.pk.rby.utils.NameSize
-import com.manueldidonna.pk.rby.utils.PokemonDataSize
-import com.manueldidonna.pk.rby.utils.PokemonSize
-import com.manueldidonna.pk.rby.utils.readBigEndianInt
-import com.manueldidonna.pk.rby.utils.readBigEndianUShort
-import com.manueldidonna.pk.rby.utils.writeBidEndianInt
-import com.manueldidonna.pk.rby.utils.writeBidEndianShort
 
 /**
  * 0x00 0x1 - species ID
@@ -193,8 +187,10 @@ internal class Pokemon(
         }
 
         override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
-            data.writeBidEndianInt(startOffset + 0xE, value shl 8, write3Bytes = true)
-            val newLevel = getLevel(value, getExperienceGroup(speciesId))
+            val experienceGroup = getExperienceGroup(speciesId)
+            val coercedValue = value.coerceAtMost(getExperiencePoints(100, experienceGroup))
+            data.writeBidEndianInt(startOffset + 0xE, coercedValue shl 8, write3Bytes = true)
+            val newLevel = getLevel(coercedValue, experienceGroup)
             if (newLevel != level) {
                 level(newLevel)
             }
@@ -206,10 +202,13 @@ internal class Pokemon(
             if (index.isParty) {
                 data[startOffset + 0x21] = coercedLevel.toUByte()
             }
-            val experienceGroup = getExperienceGroup(speciesId)
-            val levelFromExp = getLevel(experiencePoints, experienceGroup)
-            if (levelFromExp != value) {
-                experiencePoints(getExperiencePoints(value, experienceGroup))
+            val sanitizedExperience = sanitizeExperiencePoints(
+                points = experiencePoints,
+                level = coercedLevel,
+                experienceGroup = getExperienceGroup(speciesId)
+            )
+            if (sanitizedExperience != experiencePoints) {
+                experiencePoints(sanitizedExperience)
             }
         }
 

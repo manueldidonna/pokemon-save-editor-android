@@ -12,6 +12,24 @@ enum class ExperienceGroup(internal val value: Int) {
     // TODO: gen 3 ->  Fluctuating(2)
 }
 
+/**
+ * Return the right amount of experience points, according to [level] and [experienceGroup]
+ */
+fun sanitizeExperiencePoints(points: Int, level: Int, experienceGroup: ExperienceGroup): Int {
+    if (level == 100) {
+        // coerce pokemon experience to the max allowed for his group.
+        // It's a necessary workaround when we change the speciesId with a pokemon
+        // that has a slower experience group
+        return getExperiencePoints(100, experienceGroup)
+    } else {
+        val levelFromExperience = getLevel(points, experienceGroup)
+        if (levelFromExperience != level) {
+            return getExperiencePoints(level, experienceGroup)
+        }
+    }
+    return points
+}
+
 fun getExperienceGroup(speciesId: Int): ExperienceGroup {
     return when {
         FastSpecies.find { it == speciesId } != null -> ExperienceGroup.Fast
