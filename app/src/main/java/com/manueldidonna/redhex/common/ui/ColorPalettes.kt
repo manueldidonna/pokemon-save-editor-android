@@ -5,14 +5,14 @@ import androidx.ui.material.darkColorPalette
 import androidx.ui.material.lightColorPalette
 
 val LightColors = lightColorPalette(
-    primary = Color(0xFF2194f3),
-    primaryVariant = Color(0xFF1E88E5),
-    secondary = Color(0xFFfff079),
-    secondaryVariant = Color(0xFFfff079)
+    primary = Color(0xFFf54149),
+    primaryVariant = Color(0xFFff7775),
+    secondary = Color(0xFF00c5ad),
+    secondaryVariant = Color(0xFF5ff9e0)
 )
 
 val DarkColors = darkColorPalette(
-    primary = Color(0xFF63b4f6),
-    primaryVariant = Color(0xFF90c9f9),
-    secondary = Color(0xFFfff49f)
+    primary = Color(0xFFea696e),
+    primaryVariant = Color(0xFFf39497),
+    secondary = Color(0xFF5ff9e0)
 )
