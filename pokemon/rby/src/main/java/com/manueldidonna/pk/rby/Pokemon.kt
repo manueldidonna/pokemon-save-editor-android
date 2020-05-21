@@ -126,13 +126,10 @@ internal class Pokemon(
     }
 
     /**
-     * [Pokemon.IndividualValues.specialDefense] and [Pokemon.IndividualValues.specialAttack] are equal
+     * [Pokemon.StatisticValues.specialDefense] and [Pokemon.StatisticValues.specialAttack] are equal
      */
-    override val iV: Pokemon.IndividualValues by lazy {
-        object : Pokemon.IndividualValues {
-
-            override val maxAllowedValue: Int = 15
-
+    override val iV: Pokemon.StatisticValues by lazy {
+        object : Pokemon.StatisticValues {
             private val DV16: Int
                 get() = data.readBigEndianUShort(startOffset + 0x1b).toInt()
 
@@ -156,8 +153,8 @@ internal class Pokemon(
         }
     }
 
-    override val ev: Pokemon.EffortValues by lazy {
-        object : Pokemon.EffortValues {
+    override val eV: Pokemon.StatisticValues by lazy {
+        object : Pokemon.StatisticValues {
             override val health: Int
                 get() = data.readBigEndianUShort(startOffset + 0x11).toInt()
 
@@ -243,7 +240,7 @@ internal class Pokemon(
         override fun moveId(id: Int, moveIndex: Int): MutablePokemon.Mutator = apply {
             require(moveIndex in 0..3) { "Move index must be in 0..3" }
             data[startOffset + 0x08 + moveIndex] = id.toUByte()
-            movePowerPoints(moveIndex = moveIndex, moveId = id, points = 0)
+            movePowerPoints(moveIndex = moveIndex, moveId = id)
         }
 
         override fun movePowerPoints(
@@ -252,6 +249,7 @@ internal class Pokemon(
             points: Int
         ): MutablePokemon.Mutator = apply {
             require(moveIndex in 0..3) { "Move index must be in 0..3" }
+            require(moveId != -1 || points != -1) { "moveId or points must be greater than -1" }
             val ppIndex = startOffset + 0X1D + moveIndex
             val realPoints = if (moveId > 0) getPowerPoints(moveId) else points.coerceIn(0, 63)
             data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
@@ -268,7 +266,7 @@ internal class Pokemon(
             data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((coercedUps and 0x3) shl 6).toUByte()
             if (moveId > 0) {
                 val points = getPowerPoints(moveId)
-                movePowerPoints(moveIndex, moveId = -1, points = points + (points * coercedUps / 5))
+                movePowerPoints(moveIndex, points = points + (points * coercedUps / 5))
             }
         }
 
@@ -283,7 +281,7 @@ internal class Pokemon(
             speed: Int,
             specialAttack: Int,
             specialDefense: Int
-        ) {
+        ): MutablePokemon.Mutator = apply {
             // health is ignored, in gen 1 it's determined by the other ivs
             var totalIVs = data.readBigEndianUShort(startOffset + 0x1b).toInt()
             fun setValue(value: Int, shiftAmount: Int) {
@@ -298,6 +296,33 @@ internal class Pokemon(
             setValue(specialAttack, shiftAmount = 0)
             setValue(specialDefense, shiftAmount = 0)
             data.writeBidEndianShort(startOffset + 0x1B, totalIVs.toShort())
+        }
+
+        /**
+         * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
+         * If both are greater than -1, [specialDefense] will override [specialAttack]
+         */
+        override fun effortValues(
+            health: Int,
+            attack: Int,
+            defense: Int,
+            speed: Int,
+            specialAttack: Int,
+            specialDefense: Int
+        ): MutablePokemon.Mutator = apply {
+            fun setValue(value: Int, effortOffset: Int) {
+                if (value >= 0)
+                    data.writeBidEndianShort(
+                        offset = startOffset + effortOffset,
+                        value = value.coerceAtMost(65535).toShort()
+                    )
+            }
+            setValue(health, effortOffset = 0x11)
+            setValue(attack, effortOffset = 0x13)
+            setValue(defense, effortOffset = 0x15)
+            setValue(speed, effortOffset = 0x17)
+            setValue(specialAttack, effortOffset = 0x19)
+            setValue(specialDefense, effortOffset = 0x19)
         }
     }
 }

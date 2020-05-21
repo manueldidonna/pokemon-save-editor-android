@@ -4,176 +4,173 @@ import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.Text
-import androidx.ui.foundation.TextField
 import androidx.ui.foundation.TextFieldValue
+import androidx.ui.input.KeyboardType
 import androidx.ui.layout.*
 import androidx.ui.material.Divider
+import androidx.ui.material.FilledTextField
 import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Slider
+import androidx.ui.text.TextRange
 import androidx.ui.text.font.FontWeight
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.redhex.dividerColor
-import kotlin.math.roundToInt
+
+private class ObservableStatisticValues(
+    values: Pokemon.StatisticValues
+) : Pokemon.StatisticValues {
+    override var health by mutableStateOf(values.health, StructurallyEqual)
+    override var attack by mutableStateOf(values.attack, StructurallyEqual)
+    override var defense by mutableStateOf(values.defense, StructurallyEqual)
+    override var specialAttack by mutableStateOf(values.specialAttack, StructurallyEqual)
+    override var specialDefense by mutableStateOf(values.specialDefense, StructurallyEqual)
+    override var speed by mutableStateOf(values.speed, StructurallyEqual)
+
+    fun update(values: Pokemon.StatisticValues) {
+        health = values.health
+        attack = values.attack
+        defense = values.defense
+        specialAttack = values.specialAttack
+        specialDefense = values.specialDefense
+        speed = values.speed
+    }
+}
 
 @Composable
 fun PokemonStats(pokemon: MutablePokemon) {
-    Column {
-        Text(
-            text = "Individual Values",
-            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp, start = 24.dp)
+    val ivs = remember { ObservableStatisticValues(pokemon.iV) }
+    val evs = remember { ObservableStatisticValues(pokemon.eV) }
+
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        StatValue(
+            statName = "Health",
+            effortValue = evs.health,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(health = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.health,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(health = it); ivs.update(pokemon.iV)
+            }
         )
-        IndividualValuesEditorField(pokemon = pokemon)
         Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
-        Text(
-            text = "Effort Values",
-            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp, start = 24.dp)
+
+        StatValue(
+            statName = "Attack",
+            effortValue = evs.attack,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(attack = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.attack,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(attack = it); ivs.update(pokemon.iV)
+            }
         )
-        EffortValuesEditorField(pokemon = pokemon)
+        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+
+        StatValue(
+            statName = "Defense",
+            effortValue = evs.defense,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(defense = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.defense,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(defense = it); ivs.update(pokemon.iV)
+            }
+        )
+        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+
+        StatValue(
+            statName = "Speed",
+            effortValue = evs.speed,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(speed = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.speed,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(speed = it); ivs.update(pokemon.iV)
+            }
+        )
+        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+
+        StatValue(
+            statName = "Special Attack",
+            effortValue = evs.specialAttack,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(specialAttack = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.specialAttack,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(specialAttack = it); ivs.update(pokemon.iV)
+            }
+        )
+        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+
+        StatValue(
+            statName = "Special Defense",
+            effortValue = evs.specialDefense,
+            onEffortValueChange = {
+                pokemon.mutator.effortValues(specialDefense = it); evs.update(pokemon.eV)
+            },
+            individualValue = ivs.specialDefense,
+            onIndividualValueChange = {
+                pokemon.mutator.individualValues(specialDefense = it); ivs.update(pokemon.iV)
+            }
+        )
     }
 }
 
-
 @Composable
-private fun IndividualValuesEditorField(pokemon: MutablePokemon) {
-    var health by state(StructurallyEqual) { pokemon.iV.health }
-    var attack by state(StructurallyEqual) { pokemon.iV.attack }
-    var defense by state(StructurallyEqual) { pokemon.iV.defense }
-    var speed by state(StructurallyEqual) { pokemon.iV.speed }
-    var specialAttack by state(StructurallyEqual) { pokemon.iV.specialAttack }
-    var specialDefense by state(StructurallyEqual) { pokemon.iV.specialDefense }
-
-    val maxAllowedValue = pokemon.iV.maxAllowedValue
-
-    fun updateIvs() {
-        pokemon.iV.let {
-            health = it.health
-            attack = it.attack
-            defense = it.defense
-            speed = it.speed
-            specialAttack = it.specialAttack
-            specialDefense = it.specialDefense
-        }
-    }
-
-    IndividualValue(
-        name = "Health",
-        value = health,
-        maxValue = maxAllowedValue,
-        onValueChange = { health = it },
-        onChangeEnd = { pokemon.mutator.individualValues(health = health); updateIvs() }
-    )
-    IndividualValue(
-        name = "Attack",
-        value = attack,
-        maxValue = maxAllowedValue,
-        onValueChange = { attack = it },
-        onChangeEnd = { pokemon.mutator.individualValues(attack = attack); updateIvs() }
-    )
-    IndividualValue(
-        name = "Defense",
-        value = defense,
-        maxValue = maxAllowedValue,
-        onValueChange = { defense = it },
-        onChangeEnd = { pokemon.mutator.individualValues(defense = defense); updateIvs() }
-    )
-    IndividualValue(
-        name = "Speed",
-        value = speed,
-        maxValue = maxAllowedValue,
-        onValueChange = { speed = it },
-        onChangeEnd = { pokemon.mutator.individualValues(speed = speed); updateIvs() }
-    )
-    IndividualValue(
-        name = "Sp. Attack",
-        value = specialAttack,
-        maxValue = maxAllowedValue,
-        onValueChange = { specialAttack = it },
-        onChangeEnd = { pokemon.mutator.individualValues(specialAttack = specialAttack); updateIvs() }
-    )
-    IndividualValue(
-        name = "Sp. Defense",
-        value = specialDefense,
-        maxValue = maxAllowedValue,
-        onValueChange = { specialDefense = it },
-        onChangeEnd = { pokemon.mutator.individualValues(specialDefense = specialDefense); updateIvs() }
-    )
-
-}
-
-@Composable
-private fun IndividualValue(
-    name: String,
-    value: Int,
-    maxValue: Int,
-    onValueChange: (Int) -> Unit,
-    onChangeEnd: () -> Unit
+private fun StatValue(
+    statName: String,
+    effortValue: Int,
+    onEffortValueChange: (Int) -> Unit,
+    individualValue: Int,
+    onIndividualValueChange: (Int) -> Unit
 ) {
-    Row(
-        verticalGravity = Alignment.CenterVertically,
-        modifier = Modifier.padding(horizontal = 24.dp)
-    ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.subtitle1,
-            // TODO: remove this fixed width when table will be available again
-            modifier = Modifier.width(100.dp)
-        )
-        Text(
-            text = value.toString(),
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .width(40.dp)
-                .wrapContentWidth(Alignment.CenterHorizontally),
-            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-        )
-        Slider(
-            modifier = Modifier.weight(1f),
-            value = value.toFloat(),
-            onValueChange = { onValueChange(it.roundToInt()) },
-            onValueChangeEnd = onChangeEnd,
-            valueRange = 1f..maxValue.toFloat()
-        )
-    }
-}
+    var effortTextSelection by state { TextRange(0, 0) }
+    var individualTextSelection by state { TextRange(0, 0) }
 
-@Composable
-private fun EffortValuesEditorField(pokemon: MutablePokemon) {
-    val ev: Pokemon.EffortValues by state { pokemon.ev }
-
-    for (i in 0 until 6) {
-        val evWithName = ev[i]
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.height(48.dp).padding(horizontal = 24.dp)
-        ) {
-            Text(
-                text = evWithName.first,
-                style = MaterialTheme.typography.subtitle1,
-                // TODO: remove this fixed width when table will be available again
-                modifier = Modifier.width(100.dp)
+    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Text(
+            text = statName,
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(verticalGravity = Alignment.CenterVertically) {
+            FilledTextField(
+                modifier = Modifier.weight(4f),
+                value = TextFieldValue(
+                    text = if (effortValue == 0) "" else effortValue.toString(),
+                    selection = effortTextSelection
+                ),
+                onValueChange = {
+                    if (it.text.all(Char::isDigit)) {
+                        effortTextSelection = it.selection
+                        onEffortValueChange(it.text.ifEmpty { "0" }.toInt())
+                    }
+                },
+                label = { Text(text = "Effort Value") },
+                keyboardType = KeyboardType.Number
             )
-            TextField(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                value = TextFieldValue(evWithName.second.toString()),
-                onValueChange = {},
-                textStyle = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.width(16.dp))
+            FilledTextField(
+                modifier = Modifier.weight(3f),
+                value = TextFieldValue(
+                    text = if (individualValue == 0) "" else individualValue.toString(),
+                    selection = individualTextSelection
+                ),
+                onValueChange = {
+                    if (it.text.all(Char::isDigit)) {
+                        individualTextSelection = it.selection
+                        onIndividualValueChange(it.text.ifEmpty { "0" }.toInt())
+                    }
+                },
+                label = { Text(text = "Individual Value") },
+                keyboardType = KeyboardType.Number
             )
         }
-    }
-}
-
-private operator fun Pokemon.EffortValues.get(index: Int): Pair<String, Int> {
-    return when (index) {
-        0 -> Pair("Health", health)
-        1 -> Pair("Attack", attack)
-        2 -> Pair("Defense", defense)
-        3 -> Pair("Speed", speed)
-        4 -> Pair("Sp. Attack", specialAttack)
-        5 -> Pair("Sp. Defense", specialDefense)
-        else -> throw IllegalStateException("Bad index: $index")
     }
 }

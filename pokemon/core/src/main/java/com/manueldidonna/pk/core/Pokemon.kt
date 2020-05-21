@@ -31,22 +31,11 @@ interface Pokemon {
         fun getUps(index: Int): Int
     }
 
-    val iV: IndividualValues
+    val iV: StatisticValues
 
-    interface IndividualValues {
-        val maxAllowedValue: Int
+    val eV: StatisticValues
 
-        val health: Int
-        val attack: Int
-        val defense: Int
-        val specialAttack: Int
-        val specialDefense: Int
-        val speed: Int
-    }
-
-    val ev: EffortValues
-
-    interface EffortValues {
+    interface StatisticValues {
         val health: Int
         val attack: Int
         val defense: Int
@@ -85,14 +74,8 @@ interface MutablePokemon : Pokemon {
         fun experiencePoints(value: Int): Mutator
         fun level(value: Int): Mutator
         fun moveId(id: Int, moveIndex: Int): Mutator
-        /**
-         * Points should be coerced to the maximum allowed value
-         * Pass -1 as moveId to ignore the maximum allowed points of a specific move
-         */
-        fun movePowerPoints(moveIndex: Int, moveId: Int, points: Int): Mutator
-
+        fun movePowerPoints(moveIndex: Int, moveId: Int = -1, points: Int = -1): Mutator
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
-
         fun individualValues(
             health: Int = -1,
             attack: Int = -1,
@@ -100,6 +83,14 @@ interface MutablePokemon : Pokemon {
             speed: Int = -1,
             specialAttack: Int = -1,
             specialDefense: Int = -1
-        )
+        ): Mutator
+        fun effortValues(
+            health: Int = -1,
+            attack: Int = -1,
+            defense: Int = -1,
+            speed: Int = -1,
+            specialAttack: Int = -1,
+            specialDefense: Int = -1
+        ): Mutator
     }
 }
