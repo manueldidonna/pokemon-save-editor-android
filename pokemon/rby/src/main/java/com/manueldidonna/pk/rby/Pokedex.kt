@@ -15,7 +15,7 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
         require(speciesId in 1..151) { "Species Id not supported: $speciesId" }
         val bitIndex = (speciesId - 1) and 7
         val offset = (speciesId - 1) ushr 3
-        return CorePokedex.Entry(
+        return CorePokedex.Entry.Immutable(
             speciesId = speciesId,
             isSeen = (data[SeenOffset + offset].toInt() ushr bitIndex and 1) != 0,
             isOwned = (data[OwnedOffset + offset].toInt() ushr bitIndex and 1) != 0

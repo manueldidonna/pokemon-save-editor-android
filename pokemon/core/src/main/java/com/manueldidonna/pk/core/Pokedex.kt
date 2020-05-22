@@ -10,15 +10,29 @@ interface Pokedex {
 
     fun setEntry(entry: Entry)
 
-    data class Entry(
-        val speciesId: Int,
-        val isSeen: Boolean,
+    interface Entry {
+        val speciesId: Int
+        val isSeen: Boolean
         val isOwned: Boolean
-    ) {
+
+        data class Immutable(
+            override val speciesId: Int,
+            override val isSeen: Boolean,
+            override val isOwned: Boolean
+        ) : Entry
+
         companion object {
-            fun neverSeen(speciesId: Int) = Entry(speciesId, isSeen = false, isOwned = false)
-            fun onlySeen(speciesId: Int): Entry = Entry(speciesId, isSeen = true, isOwned = false)
-            fun owned(speciesId: Int): Entry = Entry(speciesId, isSeen = true, isOwned = true)
+            fun neverSeen(speciesId: Int): Entry {
+                return Immutable(speciesId, isSeen = false, isOwned = false)
+            }
+
+            fun onlySeen(speciesId: Int): Entry {
+                return Immutable(speciesId, isSeen = true, isOwned = false)
+            }
+
+            fun owned(speciesId: Int): Entry {
+                return Immutable(speciesId, isSeen = true, isOwned = true)
+            }
         }
     }
 }
