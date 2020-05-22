@@ -2,7 +2,7 @@ package com.manueldidonna.pk.rby.converter
 
 private const val G1TradeOT = '*'
 
-internal fun getGameBoyString(
+internal fun getStringFromGameBoyData(
     data: UByteArray,
     startOffset: Int,
     stringLength: Int,
@@ -16,11 +16,12 @@ internal fun getGameBoyString(
     }
 }.toString()
 
-internal fun setGameBoyString(
+internal fun getGameBoyDataFromString(
     value: String,
     maxValueLength: Int,
     isJapanese: Boolean = false,
-    outputDataSize: Int
+    outputDataSize: Int,
+    ignoreCase: Boolean
 ): UByteArray {
     require(outputDataSize > maxValueLength) {
         " String length must be equal or lower of the output data size"
@@ -34,8 +35,9 @@ internal fun setGameBoyString(
 
     val data = UByteArray(outputDataSize)
     var dataIndex = 0
-    for (i in 0 until value.length.coerceAtMost(maxValueLength)) {
-        val b = dictionary[value[i]] ?: break
+    val realValue = if (ignoreCase) value.toUpperCase() else value
+    for (i in 0 until realValue.length.coerceAtMost(maxValueLength)) {
+        val b = dictionary[realValue[i]] ?: break
         data[dataIndex++] = b.toUByte()
     }
     data[dataIndex] = 0x50u

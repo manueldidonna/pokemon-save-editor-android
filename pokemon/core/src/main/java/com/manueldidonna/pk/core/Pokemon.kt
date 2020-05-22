@@ -14,8 +14,7 @@ interface Pokemon {
         val slot: Int
     )
 
-    val trainerId: UInt
-    val trainerName: String
+    val trainer: Trainer
 
     val speciesId: Int
     val nickname: String
@@ -68,9 +67,8 @@ interface MutablePokemon : Pokemon {
      */
     interface Mutator {
         fun speciesId(value: Int): Mutator
-        fun nickname(value: String): Mutator
-        fun trainerId(value: UInt): Mutator
-        fun trainerName(value: String): Mutator
+        fun nickname(value: String, ignoreCase: Boolean = false): Mutator
+        fun trainer(value: Trainer, ignoreNameCase: Boolean = false): Mutator
         fun experiencePoints(value: Int): Mutator
         fun level(value: Int): Mutator
         fun moveId(id: Int, moveIndex: Int): Mutator

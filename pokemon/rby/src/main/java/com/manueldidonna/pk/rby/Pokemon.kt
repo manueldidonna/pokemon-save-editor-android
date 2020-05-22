@@ -3,15 +3,16 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.core.info.getExperienceGroup
 import com.manueldidonna.pk.core.info.getExperiencePoints
 import com.manueldidonna.pk.core.info.getLevel
 import com.manueldidonna.pk.core.info.sanitizeExperiencePoints
 import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
-import com.manueldidonna.pk.rby.converter.getGameBoyString
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
-import com.manueldidonna.pk.rby.converter.setGameBoyString
+import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.info.*
 import com.manueldidonna.pk.rby.utils.*
 
@@ -73,11 +74,18 @@ internal class Pokemon(
 
     override val position by lazy { Pokemon.Position(index, slot) }
 
+    override val trainer: Trainer
+        get() = Trainer(
+            name = getStringFromGameBoyData(data, trainerNameOffset, 11, false),
+            visibleId = data.readBigEndianUShort(startOffset + 0x0C).toUInt(),
+            secretId = 0u // unused in gen 1
+        )
+
     override val speciesId: Int
         get() = getNationalSpecies(data[startOffset].toInt())
 
     override val nickname: String
-        get() = getGameBoyString(data, pokemonNameOffset, stringLength = 11, isJapanese = false)
+        get() = getStringFromGameBoyData(data, pokemonNameOffset, 11, false)
 
     override val level: Int
         get() {
@@ -99,12 +107,6 @@ internal class Pokemon(
      */
     override val natureId: Int
         get() = experiencePoints % 25
-
-    override val trainerId: UInt
-        get() = data.readBigEndianUShort(startOffset + 0x0C).toUInt()
-
-    override val trainerName: String
-        get() = getGameBoyString(data, trainerNameOffset, stringLength = 11, isJapanese = false)
 
     override val moves: Pokemon.Moves by lazy {
         object : Pokemon.Moves {
@@ -199,16 +201,16 @@ internal class Pokemon(
             data.writeBidEndianShort(startOffset + 0x1, 0)
         }
 
-        override fun trainerId(value: UInt): MutablePokemon.Mutator = apply {
-            data.writeBidEndianShort(startOffset + 0xC, value.toShort())
+        override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
+            getGameBoyDataFromString(value, 10, false, 11, ignoreCase)
+                .copyInto(data, pokemonNameOffset)
         }
 
-        override fun nickname(value: String): MutablePokemon.Mutator = apply {
-            setGameBoyString(value, 10, false, 11).copyInto(data, pokemonNameOffset)
-        }
-
-        override fun trainerName(value: String): MutablePokemon.Mutator = apply {
-            setGameBoyString(value, 7, false, 11).copyInto(data, trainerNameOffset)
+        override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator {
+            data.writeBidEndianShort(startOffset + 0xC, value.visibleId.toShort())
+            getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase)
+                .copyInto(data, trainerNameOffset)
+            return this
         }
 
         override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
