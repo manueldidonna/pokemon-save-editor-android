@@ -44,7 +44,8 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
     SpeciesEditorField(pokemon, pokedex, state)
     Divider(color = dividerColor())
     ExperienceEditorField(pokemon, state)
-
+    Divider(color = dividerColor())
+    TrainerEditorField(pokemon)
 }
 
 @Composable
@@ -143,3 +144,21 @@ private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) 
     }
 }
 
+@Composable
+private fun TrainerEditorField(pokemon: MutablePokemon) {
+    var trainer: Trainer by state { pokemon.trainer }
+    var nameSelection by state { TextRange(0, 0) }
+    Column(modifier = Modifier.padding(24.dp)) {
+        FilledTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = TextFieldValue(text = trainer.name, selection = nameSelection),
+            onValueChange = {
+                pokemon.mutator.trainer(trainer.copy(name = it.text))
+                nameSelection = it.selection
+                trainer = pokemon.trainer
+            },
+            label = { Text(text = "Trainer Name") },
+            keyboardType = KeyboardType.Text
+        )
+    }
+}
