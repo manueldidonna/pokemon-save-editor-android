@@ -3,19 +3,23 @@ package com.manueldidonna.redhex.details
 import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.*
+import androidx.ui.foundation.AdapterList
+import androidx.ui.foundation.Clickable
+import androidx.ui.foundation.Text
+import androidx.ui.foundation.TextFieldValue
 import androidx.ui.input.KeyboardType
 import androidx.ui.layout.*
 import androidx.ui.material.Divider
+import androidx.ui.material.FilledTextField
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Slider
 import androidx.ui.material.ripple.ripple
+import androidx.ui.text.TextRange
 import androidx.ui.text.font.FontWeight
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
-import com.manueldidonna.pk.core.info.getExperienceGroup
-import com.manueldidonna.pk.core.info.getExperiencePoints
+import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
@@ -26,20 +30,21 @@ import dev.chrisbanes.accompanist.coil.CoilImage
 import java.io.File
 import kotlin.math.roundToInt
 
-private class GeneralState(speciesId: Int, level: Float, experiencePoints: Int) {
+private class GeneralState(speciesId: Int, level: Int, experiencePoints: Int) {
     var speciesId by mutableStateOf(speciesId, areEquivalent = StructurallyEqual)
     var level by mutableStateOf(level, areEquivalent = StructurallyEqual)
-    var experiencePoints by mutableStateOf(experiencePoints, areEquivalent = StructurallyEqual)
+    var experiencePoints by mutableStateOf(experiencePoints, StructurallyEqual)
 }
 
 @Composable
 fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
     val state = remember {
-        GeneralState(pokemon.speciesId, pokemon.level.toFloat(), pokemon.experiencePoints)
+        GeneralState(pokemon.speciesId, pokemon.level, pokemon.experiencePoints)
     }
     SpeciesEditorField(pokemon, pokedex, state)
     Divider(color = dividerColor())
     ExperienceEditorField(pokemon, state)
+
 }
 
 @Composable
@@ -57,7 +62,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
             verticalGravity = Alignment.CenterVertically,
             modifier = Modifier.preferredHeight(56.dp).fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.preferredWidth(8.dp))
+            Spacer(modifier = Modifier.preferredWidth(24.dp))
             CoilImage(
                 data = spriteSource,
                 modifier = Modifier.pokemonSpriteSize()
@@ -80,8 +85,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
                     pokemon.mutator
                         .speciesId(it.first + 1)
                         .level(pokemon.level)
-                        // TODO: uppercase name is a gen 1-3 detail. Abstract it
-                        .nickname(it.second.toUpperCase())
+                        .nickname(it.second, ignoreCase = true)
                     pokedex.setEntry(Pokedex.Entry.owned(it.first + 1))
                     state.run {
                         speciesId = pokemon.speciesId
@@ -94,72 +98,48 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
 
 @Composable
 private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) {
-    var experienceFieldValue by stateFor(state.experiencePoints) {
-        TextFieldValue(text = state.experiencePoints.toString())
-    }
+    var experienceTextSelection by state { TextRange(0, 0) }
 
-    val maxExperience: Int = remember(state.speciesId) {
-        getExperiencePoints(100, getExperienceGroup(state.speciesId))
-    }
-
-    fun updateExperience() = state.run {
-        level = pokemon.level.toFloat()
-        experiencePoints = pokemon.experiencePoints
-    }
-
-    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.preferredHeight(48.dp)
-        ) {
-            Text(
-                text = "Experience",
-                modifier = Modifier.padding(end = 24.dp),
-                style = MaterialTheme.typography.subtitle1
-            )
-            TextField(
-                modifier = Modifier.weight(1f),
-                value = experienceFieldValue,
-                onValueChange = { newValue ->
-                    if (newValue.text.isEmpty()) {
-                        pokemon.mutator.experiencePoints(0)
-                        experienceFieldValue = newValue.copy(text = "0")
-                        updateExperience()
-                    } else if (newValue.text.all(Char::isDigit)) {
-                        val coercedExp = newValue.text.toInt().coerceAtMost(maxExperience)
-                        pokemon.mutator.experiencePoints(coercedExp)
-                        experienceFieldValue = newValue.copy(text = coercedExp.toString())
-                        updateExperience()
+    Column(modifier = Modifier.padding(24.dp)) {
+        FilledTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = TextFieldValue(
+                text = state.experiencePoints.run { if (this == 0) "" else toString() },
+                selection = experienceTextSelection
+            ),
+            onValueChange = {
+                if (it.text.all(Char::isDigit)) {
+                    experienceTextSelection = it.selection
+                    val exp = it.text.ifEmpty { "0" }.toInt()
+                    pokemon.mutator.experiencePoints(exp)
+                    state.run {
+                        experiencePoints = pokemon.experiencePoints
+                        level = pokemon.level
                     }
-                },
-                keyboardType = KeyboardType.Number,
-                textStyle = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-            )
-        }
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.preferredHeight(48.dp)
-        ) {
+                }
+            },
+            label = { Text(text = "Experience Points") },
+            keyboardType = KeyboardType.Number
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(verticalGravity = Alignment.CenterVertically) {
             Text(
-                text = "Level",
-                style = MaterialTheme.typography.subtitle1,
-                modifier = Modifier.padding(end = 8.dp)
+                text = "Level ${state.level}",
+                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
             )
-            Text(
-                text = state.level.roundToInt().toString(),
-                modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-            )
+            Spacer(modifier = Modifier.width(16.dp))
             Slider(
                 modifier = Modifier.weight(1f),
-                value = state.level,
-                onValueChange = { state.level = it },
+                value = state.level.toFloat(),
                 valueRange = 1f..100f,
+                onValueChange = { state.level = it.roundToInt() },
                 onValueChangeEnd = {
-                    pokemon.mutator.level(state.level.roundToInt())
-                    updateExperience()
+                    pokemon.mutator.level(state.level)
+                    experienceTextSelection = TextRange(0, 0)
+                    state.experiencePoints = pokemon.experiencePoints
                 }
             )
         }
     }
 }
+
