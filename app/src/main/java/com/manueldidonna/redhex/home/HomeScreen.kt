@@ -126,7 +126,6 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 
     if (state.selectedPokemonIndex != -1) {
         ContextualActions(
-            isPokemonEmpty = currentStorage.getPokemon(state.selectedPokemonIndex).nickname.isEmpty(),
             dismiss = { state.selectedPokemonIndex = -1 },
             movePokemon = {
                 val position = Pokemon.Position(
@@ -160,8 +159,7 @@ private fun getPokemonPreviews(
 ): List<PokemonPreview?> {
     return List(storage.pokemonCounts) { i ->
         storage.getPokemon(i).run {
-            // TODO: add isEmpty: Boolean to Pokemon
-            if (nickname.isEmpty() || speciesId == 0) null else {
+            if (isEmpty) null else {
                 PokemonPreview(
                     nickname = nickname,
                     labels = listOf("L. $level", resources.natures.getNatureById(natureId)),
@@ -206,7 +204,6 @@ private fun PokemonList(pokemon: List<PokemonPreview?>, onSelection: (slot: Int)
 
 @Composable
 private fun ContextualActions(
-    isPokemonEmpty: Boolean,
     dismiss: () -> Unit,
     movePokemon: () -> Unit,
     deletePokemon: () -> Unit,
@@ -214,8 +211,7 @@ private fun ContextualActions(
 ) {
     DialogMenu(dismiss = dismiss) {
         DialogItem(text = "View pokemon", onClick = viewPokemon)
-        if (!isPokemonEmpty)
-            DialogItem(text = "Delete pokemon", onClick = deletePokemon)
+        DialogItem(text = "Delete pokemon", onClick = deletePokemon)
         DialogItem(text = "Move pokemon", onClick = movePokemon)
     }
 }

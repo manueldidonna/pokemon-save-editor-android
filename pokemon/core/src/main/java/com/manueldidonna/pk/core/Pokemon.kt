@@ -7,6 +7,8 @@ package com.manueldidonna.pk.core
  * Each [Pokemon] implementation must enforces this rule.
  */
 interface Pokemon {
+    val isEmpty: Boolean
+
     val position: Position
 
     data class Position(
@@ -60,11 +62,22 @@ interface Pokemon {
  * TODO: add a function like "asPokemon()" to convert MutablePokemon to Pokemon
  */
 interface MutablePokemon : Pokemon {
-    val mutator: Mutator
+
+    /**
+     * An interface to apply a predefined set of values to a [MutablePokemon]
+     */
+    interface Template {
+        val name: String
+        val description: String
+        val speciesId: Int
+        fun apply(pokemon: MutablePokemon)
+    }
 
     /**
      * A [Mutator] makes explicit the desire to modify the pokemon's data
      */
+    val mutator: Mutator
+
     interface Mutator {
         fun speciesId(value: Int): Mutator
         fun nickname(value: String, ignoreCase: Boolean = false): Mutator
@@ -74,6 +87,7 @@ interface MutablePokemon : Pokemon {
         fun moveId(id: Int, moveIndex: Int): Mutator
         fun movePowerPoints(moveIndex: Int, moveId: Int = -1, points: Int = -1): Mutator
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
+
         fun individualValues(
             health: Int = -1,
             attack: Int = -1,
@@ -82,6 +96,7 @@ interface MutablePokemon : Pokemon {
             specialAttack: Int = -1,
             specialDefense: Int = -1
         ): Mutator
+
         fun effortValues(
             health: Int = -1,
             attack: Int = -1,
@@ -91,4 +106,12 @@ interface MutablePokemon : Pokemon {
             specialDefense: Int = -1
         ): Mutator
     }
+}
+
+fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = apply {
+    effortValues(all, all, all, all, all, all)
+}
+
+fun MutablePokemon.Mutator.individualValues(all: Int): MutablePokemon.Mutator = apply {
+    individualValues(all, all, all, all, all, all)
 }

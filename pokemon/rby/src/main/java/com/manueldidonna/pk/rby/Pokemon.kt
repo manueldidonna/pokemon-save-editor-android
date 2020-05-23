@@ -1,20 +1,17 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.StorageIndex
-import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.core.info.getExperienceGroup
 import com.manueldidonna.pk.core.info.getExperiencePoints
 import com.manueldidonna.pk.core.info.getLevel
 import com.manueldidonna.pk.core.info.sanitizeExperiencePoints
-import com.manueldidonna.pk.core.isParty
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.info.*
 import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**
  * 0x00 0x1 - species ID
@@ -58,6 +55,25 @@ internal class Pokemon(
 ) : MutablePokemon {
 
     companion object {
+        val EmptyTemplate = object : MutablePokemon.Template {
+            override val name = "Empty Pokemon"
+            override val description = "An empty template for R/B/Y games"
+            override val speciesId = 151
+            override fun apply(pokemon: MutablePokemon) {
+                pokemon.mutator
+                    .speciesId(151)
+                    .level(1)
+                    .moveId(id = 1, moveIndex = 0)
+                    .moveId(id = 0, moveIndex = 1)
+                    .moveId(id = 0, moveIndex = 2)
+                    .moveId(id = 0, moveIndex = 3)
+                    .nickname("TEMPLATE")
+                    .trainer(Trainer("TRAINER", 12345u, 0u))
+                    .individualValues(all = 15)
+                    .effortValues(all = 999999)
+            }
+        }
+
         fun newImmutableInstance(data: UByteArray, index: StorageIndex, slot: Int): Pokemon {
             require(data.size == PokemonSize) {
                 "Data size is different than $PokemonSize"
@@ -72,7 +88,10 @@ internal class Pokemon(
         }
     }
 
-    override val position by lazy { Pokemon.Position(index, slot) }
+    override val isEmpty: Boolean
+        get() = speciesId == 0 || nickname.isEmpty()
+
+    override val position by lazy { CorePokemon.Position(index, slot) }
 
     override val trainer: Trainer
         get() = Trainer(
@@ -108,8 +127,8 @@ internal class Pokemon(
     override val natureId: Int
         get() = experiencePoints % 25
 
-    override val moves: Pokemon.Moves by lazy {
-        object : Pokemon.Moves {
+    override val moves: CorePokemon.Moves by lazy {
+        object : CorePokemon.Moves {
             override fun getId(index: Int): Int {
                 require(index in 0..3) { "Move index must be in 0..3" }
                 return data[startOffset + 0x08 + index].toInt()
@@ -130,8 +149,8 @@ internal class Pokemon(
     /**
      * [Pokemon.StatisticValues.specialDefense] and [Pokemon.StatisticValues.specialAttack] are equal
      */
-    override val iV: Pokemon.StatisticValues by lazy {
-        object : Pokemon.StatisticValues {
+    override val iV: CorePokemon.StatisticValues by lazy {
+        object : CorePokemon.StatisticValues {
             private val DV16: Int
                 get() = data.readBigEndianUShort(startOffset + 0x1b).toInt()
 
@@ -155,8 +174,8 @@ internal class Pokemon(
         }
     }
 
-    override val eV: Pokemon.StatisticValues by lazy {
-        object : Pokemon.StatisticValues {
+    override val eV: CorePokemon.StatisticValues by lazy {
+        object : CorePokemon.StatisticValues {
             override val health: Int
                 get() = data.readBigEndianUShort(startOffset + 0x11).toInt()
 

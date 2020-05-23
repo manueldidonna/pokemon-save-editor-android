@@ -174,7 +174,7 @@ internal class EnglishMoves : PokemonResources.Moves {
     )
 
     override fun getMoveById(id: Int): String {
-        require(id in 0..165) { "id not supported" }
+        require(id in 0..165) { "id not supported: $id" }
         return if (id == 0) "" else moves[id]
     }
 

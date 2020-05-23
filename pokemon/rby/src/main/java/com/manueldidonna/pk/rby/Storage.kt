@@ -44,15 +44,22 @@ internal class Storage(
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
         require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
-        return Pokemon(
+        // 0 - (currentPokemonCounts - 1) -> pokemon exists
+        val coercedSlot = slot.coerceAtMost(currentPokemonCounts)
+        if (coercedSlot == currentPokemonCounts)
+            currentPokemonCounts++
+        val pokemon = Pokemon(
             data = data,
-            speciesOffset = startOffset + 1 + 1 * slot,
-            startOffset = slot.dataOfs,
-            trainerNameOffset = slot.trainerNameOfs,
-            pokemonNameOffset = slot.nameOfs,
+            speciesOffset = startOffset + 1 + 1 * coercedSlot,
+            startOffset = coercedSlot.dataOfs,
+            trainerNameOffset = coercedSlot.trainerNameOfs,
+            pokemonNameOffset = coercedSlot.nameOfs,
             index = index,
-            slot = slot
+            slot = coercedSlot
         )
+        if (pokemon.isEmpty)
+            Pokemon.EmptyTemplate.apply(pokemon)
+        return pokemon
     }
 
     override fun exportPokemonToBytes(slot: Int): UByteArray {
@@ -69,9 +76,7 @@ internal class Storage(
             }
             // Copy Trainer Name
             slot.trainerNameOfs.let { ofs ->
-                data.copyInto(this,
-                    PokemonDataSize, ofs, ofs + NameSize
-                )
+                data.copyInto(this, PokemonDataSize, ofs, ofs + NameSize)
             }
             // Copy Pokemon Name
             slot.nameOfs.let { ofs ->
@@ -88,24 +93,25 @@ internal class Storage(
             return false // empty pk
 
         // increase pokemon counts if needed
-        if (slot >= currentPokemonCounts)
-            currentPokemonCounts++
+        val increaseCount = slot >= currentPokemonCounts
 
-        val coercedSlot = slot.coerceAtMost(currentPokemonCounts - 1)
+        val coercedSlot = slot.coerceAtMost(currentPokemonCounts - 1 + if (increaseCount) 1 else 0)
 
         // verify the correctness of the data
-        val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, slot)
+        val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, coercedSlot)
+
+        if (immutablePokemon.isEmpty)
+            return false // empty pk
+
+        if (increaseCount)
+            currentPokemonCounts++
 
         data[startOffset + 0x1 + coercedSlot] = immutablePokemon.speciesId.toUByte()
         bytes.apply {
             // Set Pokemon Box Data
-            copyInto(data, coercedSlot.dataOfs, 0,
-                PokemonDataSize
-            )
+            copyInto(data, coercedSlot.dataOfs, 0, PokemonDataSize)
             // Set Trainer Name
-            copyInto(data, coercedSlot.trainerNameOfs,
-                PokemonDataSize, PokemonDataSize + NameSize
-            )
+            copyInto(data, coercedSlot.trainerNameOfs, PokemonDataSize, PokemonDataSize + NameSize)
             // Set Pokemon Names
             copyInto(data, coercedSlot.nameOfs, PokemonDataSize + NameSize)
         }
@@ -141,18 +147,14 @@ internal class Storage(
 
             val startSlot = slot + 1
 
-            movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs,
-                PokemonDataSize
-            )
+            movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs, PokemonDataSize)
             movePokemonData(
                 slot.trainerNameOfs,
                 startSlot.trainerNameOfs,
                 endSlot.trainerNameOfs,
                 NameSize
             )
-            movePokemonData(slot.nameOfs, startSlot.nameOfs, endSlot.nameOfs,
-                NameSize
-            )
+            movePokemonData(slot.nameOfs, startSlot.nameOfs, endSlot.nameOfs, NameSize)
         }
 
         /**
