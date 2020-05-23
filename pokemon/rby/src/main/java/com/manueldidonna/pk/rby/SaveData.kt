@@ -15,6 +15,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
 
     companion object {
         private const val CurrentBoxOffset = 0x30C0
+        private const val PlayerStarterOffset = 0x29C3
     }
 
     override var trainer: Trainer
@@ -65,6 +66,10 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     override fun getPokedex(): CorePokedex {
         return Pokedex(data)
     }
+
+    override val version = CoreSaveData.Version.FirstGeneration(
+        isYellow = data[PlayerStarterOffset] == 0x54.toUByte() // starter is Pikachu
+    )
 
     /**
      * Export data and fix the checksum
