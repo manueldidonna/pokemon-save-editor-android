@@ -21,27 +21,33 @@ interface MutableStorage : Storage {
     fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean
 }
 
-inline val StorageIndex.isParty: Boolean get() = value == StorageIndex.Party.value
+/**
+ * A [StorageIndex] is invalid when [StorageIndex.isCurrentBox] == true
+ * but [StorageIndex.value] is different than [currentBoxIndex]
+ */
+inline fun StorageIndex.isInvalid(currentBoxIndex: Int): Boolean {
+    return isCurrentBox && value != currentBoxIndex
+}
 
-inline class StorageIndex(val value: Int) {
+inline val StorageIndex.isParty: Boolean
+    get() = value == StorageIndex.Party.value
 
-    fun nextIndex(boxCounts: Int): StorageIndex {
-        return when (value) {
-            Party.value -> StorageIndex(0)
-            in 0 until boxCounts - 1 -> StorageIndex(value + 1)
-            else -> Party
-        }
-    }
+inline class StorageIndex(private val packedValue: Long) {
 
-    fun previousIndex(boxCounts: Int): StorageIndex {
-        return when (value) {
-            Party.value -> StorageIndex(boxCounts - 1)
-            in 1 until boxCounts -> StorageIndex(value - 1)
-            else -> Party
-        }
-    }
+    val value: Int
+        get() = packedValue.shr(32).toInt()
+
+    val isCurrentBox: Boolean
+        get() = !isParty && (packedValue.and(0xFFFFFFFF) == 1L)
 
     companion object {
-        val Party = StorageIndex(-1)
+        val Party = Box(-1, false)
+
+        @Suppress("FunctionName")
+        fun Box(index: Int, isCurrentBox: Boolean): StorageIndex {
+            // pack index and isCurrentBox together for use in inline class
+            val packedValue = index.toLong() shl 32 or (if (isCurrentBox) 1L else 0L and 0xFFFFFFFF)
+            return StorageIndex(packedValue)
+        }
     }
 }

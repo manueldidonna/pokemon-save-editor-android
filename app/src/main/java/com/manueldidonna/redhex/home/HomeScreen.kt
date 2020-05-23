@@ -59,14 +59,16 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 
     val state = rememberSavedInstanceState(saver = object : Saver<HomeState, Int> {
         override fun restore(value: Int): HomeState? {
-            return HomeState(currentStorageIndex = StorageIndex(value))
+            return HomeState(
+                currentStorageIndex = StorageIndex.Box(value, saveData.currentBoxIndex == value)
+            )
         }
 
         override fun SaverScope.save(value: HomeState): Int? {
             return value.currentStorageIndex.value
         }
     }) {
-        HomeState(currentStorageIndex = StorageIndex(saveData.currentBoxIndex))
+        HomeState(currentStorageIndex = StorageIndex.Box(saveData.currentBoxIndex, true))
     }
 
     val currentStorage by stateFor(state.currentStorageIndex.value) {
@@ -79,17 +81,21 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 
     fun executeAction(action: HomeAction) {
         when (action) {
-            IncreaseBoxIndex -> {
-                val newIndex = state.currentStorageIndex.nextIndex(saveData.boxCounts)
-                if (!newIndex.isParty)
-                    saveData.currentBoxIndex = newIndex.value
-                state.currentStorageIndex = newIndex
-            }
-            DecreaseBoxIndex -> {
-                val newIndex = state.currentStorageIndex.previousIndex(saveData.boxCounts)
-                if (!newIndex.isParty)
-                    saveData.currentBoxIndex = newIndex.value
-                state.currentStorageIndex = newIndex
+            IncreaseBoxIndex, DecreaseBoxIndex -> {
+                val sumValue = if (action == IncreaseBoxIndex) 1 else -1
+                val wasParty = state.currentStorageIndex.isParty
+                val newIndex = state.currentStorageIndex.value + sumValue
+                val maxBoxIndex = saveData.boxCounts - 1
+                state.currentStorageIndex = when {
+                    newIndex in 0..maxBoxIndex -> {
+                        saveData.currentBoxIndex = newIndex
+                        StorageIndex.Box(newIndex, isCurrentBox = true)
+                    }
+                    wasParty -> {
+                        StorageIndex.Box(if (sumValue == 1) 0 else maxBoxIndex, isCurrentBox = true)
+                    }
+                    else -> StorageIndex.Party
+                }
             }
             is DeleteSlot -> {
                 currentStorage.deletePokemon(action.slot)
