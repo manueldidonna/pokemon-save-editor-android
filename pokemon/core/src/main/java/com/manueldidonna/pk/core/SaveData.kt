@@ -1,6 +1,9 @@
 package com.manueldidonna.pk.core
 
 interface SaveData {
+
+    var trainer: Trainer
+
     val boxCounts: Int
 
     var currentBoxIndex: Int

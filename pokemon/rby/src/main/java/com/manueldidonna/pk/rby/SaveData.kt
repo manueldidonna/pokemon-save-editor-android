@@ -2,9 +2,11 @@ package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.MutableStorage
 import com.manueldidonna.pk.core.StorageIndex
+import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.core.isParty
-import com.manueldidonna.pk.rby.utils.BoxSize
-import com.manueldidonna.pk.rby.utils.PartySize
+import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
+import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
+import com.manueldidonna.pk.rby.utils.*
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 import com.manueldidonna.pk.core.Storage as CoreStorage
@@ -14,6 +16,17 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     companion object {
         private const val CurrentBoxOffset = 0x30C0
     }
+
+    override var trainer: Trainer
+        get() = Trainer(
+            name = getStringFromGameBoyData(data, 0x2598, NameSize, false),
+            visibleId = data.readBigEndianUShort(0x2605).toUInt(),
+            secretId = 0u
+        )
+        set(value) {
+            getGameBoyDataFromString(value.name, 7, false, 11, false).copyInto(data, 0x2598)
+            data.writeBidEndianShort(0x2605, value.visibleId.toShort())
+        }
 
     override val boxCounts: Int = 12
 
