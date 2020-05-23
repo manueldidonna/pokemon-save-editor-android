@@ -1,6 +1,6 @@
-package com.manueldidonna.pk.rby.info
+package com.manueldidonna.pk.resources
 
-internal fun getPowerPoints(moveId: Int): Int {
+fun getPowerPoints(moveId: Int): Int {
     return MovePowerPoints[moveId].toInt()
 }
 

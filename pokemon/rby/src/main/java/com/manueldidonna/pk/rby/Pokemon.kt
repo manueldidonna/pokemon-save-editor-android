@@ -1,16 +1,16 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.core.info.getExperienceGroup
-import com.manueldidonna.pk.core.info.getExperiencePoints
-import com.manueldidonna.pk.core.info.getLevel
-import com.manueldidonna.pk.core.info.sanitizeExperiencePoints
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
-import com.manueldidonna.pk.rby.info.*
+import com.manueldidonna.pk.rby.info.getCatchRate
+import com.manueldidonna.pk.rby.info.getFirstType
+import com.manueldidonna.pk.rby.info.getSecondType
+import com.manueldidonna.pk.rby.info.ifNull
 import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**

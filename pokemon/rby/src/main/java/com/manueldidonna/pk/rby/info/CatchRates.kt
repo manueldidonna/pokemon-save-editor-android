@@ -1,6 +1,5 @@
 package com.manueldidonna.pk.rby.info
 
-
 internal fun getCatchRate(speciesId: Int): Int {
     return CatchRates[speciesId - 1]
 }

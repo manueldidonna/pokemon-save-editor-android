@@ -1,4 +1,4 @@
-package com.manueldidonna.pk.core.info
+package com.manueldidonna.pk.resources
 
 /**
  * [value] is used to find the exp in [ExperiencePointsPerGrowth]
