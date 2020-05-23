@@ -23,7 +23,7 @@ import androidx.ui.savedinstancestate.SaverScope
 import androidx.ui.savedinstancestate.rememberSavedInstanceState
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
@@ -154,7 +154,7 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
 
 private fun getPokemonPreviews(
     storage: Storage,
-    resources: PokemonResources,
+    resources: PokemonTextResources,
     spritesRetriever: PokemonSpritesRetriever
 ): List<PokemonPreview?> {
     return List(storage.pokemonCounts) { i ->

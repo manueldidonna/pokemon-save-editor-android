@@ -28,7 +28,7 @@ import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
             MaterialTheme(if (isSystemInDarkTheme()) DarkColors else LightColors) {
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
-                    PokemonResourcesAmbient provides PokemonResources.English,
+                    PokemonResourcesAmbient provides PokemonTextResources.English,
                     PokemonSpritesRetrieverAmbient provides PokemonSpritesRetriever.from(this)
                 ) {
                     window.statusBarColor = MaterialTheme.colors.surface.toArgb()

@@ -16,7 +16,7 @@ import androidx.ui.material.icons.twotone.Remove
 import androidx.ui.material.ripple.ripple
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.ui.DialogItem
 import com.manueldidonna.redhex.common.ui.DialogMenu
@@ -133,7 +133,7 @@ private fun CounterButton(icon: VectorAsset, onClick: (() -> Unit)?) {
 @Composable
 private inline fun MovesChooser(
     noinline dismiss: () -> Unit,
-    resources: PokemonResources.Moves,
+    resources: PokemonTextResources.Moves,
     crossinline onMoveSelected: (id: Int) -> Unit
 ) {
     DialogMenu(dismiss = dismiss) {

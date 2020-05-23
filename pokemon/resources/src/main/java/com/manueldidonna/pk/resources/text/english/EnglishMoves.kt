@@ -1,8 +1,8 @@
-package com.manueldidonna.pk.resources.english
+package com.manueldidonna.pk.resources.text.english
 
-import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.pk.resources.text.PokemonTextResources
 
-internal class EnglishMoves : PokemonResources.Moves {
+internal class EnglishMoves : PokemonTextResources.Moves {
 
     private val moves = arrayOf(
         "-------",

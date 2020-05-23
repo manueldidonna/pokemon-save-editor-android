@@ -1,8 +1,8 @@
-package com.manueldidonna.pk.resources.english
+package com.manueldidonna.pk.resources.text.english
 
-import com.manueldidonna.pk.resources.PokemonResources
+import com.manueldidonna.pk.resources.text.PokemonTextResources
 
-internal class EnglishNatures : PokemonResources.Natures {
+internal class EnglishNatures : PokemonTextResources.Natures {
     private val values = arrayOf(
         "Hardy",
         "Lonely",

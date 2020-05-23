@@ -1,8 +1,8 @@
-package com.manueldidonna.pk.resources
+package com.manueldidonna.pk.resources.text
 
-import com.manueldidonna.pk.resources.english.EnglishPokemonResources
+import com.manueldidonna.pk.resources.text.english.EnglishPokemonTextResources
 
-interface PokemonResources {
+interface PokemonTextResources {
     val natures: Natures
 
     interface Natures {
@@ -24,6 +24,6 @@ interface PokemonResources {
     }
 
     companion object {
-        val English: PokemonResources = EnglishPokemonResources()
+        val English: PokemonTextResources = EnglishPokemonTextResources()
     }
 }
