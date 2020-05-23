@@ -1,9 +1,12 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.manueldidonna.pk.core
 
 /**
  * A generic interface to store and retrieve pokemon. It's immutable
  */
 interface Storage {
+    val version: Version
     val index: StorageIndex
     val name: String
     val pokemonCounts: Int

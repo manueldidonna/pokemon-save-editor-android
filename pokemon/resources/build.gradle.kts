@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     implementation(Libs.Kotlin.stdlib)
+    implementation(project(Modules.Pokemon.core))
 }

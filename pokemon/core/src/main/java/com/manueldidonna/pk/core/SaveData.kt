@@ -2,6 +2,8 @@ package com.manueldidonna.pk.core
 
 interface SaveData {
 
+    val version: Version
+
     var trainer: Trainer
 
     val boxCounts: Int
@@ -15,12 +17,6 @@ interface SaveData {
     fun getPokedex(): Pokedex
 
     fun exportToBytes(): UByteArray
-
-    val version: Version
-
-    sealed class Version {
-        data class FirstGeneration(val isYellow: Boolean) : Version()
-    }
 
     interface Factory {
         fun createSaveData(data: UByteArray): SaveData?

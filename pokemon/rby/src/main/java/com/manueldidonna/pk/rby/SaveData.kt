@@ -1,9 +1,6 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MutableStorage
-import com.manueldidonna.pk.core.StorageIndex
-import com.manueldidonna.pk.core.Trainer
-import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.utils.*
@@ -17,6 +14,10 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
         private const val CurrentBoxOffset = 0x30C0
         private const val PlayerStarterOffset = 0x29C3
     }
+
+    override val version = Version.FirstGeneration(
+        isYellow = data[PlayerStarterOffset] == 0x54.toUByte() // starter is Pikachu
+    )
 
     override var trainer: Trainer
         get() = Trainer(
@@ -47,13 +48,18 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     override fun getStorage(index: StorageIndex): CoreStorage {
         val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
         val size = if (index.isParty) PartySize else BoxSize
-        val pokemonCounts = if (index.isParty) 6 else 20
-        return Storage(data.copyOfRange(dataOffset, dataOffset + size), 0, index, pokemonCounts)
+        return Storage(
+            data = data.copyOfRange(dataOffset, dataOffset + size),
+            startOffset = 0,
+            index = index,
+            pokemonCounts = if (index.isParty) 6 else 20,
+            version = version
+        )
     }
 
     override fun getMutableStorage(index: StorageIndex): MutableStorage {
         val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
-        return Storage(data, dataOffset, index, if (index.isParty) 6 else 20)
+        return Storage(data, dataOffset, index, if (index.isParty) 6 else 20, version)
     }
 
     private fun getBoxDataOffset(index: Int): Int {
@@ -66,10 +72,6 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     override fun getPokedex(): CorePokedex {
         return Pokedex(data)
     }
-
-    override val version = CoreSaveData.Version.FirstGeneration(
-        isYellow = data[PlayerStarterOffset] == 0x54.toUByte() // starter is Pikachu
-    )
 
     /**
      * Export data and fix the checksum

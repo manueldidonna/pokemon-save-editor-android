@@ -1,6 +1,10 @@
-package com.manueldidonna.pk.rby.info
+package com.manueldidonna.pk.resources
 
-internal fun getCatchRate(speciesId: Int): Int {
+import com.manueldidonna.pk.core.Version
+
+fun getCatchRate(speciesId: Int, version: Version): Int {
+    require(version is Version.FirstGeneration) { "Only first generation games are supported" }
+    require(speciesId in 1..151) { "Species ID not supported: $speciesId" }
     return CatchRates[speciesId - 1]
 }
 

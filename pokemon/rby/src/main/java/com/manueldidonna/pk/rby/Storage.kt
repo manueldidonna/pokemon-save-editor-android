@@ -1,9 +1,6 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.MutableStorage
-import com.manueldidonna.pk.core.StorageIndex
-import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.utils.NameSize
 import com.manueldidonna.pk.rby.utils.PokemonDataSize
 import com.manueldidonna.pk.rby.utils.PokemonPartyDataSize
@@ -23,7 +20,8 @@ internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
     override val index: StorageIndex,
-    override val pokemonCounts: Int
+    override val pokemonCounts: Int,
+    override val version: Version
 ) : MutableStorage {
 
     override val name = if (index.isParty) "PARTY" else "Box ${index.value + 1}"
@@ -38,7 +36,7 @@ internal class Storage(
 
     override fun getPokemon(slot: Int): com.manueldidonna.pk.core.Pokemon {
         require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
-        return Pokemon.newImmutableInstance(exportPokemonToBytes(slot), index, slot)
+        return Pokemon.newImmutableInstance(exportPokemonToBytes(slot), index, slot, version)
     }
 
     override fun getMutablePokemon(slot: Int): MutablePokemon {
@@ -55,7 +53,8 @@ internal class Storage(
             trainerNameOffset = coercedSlot.trainerNameOfs,
             pokemonNameOffset = coercedSlot.nameOfs,
             index = index,
-            slot = coercedSlot
+            slot = coercedSlot,
+            version = version
         )
         if (pokemon.isEmpty)
             Pokemon.EmptyTemplate.apply(pokemon)
@@ -98,7 +97,7 @@ internal class Storage(
         val coercedSlot = slot.coerceAtMost(currentPokemonCounts - 1 + if (increaseCount) 1 else 0)
 
         // verify the correctness of the data
-        val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, coercedSlot)
+        val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, coercedSlot, version)
 
         if (immutablePokemon.isEmpty)
             return false // empty pk
@@ -115,10 +114,10 @@ internal class Storage(
             // Set Pokemon Names
             copyInto(data, coercedSlot.nameOfs, PokemonDataSize + NameSize)
         }
-        getMutablePokemon(slot).run {
+        getMutablePokemon(coercedSlot).run {
             data[startOffset + 0x1 + coercedSlot] = speciesId.toUByte()
-            // recalculate level from exp if pokemon is moved from party to box
-            mutator.experiencePoints(experiencePoints)
+            // recalculate level from exp & stats if pokemon is moved from party to box
+            mutator.experiencePoints(experiencePoints).statistics(all = 9999)
         }
         return true
     }

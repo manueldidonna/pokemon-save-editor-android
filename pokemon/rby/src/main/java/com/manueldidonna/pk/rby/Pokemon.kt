@@ -5,7 +5,6 @@ import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
-import com.manueldidonna.pk.rby.info.getCatchRate
 import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
 import com.manueldidonna.pk.rby.info.ifNull
@@ -35,7 +34,13 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * 0x1F	0x1 - Move 3's PP values
  * 0x20	0x1 - Move 4's PP values
  * ------------------------
+ * -------- PARTY ---------
  * 0x21 0x1 - level (exclusive of the pokemon in the party. @see [level])
+ * 0x22 0x2 - maximum HP
+ * 0x24 0x2 - attack stat
+ * 0x26 0x2 - defense stat
+ * 0x28 0x2 - speed stat
+ * 0x2A 0x2 - special stat
  * ------------------------
  * 0x21 0xb - trainer name
  * 0x2C 0xb - pokemon name
@@ -51,7 +56,8 @@ internal class Pokemon(
     private val trainerNameOffset: Int,
     private val pokemonNameOffset: Int,
     private val index: StorageIndex,
-    slot: Int
+    slot: Int,
+    override val version: Version
 ) : MutablePokemon {
 
     companion object {
@@ -71,14 +77,29 @@ internal class Pokemon(
                     .trainer(Trainer("TRAINER", 12345u, 0u))
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
+                    .statistics(all = 99999)
             }
         }
 
-        fun newImmutableInstance(data: UByteArray, index: StorageIndex, slot: Int): Pokemon {
+        fun newImmutableInstance(
+            data: UByteArray,
+            index: StorageIndex,
+            slot: Int,
+            version: Version
+        ): Pokemon {
             require(data.size == PokemonSize) {
                 "Data size is different than $PokemonSize"
             }
-            return Pokemon(data, 0, 0, PokemonDataSize, PokemonDataSize + NameSize, index, slot)
+            return Pokemon(
+                data = data,
+                speciesOffset = 0,
+                startOffset = 0,
+                trainerNameOffset = PokemonDataSize,
+                pokemonNameOffset = PokemonDataSize + NameSize,
+                index = index,
+                slot = slot,
+                version = version
+            )
         }
     }
 
@@ -204,6 +225,8 @@ internal class Pokemon(
             require(startOffset != 0) { "This Pokemon instance is read-only" }
         }
 
+        private var baseStatistics: CorePokemon.StatisticValues? = null
+
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
             require(value in 1..151) { "Not supported species id: $value" }
             // set species id
@@ -211,13 +234,14 @@ internal class Pokemon(
             data[startOffset] = getGameBoySpecies(value).toUByte()
             // set cache rate
             // TODO: catch rate doesn't change with evolution. Check it!
-            data[startOffset + 0x7] = getCatchRate(value).toUByte()
+            data[startOffset + 0x7] = getCatchRate(value, version).toUByte()
             // set types
             val firstType = getFirstType(value)
             data[startOffset + 0x5] = firstType.value.toUByte()
             data[startOffset + 0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
-            // set hp to 0 -- TODO: avoid to reset HP.
-            data.writeBidEndianShort(startOffset + 0x1, 0)
+            // set max statistics per species
+            baseStatistics = getBaseStatistics(value, version)
+            statistics(all = 9999)
         }
 
         override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
@@ -248,6 +272,8 @@ internal class Pokemon(
             if (index.isParty) {
                 data[startOffset + 0x21] = coercedLevel.toUByte()
             }
+            // TODO: remove statistics invocation
+            statistics(all = 9999) // set max statistics per level
             val sanitizedExperience = sanitizeExperiencePoints(
                 points = experiencePoints,
                 level = coercedLevel,
@@ -317,6 +343,8 @@ internal class Pokemon(
             setValue(specialAttack, shiftAmount = 0)
             setValue(specialDefense, shiftAmount = 0)
             data.writeBidEndianShort(startOffset + 0x1B, totalIVs.toShort())
+            // TODO: remove statistics invocation
+            statistics(all = 9999) // set max statistics per ivs
         }
 
         /**
@@ -332,11 +360,12 @@ internal class Pokemon(
             specialDefense: Int
         ): MutablePokemon.Mutator = apply {
             fun setValue(value: Int, effortOffset: Int) {
-                if (value >= 0)
+                if (value >= 0) {
                     data.writeBidEndianShort(
-                        offset = startOffset + effortOffset,
-                        value = value.coerceAtMost(65535).toShort()
+                        startOffset + effortOffset,
+                        value.coerceAtMost(65535).toShort()
                     )
+                }
             }
             setValue(health, effortOffset = 0x11)
             setValue(attack, effortOffset = 0x13)
@@ -344,6 +373,49 @@ internal class Pokemon(
             setValue(speed, effortOffset = 0x17)
             setValue(specialAttack, effortOffset = 0x19)
             setValue(specialDefense, effortOffset = 0x19)
+            // TODO: remove statistics invocation
+            statistics(all = 9999) // set max statistics per evs
+        }
+
+        override fun statistics(
+            health: Int,
+            attack: Int,
+            defense: Int,
+            speed: Int,
+            specialAttack: Int,
+            specialDefense: Int
+        ): MutablePokemon.Mutator = apply {
+            fun setStat(offset: Int, value: Int, max: Int) {
+                if (value > 0) {
+                    data.writeBidEndianShort(
+                        startOffset + offset,
+                        value.coerceAtMost(max).toShort()
+                    )
+                }
+            }
+
+            val baseStatistics = baseStatistics
+                ?: getBaseStatistics(speciesId, version).also { baseStatistics = it }
+
+            val stats = calculateStatistics(
+                level = level,
+                base = baseStatistics,
+                individuals = iV,
+                efforts = eV,
+                version = version
+            )
+
+            // current HP
+            setStat(offset = 0x1, value = health, max = stats.health)
+
+            if (index.isParty) {
+                setStat(offset = 0x22, value = health, max = stats.health)
+                setStat(offset = 0x24, value = attack, max = stats.attack)
+                setStat(offset = 0x26, value = defense, max = stats.defense)
+                setStat(offset = 0x28, value = speed, max = stats.speed)
+                setStat(offset = 0x2A, value = specialAttack, max = stats.specialAttack)
+                setStat(offset = 0x2A, value = specialDefense, max = stats.specialDefense)
+            }
         }
     }
 }

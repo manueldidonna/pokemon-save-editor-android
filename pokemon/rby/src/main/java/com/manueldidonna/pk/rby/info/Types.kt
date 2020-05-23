@@ -14,6 +14,7 @@ internal fun getSecondType(speciesId: Int): PokemonType {
     return PokemonType(SecondTypes[speciesId - 1])
 }
 
+// TODO: BAD TYPES ORDER
 private val FirstTypes = intArrayOf(
     3, 3, 3, 20, 20, 2, 21, 21, 21, 7, 7, 2, 3, 3, 3, 2, 2, 2, 0, 0, 2, 2, 3, 3, 23, 23, 4, 4,
     3, 3, 4, 3, 3, 4, 0, 0, 20, 20, 0, 0, 2, 2, 3, 3, 3, 22, 22, 3, 3, 4, 4, 0, 0, 21, 21, 1,

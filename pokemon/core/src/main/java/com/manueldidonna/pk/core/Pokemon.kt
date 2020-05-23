@@ -9,6 +9,8 @@ package com.manueldidonna.pk.core
 interface Pokemon {
     val isEmpty: Boolean
 
+    val version: Version
+
     val position: Position
 
     data class Position(
@@ -105,6 +107,15 @@ interface MutablePokemon : Pokemon {
             specialAttack: Int = -1,
             specialDefense: Int = -1
         ): Mutator
+
+        fun statistics(
+            health: Int = -1,
+            attack: Int = -1,
+            defense: Int = -1,
+            speed: Int = -1,
+            specialAttack: Int = -1,
+            specialDefense: Int = -1
+        ): Mutator
     }
 }
 
@@ -114,4 +125,8 @@ fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = appl
 
 fun MutablePokemon.Mutator.individualValues(all: Int): MutablePokemon.Mutator = apply {
     individualValues(all, all, all, all, all, all)
+}
+
+fun MutablePokemon.Mutator.statistics(all: Int): MutablePokemon.Mutator = apply {
+    statistics(all, all, all, all, all, all)
 }
