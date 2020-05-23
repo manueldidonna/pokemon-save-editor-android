@@ -84,11 +84,13 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
      * 3. Invert the bits of the result.
      */
     override fun exportToBytes(): UByteArray {
+        // don't export the internal data
+        val export = data.copyOf()
         // Fix checksum
         var checksum: Int = 0
         for (i in 0x2598 until 0x3523)
-            checksum += data[i].toInt()
-        data[0x3523] = checksum.toUByte() xor 0xFFu
-        return data
+            checksum += export[i].toInt()
+        export[0x3523] = checksum.toUByte() xor 0xFFu
+        return export
     }
 }
