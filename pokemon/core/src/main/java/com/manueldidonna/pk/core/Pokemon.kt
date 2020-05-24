@@ -46,6 +46,12 @@ interface Pokemon {
         val specialDefense: Int
         val speed: Int
     }
+
+    val status: StatusCondition?
+
+    enum class StatusCondition {
+        Asleep, Poisoned, Burned, Frozen, Paralyzed
+    }
 }
 
 /**
@@ -89,6 +95,7 @@ interface MutablePokemon : Pokemon {
         fun moveId(id: Int, moveIndex: Int): Mutator
         fun movePowerPoints(moveIndex: Int, moveId: Int = -1, points: Int = -1): Mutator
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
+        fun status(value: Pokemon.StatusCondition? = null): Mutator
 
         fun individualValues(
             health: Int = -1,

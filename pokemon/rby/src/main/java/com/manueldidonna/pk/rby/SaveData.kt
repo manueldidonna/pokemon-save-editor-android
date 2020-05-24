@@ -11,6 +11,7 @@ import com.manueldidonna.pk.core.Storage as CoreStorage
 internal class SaveData(private val data: UByteArray) : CoreSaveData {
 
     companion object {
+        private const val PartyOffset = 0x2F2C
         private const val CurrentBoxOffset = 0x30C0
         private const val PlayerStarterOffset = 0x29C3
     }
@@ -46,7 +47,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
         }
 
     override fun getStorage(index: StorageIndex): CoreStorage {
-        val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
+        val dataOffset = if (index.isParty) PartyOffset else getBoxDataOffset(index.value)
         val size = if (index.isParty) PartySize else BoxSize
         return Storage(
             data = data.copyOfRange(dataOffset, dataOffset + size),
@@ -58,7 +59,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     }
 
     override fun getMutableStorage(index: StorageIndex): MutableStorage {
-        val dataOffset = if (index.isParty) 0x2F2C else getBoxDataOffset(index.value)
+        val dataOffset = if (index.isParty) PartyOffset else getBoxDataOffset(index.value)
         return Storage(data, dataOffset, index, if (index.isParty) 6 else 20, version)
     }
 

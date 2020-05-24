@@ -42,10 +42,7 @@ internal class Storage(
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
         require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
-        // 0 - (currentPokemonCounts - 1) -> pokemon exists
         val coercedSlot = slot.coerceAtMost(currentPokemonCounts)
-        if (coercedSlot == currentPokemonCounts)
-            currentPokemonCounts++
         val pokemon = Pokemon(
             data = data,
             speciesOffset = startOffset + 1 + 1 * coercedSlot,
@@ -56,6 +53,8 @@ internal class Storage(
             slot = coercedSlot,
             version = version
         )
+        if (coercedSlot == currentPokemonCounts)
+            currentPokemonCounts++
         if (pokemon.isEmpty)
             Pokemon.EmptyTemplate.apply(pokemon)
         return pokemon

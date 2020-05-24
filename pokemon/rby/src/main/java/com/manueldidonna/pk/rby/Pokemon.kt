@@ -1,6 +1,7 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.rby.Pokemon.Mutator
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
@@ -16,6 +17,7 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * 0x00 0x1 - species ID
  * 0x01 0x2 - current HP
  * 0x03 0x1 - level
+ * 0x04 0x1 - status condition (@see [Mutator.status] & [Pokemon.StatusToValue])
  * 0x05 0x1 - type 1
  * 0x06 0x1 - type 2
  * 0x07 0x1 - catch rate/held item (for gen 2 compatibility)
@@ -61,6 +63,14 @@ internal class Pokemon(
 ) : MutablePokemon {
 
     companion object {
+        private val StatusToValue = mapOf(
+            CorePokemon.StatusCondition.Asleep to 0x4,
+            CorePokemon.StatusCondition.Poisoned to 0x8,
+            CorePokemon.StatusCondition.Burned to 0x10,
+            CorePokemon.StatusCondition.Frozen to 0x20,
+            CorePokemon.StatusCondition.Paralyzed to 0x40
+        )
+
         val EmptyTemplate = object : MutablePokemon.Template {
             override val name = "Empty Pokemon"
             override val description = "An empty template for R/B/Y games"
@@ -78,6 +88,7 @@ internal class Pokemon(
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
                     .statistics(all = 99999)
+                    .status()
             }
         }
 
@@ -217,6 +228,16 @@ internal class Pokemon(
         }
     }
 
+    override val status: CorePokemon.StatusCondition?
+        get() {
+            val statusValue = data[startOffset + 0x4].toInt()
+            for (entry in StatusToValue) {
+                if (entry.value == statusValue)
+                    return entry.key
+            }
+            return null
+        }
+
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 
     inner class Mutator : MutablePokemon.Mutator {
@@ -315,6 +336,11 @@ internal class Pokemon(
                 val points = getPowerPoints(moveId)
                 movePowerPoints(moveIndex, points = points + (points * coercedUps / 5))
             }
+        }
+
+        override fun status(value: CorePokemon.StatusCondition?): MutablePokemon.Mutator = apply {
+            val statusValue = if (value != null) (StatusToValue.get(value) ?: 0) else 0
+            data[startOffset + 0x4] = statusValue.toUByte()
         }
 
         /**
