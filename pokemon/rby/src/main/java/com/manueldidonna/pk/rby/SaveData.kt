@@ -28,7 +28,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
         )
         set(value) {
             getGameBoyDataFromString(value.name, 7, false, 11, false).copyInto(data, 0x2598)
-            data.writeBidEndianShort(0x2605, value.visibleId.toShort())
+            data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535u).toShort())
         }
 
     override val boxCounts: Int = 12

@@ -9,13 +9,13 @@ import androidx.ui.foundation.Text
 import androidx.ui.foundation.TextFieldValue
 import androidx.ui.input.KeyboardType
 import androidx.ui.layout.*
-import androidx.ui.material.Divider
-import androidx.ui.material.FilledTextField
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Slider
+import androidx.ui.material.*
 import androidx.ui.material.ripple.ripple
+import androidx.ui.text.AnnotatedString
+import androidx.ui.text.SpanStyle
 import androidx.ui.text.TextRange
 import androidx.ui.text.font.FontWeight
+import androidx.ui.text.withStyle
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
@@ -63,7 +63,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
             verticalGravity = Alignment.CenterVertically,
             modifier = Modifier.preferredHeight(56.dp).fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.preferredWidth(24.dp))
+            Spacer(modifier = Modifier.preferredWidth(16.dp))
             CoilImage(
                 data = spriteSource,
                 modifier = Modifier.pokemonSpriteSize()
@@ -99,48 +99,38 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
 
 @Composable
 private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) {
-    var experienceTextSelection by state { TextRange(0, 0) }
-
-    Column(modifier = Modifier.padding(24.dp)) {
-        FilledTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = TextFieldValue(
-                text = state.experiencePoints.run { if (this == 0) "" else toString() },
-                selection = experienceTextSelection
-            ),
-            onValueChange = {
-                if (it.text.all(Char::isDigit)) {
-                    experienceTextSelection = it.selection
-                    val exp = it.text.ifEmpty { "0" }.toInt()
-                    pokemon.mutator.experiencePoints(exp)
-                    state.run {
-                        experiencePoints = pokemon.experiencePoints
-                        level = pokemon.level
-                    }
+    Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp)) {
+        Spacer(modifier = Modifier.height(8.dp))
+        val valueStyle = SpanStyle(
+            fontWeight = FontWeight.Medium,
+            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface)
+        )
+        Text(
+            text = AnnotatedString {
+                append("Level ")
+                withStyle(valueStyle) {
+                    append(state.level.toString())
                 }
+                append(" with ")
+                withStyle(valueStyle) {
+                    append(state.experiencePoints.toString())
+                }
+                append(" experience points")
             },
-            label = { Text(text = "Experience Points") },
-            keyboardType = KeyboardType.Number
+            style = MaterialTheme.typography.body1,
+            color = EmphasisAmbient.current.medium.emphasize(MaterialTheme.colors.onSurface)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Row(verticalGravity = Alignment.CenterVertically) {
-            Text(
-                text = "Level ${state.level}",
-                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Slider(
-                modifier = Modifier.weight(1f),
-                value = state.level.toFloat(),
-                valueRange = 1f..100f,
-                onValueChange = { state.level = it.roundToInt() },
-                onValueChangeEnd = {
-                    pokemon.mutator.level(state.level)
-                    experienceTextSelection = TextRange(0, 0)
-                    state.experiencePoints = pokemon.experiencePoints
-                }
-            )
-        }
+        Slider(
+            modifier = Modifier.fillMaxWidth(),
+            value = state.level.toFloat(),
+            valueRange = 1f..100f,
+            onValueChange = {
+                state.level = it.roundToInt()
+                pokemon.mutator.level(state.level)
+                state.experiencePoints = pokemon.experiencePoints
+            }
+        )
     }
 }
 
@@ -148,7 +138,14 @@ private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) 
 private fun TrainerEditorField(pokemon: MutablePokemon) {
     var trainer: Trainer by state { pokemon.trainer }
     var nameSelection by state { TextRange(0, 0) }
+    var visibleIdSelection by state { TextRange(0, 0) }
+    var secretIdSelection by state { TextRange(0, 0) }
     Column(modifier = Modifier.padding(24.dp)) {
+        Text(
+            text = "Trainer Info",
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         FilledTextField(
             modifier = Modifier.fillMaxWidth(),
             value = TextFieldValue(text = trainer.name, selection = nameSelection),
@@ -157,8 +154,47 @@ private fun TrainerEditorField(pokemon: MutablePokemon) {
                 nameSelection = it.selection
                 trainer = pokemon.trainer
             },
-            label = { Text(text = "Trainer Name") },
+            label = { Text(text = "Name") },
             keyboardType = KeyboardType.Text
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        Row {
+            FilledTextField(
+                modifier = Modifier.weight(1f),
+                value = TextFieldValue(
+                    text = if (trainer.visibleId == 0u) "" else trainer.visibleId.toString(),
+                    selection = visibleIdSelection
+                ),
+                onValueChange = {
+                    if (it.text.all(Char::isDigit)) {
+                        visibleIdSelection = it.selection
+                        pokemon.mutator
+                            .trainer(trainer.copy(visibleId = it.text.ifEmpty { "0" }.toUInt()))
+                        trainer = pokemon.trainer
+                    }
+                },
+                label = { Text(text = "Visible ID") },
+                keyboardType = KeyboardType.Number
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            FilledTextField(
+                modifier = Modifier.weight(1f),
+                value = TextFieldValue(
+                    text = if (trainer.secretId == 0u) "" else trainer.secretId.toString(),
+                    selection = secretIdSelection
+                ),
+                onValueChange = {
+                    if (it.text.all(Char::isDigit)) {
+                        secretIdSelection = it.selection
+                        pokemon.mutator
+                            .trainer(trainer.copy(secretId = it.text.ifEmpty { "0" }.toUInt()))
+                        trainer = pokemon.trainer
+                    }
+                },
+                label = { Text(text = "Secret ID") },
+                keyboardType = KeyboardType.Number
+            )
+        }
+
     }
 }

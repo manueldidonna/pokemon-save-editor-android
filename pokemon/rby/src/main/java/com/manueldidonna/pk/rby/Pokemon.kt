@@ -179,7 +179,7 @@ internal class Pokemon(
     }
 
     /**
-     * [Pokemon.StatisticValues.specialDefense] and [Pokemon.StatisticValues.specialAttack] are equal
+     * [CorePokemon.StatisticValues.specialDefense] is equal to [CorePokemon.StatisticValues.specialAttack]
      */
     override val iV: CorePokemon.StatisticValues by lazy {
         object : CorePokemon.StatisticValues {
@@ -271,7 +271,10 @@ internal class Pokemon(
         }
 
         override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator {
-            data.writeBidEndianShort(startOffset + 0xC, value.visibleId.toShort())
+            data.writeBidEndianShort(
+                startOffset + 0xC,
+                value.visibleId.coerceAtMost(65535u).toShort()
+            )
             getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase)
                 .copyInto(data, trainerNameOffset)
             return this
