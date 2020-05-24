@@ -20,6 +20,3 @@ internal const val PokemonPartyDataSize = 0x2C
  * Size of pokemon and trainer names
  */
 internal const val NameSize = 0xb
-
-
-

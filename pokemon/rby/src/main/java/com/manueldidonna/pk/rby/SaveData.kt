@@ -69,9 +69,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
         }
     }
 
-    override fun getPokedex(): CorePokedex {
-        return Pokedex(data)
-    }
+    override fun getPokedex(): CorePokedex = Pokedex(data)
 
     /**
      * Export data and fix the checksum

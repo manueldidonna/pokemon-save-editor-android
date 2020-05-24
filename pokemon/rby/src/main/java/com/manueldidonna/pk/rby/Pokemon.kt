@@ -397,13 +397,7 @@ internal class Pokemon(
             val baseStatistics = baseStatistics
                 ?: getBaseStatistics(speciesId, version).also { baseStatistics = it }
 
-            val stats = calculateStatistics(
-                level = level,
-                base = baseStatistics,
-                individuals = iV,
-                efforts = eV,
-                version = version
-            )
+            val stats = calculateStatistics(level, baseStatistics, iV, eV, version)
 
             // current HP
             setStat(offset = 0x1, value = health, max = stats.health)
