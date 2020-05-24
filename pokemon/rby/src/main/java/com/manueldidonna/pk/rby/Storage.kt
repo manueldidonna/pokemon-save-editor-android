@@ -29,7 +29,7 @@ internal class Storage(
     override var currentPokemonCounts: Int
         get() = data[startOffset].toInt()
         private set(value) {
-            val coercedValue = value.coerceAtMost(pokemonCounts)
+            val coercedValue = value.coerceIn(0, pokemonCounts)
             data[startOffset] = (coercedValue).toUByte()
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
@@ -129,12 +129,11 @@ internal class Storage(
         if (slot >= currentPokemonCounts)
             return // empty slot
 
-        val endSlot = pokemonCounts - 1
+        val endSlot = currentPokemonCounts - 1
 
-        // Decrease pokemon counts and check if the selected slot is lower than the last empty slot
-        // In gen 1 there couldn't be empty slots between the pokemon in the box
-        // Move back the pokemon from 1 position if their slot is greater than the selected one
-        if (slot < --currentPokemonCounts) {
+        // In gen 1 there couldn't be empty slots between the pokemon in the storage
+        // Move back the pokemon from 1 position if the passed slot isn't the last one
+        if (slot < endSlot) {
 
             /**
              * [end] is the start offset of the last pk to move.
@@ -144,6 +143,8 @@ internal class Storage(
                 data.copyInto(data, destination, start, end + dataSize)
             }
 
+            // Ex: current count is 2. Slot is 0. End slot is 1. Start slot is 1.
+            // Data from slot 1 will be copied to slot 0. Slot 1 must be deleted
             val startSlot = slot + 1
 
             movePokemonData(slot.dataOfs, startSlot.dataOfs, endSlot.dataOfs, PokemonDataSize)
@@ -166,6 +167,9 @@ internal class Storage(
         erasePokemonData(endSlot.dataOfs, PokemonDataSize)
         erasePokemonData(endSlot.trainerNameOfs, NameSize)
         erasePokemonData(endSlot.nameOfs, NameSize)
+
+        // decrease the number of pokemon in the storage
+        currentPokemonCounts--
     }
 
     // don't use this value to export/import pokemon. Use PokemonDataSize instead
