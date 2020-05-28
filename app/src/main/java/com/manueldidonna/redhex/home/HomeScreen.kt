@@ -1,51 +1,32 @@
 package com.manueldidonna.redhex.home
 
-import androidx.compose.Composable
-import androidx.compose.Model
-import androidx.compose.getValue
-import androidx.compose.stateFor
+import android.util.Log
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
-import androidx.ui.foundation.Clickable
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.*
 import androidx.ui.layout.*
-import androidx.ui.material.IconButton
-import androidx.ui.material.MaterialTheme
+import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
-import androidx.ui.material.ripple.ripple
-import androidx.ui.savedinstancestate.Saver
-import androidx.ui.savedinstancestate.SaverScope
-import androidx.ui.savedinstancestate.rememberSavedInstanceState
+import androidx.ui.material.ripple.RippleIndication
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
-import com.manueldidonna.redhex.common.ui.DialogItem
-import com.manueldidonna.redhex.common.ui.DialogMenu
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import com.manueldidonna.redhex.home.HomeAction.*
 import java.io.File
 
-@Model
-private data class HomeState(
-    var currentStorageIndex: StorageIndex,
-    var movingPokemonPosition: Pokemon.Position? = null,
-    var selectedPokemonIndex: Int = -1
-)
-
 private sealed class HomeAction {
     object IncreaseBoxIndex : HomeAction()
     object DecreaseBoxIndex : HomeAction()
     data class DeleteSlot(val slot: Int) : HomeAction()
-    data class SwapPokemon(val first: Pokemon.Position, val second: Pokemon.Position) : HomeAction()
 }
 
 interface HomeEvents {
@@ -57,22 +38,12 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
     val pokemonResources = PokemonResourcesAmbient.current
     val spritesRetriever = PokemonSpritesRetrieverAmbient.current
 
-    val state = rememberSavedInstanceState(saver = object : Saver<HomeState, Int> {
-        override fun restore(value: Int): HomeState? {
-            return HomeState(
-                currentStorageIndex = StorageIndex.Box(value, saveData.currentBoxIndex == value)
-            )
-        }
-
-        override fun SaverScope.save(value: HomeState): Int? {
-            return value.currentStorageIndex.value
-        }
-    }) {
-        HomeState(currentStorageIndex = StorageIndex.Box(saveData.currentBoxIndex, true))
+    var currentStorageIndex: StorageIndex by state {
+        StorageIndex.Box(saveData.currentBoxIndex, isCurrentBox = true)
     }
 
-    val currentStorage by stateFor(state.currentStorageIndex.value) {
-        saveData.getMutableStorage(state.currentStorageIndex)
+    val currentStorage by stateFor(currentStorageIndex.value) {
+        saveData.getMutableStorage(currentStorageIndex)
     }
 
     val pokemonPreviews = stateFor(currentStorage) {
@@ -83,10 +54,10 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         when (action) {
             IncreaseBoxIndex, DecreaseBoxIndex -> {
                 val sumValue = if (action == IncreaseBoxIndex) 1 else -1
-                val wasParty = state.currentStorageIndex.isParty
-                val newIndex = state.currentStorageIndex.value + sumValue
+                val wasParty = currentStorageIndex.isParty
+                val newIndex = currentStorageIndex.value + sumValue
                 val maxBoxIndex = saveData.boxCounts - 1
-                state.currentStorageIndex = when {
+                currentStorageIndex = when {
                     newIndex in 0..maxBoxIndex -> {
                         saveData.currentBoxIndex = newIndex
                         StorageIndex.Box(newIndex, isCurrentBox = true)
@@ -98,12 +69,8 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
                 }
             }
             is DeleteSlot -> {
+                Log.d("delete slot", "slot: ${action.slot}")
                 currentStorage.deletePokemon(action.slot)
-                pokemonPreviews.value =
-                    getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
-            }
-            is SwapPokemon -> {
-                saveData.swapPokemon(action.first, action.second)
                 pokemonPreviews.value =
                     getPokemonPreviews(currentStorage, pokemonResources, spritesRetriever)
             }
@@ -114,9 +81,15 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
         VerticalScroller {
             Column {
                 Spacer(modifier = Modifier.preferredHeight(56.dp))
-                PokemonList(pokemon = pokemonPreviews.value) { slot ->
-                    state.selectedPokemonIndex = slot
-                }
+                PokemonList(
+                    pokemon = pokemonPreviews.value,
+                    deletePokemon = { slot -> executeAction(DeleteSlot(slot)) },
+                    onSelection = { slot ->
+                        listener.showPokemonDetails(
+                            Pokemon.Position(currentStorageIndex, slot)
+                        )
+                    }
+                )
                 Spacer(modifier = Modifier.preferredHeight(16.dp))
             }
         }
@@ -127,33 +100,6 @@ fun HomeScreen(modifier: Modifier = Modifier, saveData: SaveData, listener: Home
             title = currentStorage.name,
             onBack = { executeAction(DecreaseBoxIndex) },
             onForward = { executeAction(IncreaseBoxIndex) }
-        )
-    }
-
-    if (state.selectedPokemonIndex != -1) {
-        ContextualActions(
-            dismiss = { state.selectedPokemonIndex = -1 },
-            movePokemon = {
-                val position = Pokemon.Position(
-                    index = state.currentStorageIndex,
-                    slot = state.selectedPokemonIndex
-                )
-                if (state.movingPokemonPosition != null) {
-                    executeAction(SwapPokemon(state.movingPokemonPosition!!, position))
-                    state.movingPokemonPosition = null
-                } else {
-                    state.movingPokemonPosition = position
-                }
-            },
-            deletePokemon = { executeAction(DeleteSlot(state.selectedPokemonIndex)) },
-            viewPokemon = {
-                listener.showPokemonDetails(
-                    Pokemon.Position(
-                        state.currentStorageIndex,
-                        state.selectedPokemonIndex
-                    )
-                )
-            }
         )
     }
 }
@@ -200,24 +146,85 @@ private fun HomeToolbar(
 }
 
 @Composable
-private fun PokemonList(pokemon: List<PokemonPreview?>, onSelection: (slot: Int) -> Unit) {
+private fun PokemonList(
+    pokemon: List<PokemonPreview?>,
+    onSelection: (slot: Int) -> Unit,
+    deletePokemon: (slot: Int) -> Unit
+) {
+    var selectedIndex by state { -1 }
     pokemon.forEachIndexed { index, pk ->
-        Clickable(onClick = { onSelection(index) }, modifier = Modifier.ripple()) {
-            PokemonCard(preview = pk)
+        ContextualMenu(
+            expanded = selectedIndex == index,
+            onDismissRequest = { selectedIndex = -1 },
+            deletePokemon = { deletePokemon(selectedIndex) }
+        ) {
+            PokemonCard(
+                preview = pk,
+                clickable = Modifier.clickable(
+                    onClick = { onSelection(index) },
+                    onLongClick = { selectedIndex = index }
+                )
+            )
         }
     }
 }
 
 @Composable
-private fun ContextualActions(
-    dismiss: () -> Unit,
-    movePokemon: () -> Unit,
+private fun ContextualMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
     deletePokemon: () -> Unit,
-    viewPokemon: () -> Unit
+    anchorTo: @Composable() () -> Unit
 ) {
-    DialogMenu(dismiss = dismiss) {
-        DialogItem(text = "View pokemon", onClick = viewPokemon)
-        DialogItem(text = "Delete pokemon", onClick = deletePokemon)
-        DialogItem(text = "Move pokemon", onClick = movePokemon)
+    fun dismissAfterClick(click: () -> Unit): () -> Unit = {
+        click()
+        onDismissRequest()
+    }
+    DropdownMenu(
+        toggle = anchorTo,
+        expanded = expanded,
+        onDismissRequest = onDismissRequest
+    ) {
+        FixedDropDownMenuItem(onClick = dismissAfterClick(deletePokemon)) {
+            Text("Delete Pokemon")
+        }
     }
 }
+
+
+@Composable //TODO: remove when a bug in ui-material will be fixed
+private fun FixedDropDownMenuItem(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable() () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clickable(enabled = enabled, onClick = onClick, indication = RippleIndication())
+            .fillMaxWidth()
+            // Preferred min and max width used during the intrinsic measurement.
+            .preferredSizeIn(
+                minWidth = DropdownMenuItemDefaultMinWidth,
+                maxWidth = DropdownMenuItemDefaultMaxWidth,
+                minHeight = DropdownMenuItemDefaultMinHeight
+            )
+            .padding(horizontal = DropdownMenuHorizontalPadding),
+        gravity = ContentGravity.CenterStart
+    ) {
+        // TODO(popam, b/156912039): update emphasis if the menu item is disabled
+        val typography = MaterialTheme.typography
+        val emphasisLevels = EmphasisAmbient.current
+        ProvideTextStyle(typography.subtitle1) {
+            ProvideEmphasis(
+                if (enabled) emphasisLevels.high else emphasisLevels.disabled,
+                content
+            )
+        }
+    }
+}
+
+private val DropdownMenuHorizontalPadding = 16.dp
+private val DropdownMenuItemDefaultMinWidth = 112.dp
+private val DropdownMenuItemDefaultMaxWidth = 280.dp
+private val DropdownMenuItemDefaultMinHeight = 48.dp

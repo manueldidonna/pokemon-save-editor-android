@@ -4,16 +4,15 @@ import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.AdapterList
-import androidx.ui.foundation.Clickable
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.TextFieldValue
+import androidx.ui.foundation.clickable
 import androidx.ui.input.KeyboardType
 import androidx.ui.layout.*
 import androidx.ui.material.*
-import androidx.ui.material.ripple.ripple
-import androidx.ui.text.AnnotatedString
 import androidx.ui.text.SpanStyle
 import androidx.ui.text.TextRange
+import androidx.ui.text.annotatedString
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.withStyle
 import androidx.ui.unit.dp
@@ -57,25 +56,24 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
     }
 
     var showSpeciesDialog by state { false }
-
-    Clickable(onClick = { showSpeciesDialog = true }, modifier = Modifier.ripple()) {
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.preferredHeight(56.dp).fillMaxWidth()
-        ) {
-            Spacer(modifier = Modifier.preferredWidth(16.dp))
-            CoilImage(
-                data = spriteSource,
-                modifier = Modifier.pokemonSpriteSize()
-            )
-            Text(
-                text = species.getSpeciesById(state.speciesId),
-                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier
+            .preferredHeight(56.dp)
+            .fillMaxWidth()
+            .clickable(onClick = { showSpeciesDialog = true })
+    ) {
+        Spacer(modifier = Modifier.preferredWidth(16.dp))
+        CoilImage(
+            data = spriteSource,
+            modifier = Modifier.pokemonSpriteSize()
+        )
+        Text(
+            text = species.getSpeciesById(state.speciesId),
+            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
-
     if (showSpeciesDialog)
         DialogMenu(dismiss = { showSpeciesDialog = false }) {
             AdapterList(data = species.getAllSpecies()
@@ -103,10 +101,10 @@ private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) 
         Spacer(modifier = Modifier.height(8.dp))
         val valueStyle = SpanStyle(
             fontWeight = FontWeight.Medium,
-            color = EmphasisAmbient.current.high.emphasize(MaterialTheme.colors.onSurface)
+            color = EmphasisAmbient.current.high.applyEmphasis(MaterialTheme.colors.onSurface)
         )
         Text(
-            text = AnnotatedString {
+            text = annotatedString {
                 append("Level ")
                 withStyle(valueStyle) {
                     append(state.level.toString())
@@ -118,7 +116,7 @@ private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) 
                 append(" experience points")
             },
             style = MaterialTheme.typography.body1,
-            color = EmphasisAmbient.current.medium.emphasize(MaterialTheme.colors.onSurface)
+            color = EmphasisAmbient.current.medium.applyEmphasis(MaterialTheme.colors.onSurface)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Slider(

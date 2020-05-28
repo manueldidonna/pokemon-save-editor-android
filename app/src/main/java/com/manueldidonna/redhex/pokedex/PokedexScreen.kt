@@ -5,14 +5,14 @@ import androidx.compose.frames.ModelList
 import androidx.compose.remember
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.Clickable
 import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
+import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.clickable
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.*
 import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
-import androidx.ui.material.ripple.ripple
 import androidx.ui.res.imageResource
 import androidx.ui.text.font.FontWeight
 import androidx.ui.unit.dp
@@ -24,7 +24,6 @@ import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
 import com.manueldidonna.redhex.common.ui.Label
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
-import com.manueldidonna.redhex.common.ui.VerticalList
 import dev.chrisbanes.accompanist.coil.CoilImage
 import java.io.File
 
@@ -38,25 +37,27 @@ fun PokedexScreen(modifier: Modifier = Modifier, pokedex: Pokedex) {
     val spritesRetriever = PokemonSpritesRetrieverAmbient.current
 
     Stack(modifier) {
-        VerticalList(data = entries) { entry ->
-            if (entry.speciesId == 1)
-                Spacer(modifier = Modifier.preferredHeight(56.dp))
-            PokedexEntry(
-                species = species.getSpeciesById(entry.speciesId),
-                spriteSource = File(spritesRetriever.getSpritesPathFromId(entry.speciesId)),
-                isSeen = entry.isSeen,
-                isOwned = entry.isOwned,
-                id = entry.speciesId,
-                onValueChange = {
-                    val newEntry = when {
-                        entry.isOwned -> Pokedex.Entry.neverSeen(entry.speciesId)
-                        entry.isSeen -> Pokedex.Entry.owned(entry.speciesId)
-                        else -> Pokedex.Entry.onlySeen(entry.speciesId)
+        VerticalScroller {
+            entries.forEach { entry ->
+                if (entry.speciesId == 1)
+                    Spacer(modifier = Modifier.preferredHeight(56.dp))
+                PokedexEntry(
+                    species = species.getSpeciesById(entry.speciesId),
+                    spriteSource = File(spritesRetriever.getSpritesPathFromId(entry.speciesId)),
+                    isSeen = entry.isSeen,
+                    isOwned = entry.isOwned,
+                    id = entry.speciesId,
+                    onValueChange = {
+                        val newEntry = when {
+                            entry.isOwned -> Pokedex.Entry.neverSeen(entry.speciesId)
+                            entry.isSeen -> Pokedex.Entry.owned(entry.speciesId)
+                            else -> Pokedex.Entry.onlySeen(entry.speciesId)
+                        }
+                        pokedex.setEntry(newEntry)
+                        entries[newEntry.speciesId - 1] = newEntry
                     }
-                    pokedex.setEntry(newEntry)
-                    entries[newEntry.speciesId - 1] = newEntry
-                }
-            )
+                )
+            }
         }
         TranslucentToolbar(
             modifier = Modifier.preferredHeight(56.dp).gravity(Alignment.TopCenter),
@@ -78,39 +79,37 @@ private fun PokedexEntry(
     isOwned: Boolean,
     onValueChange: () -> Unit
 ) {
-    Clickable(onClick = onValueChange, modifier = Modifier.ripple()) {
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().preferredHeight(56.dp)
-        ) {
-            val emphasis = EmphasisAmbient.current.run { if (!isSeen) disabled else medium }
-            Spacer(modifier = Modifier.preferredWidth(16.dp))
-            if (!isSeen) {
-                Image(
-                    modifier = Modifier.pokemonSpriteSize(),
-                    colorFilter = ColorFilter.tint(emphasis.emphasize(MaterialTheme.colors.onSurface)),
-                    asset = imageResource(R.drawable.pokeball_s)
-                )
-            } else {
-                CoilImage(data = spriteSource, modifier = Modifier.pokemonSpriteSize())
-            }
-            Text(
-                text = "#$id",
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp),
-                color = emphasis.emphasize(MaterialTheme.colors.onSurface),
-                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+    val emphasisedColor = EmphasisAmbient.current.run { if (!isSeen) disabled else medium }
+        .applyEmphasis(MaterialTheme.colors.onSurface)
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .preferredHeight(56.dp)
+            .clickable(onClick = onValueChange)
+    ) {
+        Spacer(modifier = Modifier.preferredWidth(16.dp))
+        if (!isSeen) {
+            Image(
+                modifier = Modifier.pokemonSpriteSize(),
+                colorFilter = ColorFilter.tint(emphasisedColor),
+                asset = imageResource(R.drawable.pokeball_s)
             )
-            Text(
-                text = species,
-                color = emphasis.emphasize(MaterialTheme.colors.onSurface),
-                style = MaterialTheme.typography.body1
-            )
-            if (isOwned)
-                Label(
-                    modifier = Modifier.padding(start = 24.dp),
-                    text = "Owned",
-                    emphasis = emphasis
-                )
+        } else {
+            CoilImage(data = spriteSource, modifier = Modifier.pokemonSpriteSize())
         }
+        Text(
+            text = "#$id",
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp),
+            color = emphasisedColor,
+            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+        )
+        Text(
+            text = species,
+            color = emphasisedColor,
+            style = MaterialTheme.typography.body1
+        )
+        if (isOwned)
+            Label(modifier = Modifier.padding(start = 24.dp), text = "Owned")
     }
 }

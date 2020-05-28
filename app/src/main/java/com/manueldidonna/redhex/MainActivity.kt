@@ -2,9 +2,7 @@ package com.manueldidonna.redhex
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.Composable
-import androidx.compose.Model
-import androidx.compose.Providers
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
@@ -41,24 +39,18 @@ import com.manueldidonna.redhex.home.HomeEvents
 import com.manueldidonna.redhex.home.HomeScreen
 import com.manueldidonna.redhex.pokedex.PokedexScreen
 
-@Model
+
 object MainState {
-    var saveData: SaveData? = null
+    var saveData by mutableStateOf<SaveData?>(null)
+    var route by mutableStateOf<Route>(Route.Root)
+
+    sealed class Route {
+        object Root : Route()
+        data class Details(val position: Pokemon.Position) : Route()
+    }
 }
 
 class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
-
-    @Model
-    private class RouteState {
-        var route: Route = Route.Root
-
-        sealed class Route {
-            object Root : Route()
-            data class Details(val position: Pokemon.Position) : Route()
-        }
-    }
-
-    private val routeState = RouteState()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,8 +74,8 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
         if (saveData == null) {
             LoadSaveDataScreen()
         } else {
-            val route = routeState.route
-            if (route is RouteState.Route.Details) {
+            val route = MainState.route
+            if (route is MainState.Route.Details) {
                 val (index, slot) = route.position
                 Surface {
                     PokemonDetailsScreen(
@@ -105,11 +97,11 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
     }
 
     override fun showPokemonDetails(position: Pokemon.Position) {
-        routeState.route = RouteState.Route.Details(position)
+        MainState.route = MainState.Route.Details(position)
     }
 
     override fun goBackToPokemonList() {
-        routeState.route = RouteState.Route.Root
+        MainState.route = MainState.Route.Root
     }
 
     private enum class BottomDestination(val icon: VectorAsset) {

@@ -13,7 +13,6 @@ import androidx.ui.material.MaterialTheme
 import androidx.ui.res.imageResource
 import androidx.ui.unit.dp
 import com.manueldidonna.redhex.R
-import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
 import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
 import com.manueldidonna.redhex.common.ui.Label
 import dev.chrisbanes.accompanist.coil.CoilImage
@@ -26,10 +25,10 @@ data class PokemonPreview(
 )
 
 @Composable
-fun PokemonCard(preview: PokemonPreview?) {
+fun PokemonCard(clickable: Modifier, preview: PokemonPreview?) {
     val emphasis = EmphasisAmbient.current.run { if (preview != null) medium else disabled }
     Row(
-        modifier = Modifier.fillMaxWidth().preferredHeight(56.dp),
+        modifier = Modifier.fillMaxWidth().preferredHeight(56.dp) + clickable,
         verticalGravity = Alignment.CenterVertically
     ) {
         if (preview == null) {
@@ -40,16 +39,12 @@ fun PokemonCard(preview: PokemonPreview?) {
         Text(
             modifier = Modifier.padding(end = 24.dp),
             text = preview?.nickname ?: "Empty Slot",
-            color = emphasis.emphasize(MaterialTheme.colors.onSurface),
+            color = emphasis.applyEmphasis(MaterialTheme.colors.onSurface),
             style = MaterialTheme.typography.body1
         )
         if (preview != null && preview.labels.isNotEmpty())
             preview.labels.forEach { label ->
-                Label(
-                    text = label,
-                    emphasis = emphasis,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
+                Label(text = label, modifier = Modifier.padding(end = 8.dp))
             }
     }
 }
@@ -59,7 +54,7 @@ private fun PokeballPlaceholder(emphasis: Emphasis) {
     Spacer(modifier = Modifier.preferredWidth(16.dp))
     Image(
         modifier = Modifier.pokemonSpriteSize(),
-        colorFilter = ColorFilter.tint(emphasis.emphasize(MaterialTheme.colors.onSurface)),
+        colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface)),
         asset = imageResource(R.drawable.pokeball_s)
     )
     Spacer(modifier = Modifier.preferredWidth(16.dp))
@@ -68,9 +63,6 @@ private fun PokeballPlaceholder(emphasis: Emphasis) {
 @Composable
 private fun LoadPokemonSprite(data: Any) {
     Spacer(modifier = Modifier.preferredWidth(16.dp))
-    CoilImage(
-        data = data,
-        modifier = Modifier.pokemonSpriteSize()
-    )
+    CoilImage(data = data, modifier = Modifier.pokemonSpriteSize())
     Spacer(modifier = Modifier.preferredWidth(16.dp))
 }
