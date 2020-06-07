@@ -4,17 +4,12 @@ import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 import com.manueldidonna.pk.core.Storage as CoreStorage
 
 internal class SaveData(private val data: UByteArray) : CoreSaveData {
-
-    companion object {
-        private const val PartyOffset = 0x2F2C
-        private const val CurrentBoxOffset = 0x30C0
-        private const val PlayerStarterOffset = 0x29C3
-    }
 
     override val version = Version.FirstGeneration(
         isYellow = data[PlayerStarterOffset] == 0x54.toUByte() // starter is Pikachu
@@ -72,6 +67,14 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
 
     override fun getPokedex(): CorePokedex = Pokedex(data)
 
+    override val supportedInventoryTypes: List<CoreInventory.Type> =
+        listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
+
+    override fun getInventory(type: CoreInventory.Type): CoreInventory? {
+        if (type !in supportedInventoryTypes) return null
+        return Inventory(type, data)
+    }
+
     /**
      * Export data and fix the checksum
      *
@@ -91,5 +94,11 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
             checksum += export[i].toInt()
         export[0x3523] = checksum.toUByte() xor 0xFFu
         return export
+    }
+
+    companion object {
+        private const val PartyOffset = 0x2F2C
+        private const val CurrentBoxOffset = 0x30C0
+        private const val PlayerStarterOffset = 0x29C3
     }
 }
