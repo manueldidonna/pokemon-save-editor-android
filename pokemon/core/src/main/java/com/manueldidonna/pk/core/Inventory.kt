@@ -60,3 +60,7 @@ interface Inventory {
         }
     }
 }
+
+fun Inventory.getAllItems(): List<Inventory.Item> {
+    return List(size) { getItem(it) }
+}
