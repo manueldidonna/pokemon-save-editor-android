@@ -8,6 +8,7 @@ import androidx.ui.foundation.AdapterList
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.clickable
 import androidx.ui.layout.*
+import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Tab
 import androidx.ui.material.TabRow
@@ -35,27 +36,21 @@ fun InventoryScreen(modifier: Modifier, saveData: SaveData) {
     var items: List<Inventory.Item> by state { inventories.first().getAllItems() }
 
     var selectedIndex by state { -1 }
-
-    Stack(modifier = modifier) {
+    Column {
         InventoryTabs(inventories) { inventory ->
             items = inventory.getAllItems()
             selectedInventory = inventory
         }
-        Column {
-            Spacer(modifier = Modifier.height(48.dp))
-            if (items.isNotEmpty()) {
-                ItemsList(
-                    items = items,
-                    names = itemNames,
-                    maxAllowedQuantity = selectedInventory.maxAllowedQuantity,
-                    onItemChange = { newItem ->
-                        selectedInventory.setItem(newItem)
-                        items = selectedInventory.getAllItems()
-                    },
-                    onItemClick = { index -> selectedIndex = index }
-                )
-            }
-        }
+        ItemsList(
+            items = items,
+            names = itemNames,
+            maxAllowedQuantity = selectedInventory.maxAllowedQuantity,
+            onItemChange = { newItem ->
+                selectedInventory.setItem(newItem)
+                items = selectedInventory.getAllItems()
+            },
+            onItemClick = { index -> selectedIndex = index }
+        )
     }
 
     if (selectedIndex >= 0) {
@@ -124,15 +119,21 @@ private fun ItemRow(
     onQuantityChange: (Int) -> Unit,
     onItemClick: () -> Unit
 ) {
+    val emphasis = EmphasisAmbient.current.run { if (quantity > 0) high else disabled }
     Row(
         verticalGravity = Alignment.CenterVertically,
-        modifier = Modifier
-            .clickable(onClick = onItemClick)
-            .padding(horizontal = 16.dp)
-            .height(48.dp)
-            .fillMaxWidth()
+        modifier = Modifier.padding(horizontal = 16.dp).height(48.dp).fillMaxWidth()
     ) {
-        Text(text = name, style = MaterialTheme.typography.body1, modifier = Modifier.weight(1f))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable(onClick = onItemClick)
+                .wrapContentHeight(Alignment.CenterVertically),
+            color = emphasis.applyEmphasis(MaterialTheme.colors.onSurface)
+        )
         if (quantity > 0)
             Counter(
                 modifier = Modifier.width(140.dp),

@@ -38,7 +38,7 @@ internal class Inventory(
         private set(value) {
             data[startOffset] = value.coerceIn(0, capacity).toUByte()
             // end byte
-            data[startOffset + (value * 2 + 1)] = 0xFFu
+            data[startOffset + 1 + (size * 2)] = 0xFFu
         }
 
     override fun getItem(index: Int): CoreInventory.Item {
@@ -74,7 +74,7 @@ internal class Inventory(
                 "Item id (${item.id}) is not supported"
             }
             if (index >= size) size++
-            val offset = startOffset + (index.coerceAtMost(size) * 2) + 1
+            val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
             data[offset] = item.id.toUByte()
             data[offset + 1] = item.quantity.coerceAtMost(maxAllowedQuantity).toUByte()
         }
