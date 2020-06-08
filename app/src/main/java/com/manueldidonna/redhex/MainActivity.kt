@@ -19,6 +19,7 @@ import androidx.ui.material.BottomNavigationItem
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Surface
 import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.twotone.Category
 import androidx.ui.material.icons.twotone.Home
 import androidx.ui.material.icons.twotone.List
 import androidx.ui.material.icons.twotone.Settings
@@ -37,6 +38,7 @@ import com.manueldidonna.redhex.details.PokemonDetailsEvents
 import com.manueldidonna.redhex.details.PokemonDetailsScreen
 import com.manueldidonna.redhex.home.HomeEvents
 import com.manueldidonna.redhex.home.HomeScreen
+import com.manueldidonna.redhex.inventory.InventoryScreen
 import com.manueldidonna.redhex.pokedex.PokedexScreen
 
 
@@ -55,7 +57,9 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(if (isSystemInDarkTheme()) DarkColors else LightColors) {
+            MaterialTheme(
+                colors = if (isSystemInDarkTheme()) DarkColors else LightColors
+            ) {
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
                     PokemonResourcesAmbient provides PokemonTextResources.English,
@@ -90,6 +94,7 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
                         BottomDestination.Home -> HomeScreen(modifier, saveData, this)
                         BottomDestination.Settings -> SettingsScreen()
                         BottomDestination.Pokedex -> PokedexScreen(modifier, saveData.getPokedex())
+                        BottomDestination.Inventory -> InventoryScreen(modifier, saveData)
                     }
                 }
             }
@@ -107,6 +112,7 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
     private enum class BottomDestination(val icon: VectorAsset) {
         Home(Icons.TwoTone.Home),
         Pokedex(Icons.TwoTone.List),
+        Inventory(Icons.TwoTone.Category),
         Settings(Icons.TwoTone.Settings)
     }
 

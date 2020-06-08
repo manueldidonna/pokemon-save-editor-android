@@ -10,7 +10,6 @@ import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.ProvideEmphasis
 import androidx.ui.material.Surface
-import androidx.ui.material.ripple.ripple
 import androidx.ui.unit.dp
 
 class DialogScope(val dismiss: () -> Unit) {
@@ -46,16 +45,17 @@ fun DialogMenu(dismiss: () -> Unit, content: @Composable() DialogScope.() -> Uni
 
 @Composable
 inline fun DialogScope.DialogItem(text: String, crossinline onClick: () -> Unit) {
-    Clickable(onClick = dismissAfterAction(onClick), modifier = Modifier.ripple()) {
-        ProvideEmphasis(EmphasisAmbient.current.high) {
-            Box(
-                modifier = Modifier.preferredHeight(56.dp).fillMaxWidth(),
-                gravity = ContentGravity.CenterStart,
-                paddingStart = 16.dp,
-                paddingEnd = 16.dp
-            ) {
-                Text(text = text, style = MaterialTheme.typography.subtitle1)
-            }
+    ProvideEmphasis(EmphasisAmbient.current.high) {
+        Box(
+            modifier = Modifier
+                .preferredHeight(56.dp)
+                .fillMaxWidth()
+                .clickable(onClick = dismissAfterAction(onClick)),
+            gravity = ContentGravity.CenterStart,
+            paddingStart = 16.dp,
+            paddingEnd = 16.dp
+        ) {
+            Text(text = text, style = MaterialTheme.typography.subtitle1)
         }
     }
 }
