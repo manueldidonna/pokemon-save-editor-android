@@ -8,7 +8,6 @@ import androidx.ui.foundation.AdapterList
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.clickable
 import androidx.ui.layout.*
-import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Tab
 import androidx.ui.material.TabRow
@@ -36,7 +35,7 @@ fun InventoryScreen(modifier: Modifier, saveData: SaveData) {
     var items: List<Inventory.Item> by state { inventories.first().getAllItems() }
 
     var selectedIndex by state { -1 }
-    Column {
+    Column(modifier) {
         InventoryTabs(inventories) { inventory ->
             items = inventory.getAllItems()
             selectedInventory = inventory
@@ -45,6 +44,7 @@ fun InventoryScreen(modifier: Modifier, saveData: SaveData) {
             items = items,
             names = itemNames,
             maxAllowedQuantity = selectedInventory.maxAllowedQuantity,
+            capacity = selectedInventory.capacity,
             onItemChange = { newItem ->
                 selectedInventory.setItem(newItem)
                 items = selectedInventory.getAllItems()
@@ -76,7 +76,7 @@ private fun InventoryTabs(inventories: List<Inventory>, onInventoryChange: (Inve
         items = inventories,
         modifier = Modifier.zIndex(8f).fillMaxWidth(),
         selectedIndex = selectedIndex,
-        scrollable = false
+        scrollable = false // TODO: this should be scrollable
     ) { index, inventory ->
         Tab(
             modifier = Modifier.preferredHeight(48.dp),
@@ -93,6 +93,7 @@ private fun InventoryTabs(inventories: List<Inventory>, onInventoryChange: (Inve
 @Composable
 private fun ItemsList(
     maxAllowedQuantity: Int,
+    capacity: Int,
     items: List<Inventory.Item>,
     names: List<String>,
     onItemChange: (Inventory.Item) -> Unit,
@@ -108,6 +109,9 @@ private fun ItemsList(
             },
             onItemClick = { onItemClick(item.index) }
         )
+        if (item.index == items.lastIndex && item.index < capacity - 1) {
+            AddItemRow(onClick = { onItemClick(item.index + 1) })
+        }
     }
 }
 
@@ -119,7 +123,6 @@ private fun ItemRow(
     onQuantityChange: (Int) -> Unit,
     onItemClick: () -> Unit
 ) {
-    val emphasis = EmphasisAmbient.current.run { if (quantity > 0) high else disabled }
     Row(
         verticalGravity = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 16.dp).height(48.dp).fillMaxWidth()
@@ -132,17 +135,31 @@ private fun ItemRow(
                 .fillMaxHeight()
                 .clickable(onClick = onItemClick)
                 .wrapContentHeight(Alignment.CenterVertically),
-            color = emphasis.applyEmphasis(MaterialTheme.colors.onSurface)
+            color = MaterialTheme.colors.onSurface
         )
-        if (quantity > 0)
-            Counter(
-                modifier = Modifier.width(140.dp),
-                value = quantity,
-                onValueChanged = onQuantityChange,
-                enableIncrease = quantity < maxAllowedQuantity,
-                enableDecrease = quantity > 1
-            )
+        Counter(
+            modifier = Modifier.width(140.dp),
+            value = quantity,
+            onValueChanged = onQuantityChange,
+            enableIncrease = quantity < maxAllowedQuantity,
+            enableDecrease = quantity > 1
+        )
     }
+}
+
+@Composable
+private fun AddItemRow(onClick: () -> Unit) {
+    Text(
+        text = "Add an item",
+        style = MaterialTheme.typography.body1,
+        color = MaterialTheme.colors.secondary,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .fillMaxWidth()
+            .height(48.dp)
+            .wrapContentHeight(Alignment.CenterVertically)
+            .padding(horizontal = 16.dp)
+    )
 }
 
 @Composable

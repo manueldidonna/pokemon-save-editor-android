@@ -61,7 +61,7 @@ interface Inventory {
     }
 }
 
-fun Inventory.getAllItems(includeEmptyItems: Boolean = true): List<Inventory.Item> {
+fun Inventory.getAllItems(includeEmptyItems: Boolean = false): List<Inventory.Item> {
     val listSize = if (includeEmptyItems) capacity else size
     return List(listSize) { getItem(it) }
 }
