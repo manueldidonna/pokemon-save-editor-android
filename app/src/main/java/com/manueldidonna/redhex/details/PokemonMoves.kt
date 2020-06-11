@@ -81,8 +81,8 @@ private fun MoveDetails(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
             .preferredHeight(56.dp)
-            .padding(start = RowStartPadding, end = RowEndPadding)
             .clickable(onClick = onClick)
+            .padding(start = RowStartPadding, end = RowEndPadding)
     ) {
         Text(
             modifier = Modifier.weight(1f),

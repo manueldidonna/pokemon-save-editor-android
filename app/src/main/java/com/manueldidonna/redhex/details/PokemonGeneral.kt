@@ -10,11 +10,8 @@ import androidx.ui.foundation.clickable
 import androidx.ui.input.KeyboardType
 import androidx.ui.layout.*
 import androidx.ui.material.*
-import androidx.ui.text.SpanStyle
 import androidx.ui.text.TextRange
-import androidx.ui.text.annotatedString
 import androidx.ui.text.font.FontWeight
-import androidx.ui.text.withStyle
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
@@ -29,30 +26,26 @@ import dev.chrisbanes.accompanist.coil.CoilImage
 import java.io.File
 import kotlin.math.roundToInt
 
-private class GeneralState(speciesId: Int, level: Int, experiencePoints: Int) {
-    var speciesId by mutableStateOf(speciesId, areEquivalent = StructurallyEqual)
-    var level by mutableStateOf(level, areEquivalent = StructurallyEqual)
-    var experiencePoints by mutableStateOf(experiencePoints, StructurallyEqual)
-}
+@Composable
+private val LabelTextStyle
+    get() = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
 
 @Composable
 fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
-    val state = remember {
-        GeneralState(pokemon.speciesId, pokemon.level, pokemon.experiencePoints)
-    }
-    SpeciesEditorField(pokemon, pokedex, state)
+    SpeciesEditorField(pokemon, pokedex)
     Divider(color = dividerColor())
-    ExperienceEditorField(pokemon, state)
+    ExperienceEditorField(pokemon)
     Divider(color = dividerColor())
     TrainerEditorField(pokemon)
 }
 
 @Composable
-private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state: GeneralState) {
+private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
+    var speciesId by state { pokemon.speciesId }
     val species = PokemonResourcesAmbient.current.species
     val spritesRetriever = PokemonSpritesRetrieverAmbient.current
-    val spriteSource = remember(state.speciesId) {
-        File(spritesRetriever.getSpritesPathFromId(state.speciesId))
+    val spriteSource = remember(speciesId) {
+        File(spritesRetriever.getSpritesPathFromId(speciesId))
     }
 
     var showSpeciesDialog by state { false }
@@ -69,7 +62,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
             modifier = Modifier.pokemonSpriteSize()
         )
         Text(
-            text = species.getSpeciesById(state.speciesId),
+            text = species.getSpeciesById(speciesId),
             style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
@@ -86,48 +79,31 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex, state:
                         .level(pokemon.level)
                         .nickname(it.second, ignoreCase = true)
                     pokedex.setEntry(Pokedex.Entry.owned(it.first + 1))
-                    state.run {
-                        speciesId = pokemon.speciesId
-                        experiencePoints = pokemon.experiencePoints
-                    }
+                    speciesId = pokemon.speciesId
                 }
             }
         }
 }
 
 @Composable
-private fun ExperienceEditorField(pokemon: MutablePokemon, state: GeneralState) {
+private fun ExperienceEditorField(pokemon: MutablePokemon) {
+    var level by state { pokemon.level }
     Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp)) {
-        Spacer(modifier = Modifier.height(8.dp))
-        val valueStyle = SpanStyle(
-            fontWeight = FontWeight.Medium,
-            color = EmphasisAmbient.current.high.applyEmphasis(MaterialTheme.colors.onSurface)
-        )
-        Text(
-            text = annotatedString {
-                append("Level ")
-                withStyle(valueStyle) {
-                    append(state.level.toString())
-                }
-                append(" with ")
-                withStyle(valueStyle) {
-                    append(state.experiencePoints.toString())
-                }
-                append(" experience points")
-            },
-            style = MaterialTheme.typography.body1,
-            color = EmphasisAmbient.current.medium.applyEmphasis(MaterialTheme.colors.onSurface)
-        )
+        Row {
+            Text(text = "Level", style = LabelTextStyle, modifier = Modifier.weight(1f))
+            Text(
+                text = level.toString(),
+                style = MaterialTheme.typography.body1,
+                color = EmphasisAmbient.current.medium.applyEmphasis(MaterialTheme.colors.onSurface)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Slider(
             modifier = Modifier.fillMaxWidth(),
-            value = state.level.toFloat(),
+            value = level.toFloat(),
             valueRange = 1f..100f,
-            onValueChange = {
-                state.level = it.roundToInt()
-                pokemon.mutator.level(state.level)
-                state.experiencePoints = pokemon.experiencePoints
-            }
+            onValueChange = { level = it.roundToInt() },
+            onValueChangeEnd = { pokemon.mutator.level(level) }
         )
     }
 }
@@ -138,12 +114,7 @@ private fun TrainerEditorField(pokemon: MutablePokemon) {
     var nameSelection by state { TextRange(0, 0) }
     var visibleIdSelection by state { TextRange(0, 0) }
     var secretIdSelection by state { TextRange(0, 0) }
-    Column(modifier = Modifier.padding(24.dp)) {
-        Text(
-            text = "Trainer Info",
-            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+    Column(modifier = Modifier.padding(16.dp)) {
         FilledTextField(
             modifier = Modifier.fillMaxWidth(),
             value = TextFieldValue(text = trainer.name, selection = nameSelection),
@@ -152,10 +123,10 @@ private fun TrainerEditorField(pokemon: MutablePokemon) {
                 nameSelection = it.selection
                 trainer = pokemon.trainer
             },
-            label = { Text(text = "Name") },
+            label = { Text(text = "Trainer Name") },
             keyboardType = KeyboardType.Text
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Row {
             FilledTextField(
                 modifier = Modifier.weight(1f),
@@ -193,6 +164,5 @@ private fun TrainerEditorField(pokemon: MutablePokemon) {
                 keyboardType = KeyboardType.Number
             )
         }
-
     }
 }
