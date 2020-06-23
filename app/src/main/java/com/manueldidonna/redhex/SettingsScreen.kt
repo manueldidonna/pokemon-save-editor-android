@@ -1,6 +1,5 @@
 package com.manueldidonna.redhex
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.invoke
 import androidx.activity.result.ActivityResultCallback
@@ -29,7 +28,7 @@ fun SettingsScreen() {
         contractKey = "OPEN_SAVE_DATA",
         contract = ActivityResultContracts.CreateDocument(),
         activityResultCallback = ActivityResultCallback { uri: Uri? ->
-            val saveData = MainState.saveData
+            val saveData = AppState.saveData
             if (uri != null && saveData != null) {
                 context.contentResolver
                     .openOutputStream(uri)
@@ -45,7 +44,7 @@ fun SettingsScreen() {
         horizontalGravity = Alignment.CenterHorizontally
     ) {
         val padding = Modifier.padding(8.dp)
-        Button(modifier = padding, onClick = { MainState.saveData = null }) {
+        Button(modifier = padding, onClick = { AppState.saveData = null }) {
             Text(text = "CHOOSE ANOTHER SAVEDATA")
         }
         Button(modifier = padding, onClick = { launchIntent = true }) {

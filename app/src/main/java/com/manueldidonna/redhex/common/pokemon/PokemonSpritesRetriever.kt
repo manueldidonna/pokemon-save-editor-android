@@ -2,7 +2,6 @@ package com.manueldidonna.redhex.common.pokemon
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.Composable
 import androidx.core.graphics.drawable.toBitmap
 import androidx.ui.core.Modifier
 import androidx.ui.layout.preferredSize
@@ -13,10 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
 
-@Composable
-fun Modifier.pokemonSpriteSize(): Modifier {
-    return preferredSize(40.dp, 32.dp)
-}
+val PokemonSpriteSize: Modifier = Modifier.preferredSize(40.dp, 32.dp)
 
 class PokemonSpritesRetriever private constructor(private val spritesFolderPath: String) {
 

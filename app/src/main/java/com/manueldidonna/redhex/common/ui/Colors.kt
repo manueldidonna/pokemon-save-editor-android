@@ -1,8 +1,13 @@
 package com.manueldidonna.redhex.common.ui
 
+import androidx.compose.Composable
 import androidx.ui.graphics.Color
+import androidx.ui.material.MaterialTheme
 import androidx.ui.material.darkColorPalette
 import androidx.ui.material.lightColorPalette
+
+@Composable
+fun translucentSurfaceColor() = MaterialTheme.colors.surface.copy(alpha = 0.85f)
 
 val LightColors = lightColorPalette(
     primary = Color(0xFFf54149),

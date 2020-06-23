@@ -56,8 +56,8 @@ private fun createSaveData(uri: Uri?, context: Context) {
         Log.d("savedata", "preinput")
 
         if (input == null) return
-        MainState.saveData = RBYSaveDataFactory.createSaveData(input.readBytes().toUByteArray())
-        Log.d("savedata", MainState.saveData?.toString() ?: "")
+        AppState.saveData = RBYSaveDataFactory.createSaveData(input.readBytes().toUByteArray())
+        Log.d("savedata", AppState.saveData?.toString() ?: "")
     }
 }
 

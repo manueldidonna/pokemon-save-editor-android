@@ -19,7 +19,7 @@ import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
-import com.manueldidonna.redhex.translucentSurfaceColor
+import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
 
 interface PokemonDetailsEvents {
     fun goBackToPokemonList()

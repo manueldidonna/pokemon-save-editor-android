@@ -9,6 +9,7 @@ import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.*
 import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.IconButton
+import androidx.ui.material.ListItem
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
@@ -17,8 +18,7 @@ import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.ui.DialogItem
-import com.manueldidonna.redhex.common.ui.DialogMenu
+import com.manueldidonna.redhex.common.ui.ThemedDialog
 
 @Composable
 fun PokemonMoves(pokemon: MutablePokemon) {
@@ -136,12 +136,18 @@ private inline fun MovesChooser(
     resources: PokemonTextResources.Moves,
     crossinline onMoveSelected: (id: Int) -> Unit
 ) {
-    DialogMenu(dismiss = dismiss) {
+    ThemedDialog(onCloseRequest = dismiss) {
         AdapterList(data = resources.getAllMoves()
             .mapIndexed { index, s -> Pair(index, s) }
             .sortedBy { it.second }
         ) {
-            DialogItem(text = it.second, onClick = { onMoveSelected(it.first) })
+            ListItem(
+                text = it.second,
+                onClick = {
+                    onMoveSelected(it.first)
+                    dismiss()
+                }
+            )
         }
     }
 }

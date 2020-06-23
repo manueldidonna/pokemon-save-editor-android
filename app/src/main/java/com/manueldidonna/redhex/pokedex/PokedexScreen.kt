@@ -21,14 +21,14 @@ import com.manueldidonna.pk.core.getAllEntries
 import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
+import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
 import com.manueldidonna.redhex.common.ui.Label
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
 import java.io.File
 
 @Composable
-fun PokedexScreen(modifier: Modifier = Modifier, pokedex: Pokedex) {
+fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
     val species = PokemonResourcesAmbient.current.species
     val entries = remember {
         ModelList<Pokedex.Entry>().apply { addAll(pokedex.getAllEntries()) }
@@ -91,12 +91,12 @@ private fun PokedexEntry(
         Spacer(modifier = Modifier.preferredWidth(16.dp))
         if (!isSeen) {
             Image(
-                modifier = Modifier.pokemonSpriteSize(),
+                modifier = PokemonSpriteSize,
                 colorFilter = ColorFilter.tint(emphasisedColor),
                 asset = imageResource(R.drawable.pokeball_s)
             )
         } else {
-            CoilImage(data = spriteSource, modifier = Modifier.pokemonSpriteSize())
+            CoilImage(data = spriteSource, modifier = PokemonSpriteSize)
         }
         Text(
             text = "#$id",

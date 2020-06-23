@@ -18,10 +18,8 @@ import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.pokemonSpriteSize
-import com.manueldidonna.redhex.common.ui.DialogItem
-import com.manueldidonna.redhex.common.ui.DialogMenu
-import com.manueldidonna.redhex.dividerColor
+import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
+import com.manueldidonna.redhex.common.ui.ThemedDialog
 import dev.chrisbanes.accompanist.coil.CoilImage
 import java.io.File
 import kotlin.math.roundToInt
@@ -33,9 +31,9 @@ private val LabelTextStyle
 @Composable
 fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
     SpeciesEditorField(pokemon, pokedex)
-    Divider(color = dividerColor())
+    Divider()
     ExperienceEditorField(pokemon)
-    Divider(color = dividerColor())
+    Divider()
     TrainerEditorField(pokemon)
 }
 
@@ -59,7 +57,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
         Spacer(modifier = Modifier.preferredWidth(16.dp))
         CoilImage(
             data = spriteSource,
-            modifier = Modifier.pokemonSpriteSize()
+            modifier = PokemonSpriteSize
         )
         Text(
             text = species.getSpeciesById(speciesId),
@@ -67,22 +65,28 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
             modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
-    if (showSpeciesDialog)
-        DialogMenu(dismiss = { showSpeciesDialog = false }) {
+    if (showSpeciesDialog) {
+        val onCloseRequest = { showSpeciesDialog = false }
+        ThemedDialog(onCloseRequest = onCloseRequest) {
             AdapterList(data = species.getAllSpecies()
                 .drop(1) // TODO: manage empty species id
                 .mapIndexed { index, s -> Pair(index, s) }
             ) {
-                DialogItem(text = it.second) {
-                    pokemon.mutator
-                        .speciesId(it.first + 1)
-                        .level(pokemon.level)
-                        .nickname(it.second, ignoreCase = true)
-                    pokedex.setEntry(Pokedex.Entry.owned(it.first + 1))
-                    speciesId = pokemon.speciesId
-                }
+                ListItem(
+                    text = it.second,
+                    onClick = {
+                        pokemon.mutator
+                            .speciesId(it.first + 1)
+                            .level(pokemon.level)
+                            .nickname(it.second, ignoreCase = true)
+                        pokedex.setEntry(Pokedex.Entry.owned(it.first + 1))
+                        speciesId = pokemon.speciesId
+                        onCloseRequest()
+                    }
+                )
             }
         }
+    }
 }
 
 @Composable

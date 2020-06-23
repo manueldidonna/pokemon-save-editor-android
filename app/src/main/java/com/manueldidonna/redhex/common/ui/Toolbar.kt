@@ -10,8 +10,7 @@ import androidx.ui.material.Divider
 import androidx.ui.material.MaterialTheme
 import androidx.ui.unit.Dp
 import androidx.ui.unit.dp
-import com.manueldidonna.redhex.dividerColor
-import com.manueldidonna.redhex.translucentSurfaceColor
+import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
 
 val ToolbarHeight: Dp = 56.dp
 
@@ -21,9 +20,7 @@ fun TranslucentToolbar(
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     content: @Composable RowScope.() -> Unit
 ) {
-    ProvideTextStyle(
-        MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.onSurface)
-    ) {
+    ProvideTextStyle(MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.onSurface)) {
         Column(
             modifier = modifier.drawBackground(color = translucentSurfaceColor()),
             verticalArrangement = Arrangement.Center,
@@ -35,7 +32,7 @@ fun TranslucentToolbar(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 children = content
             )
-            Divider(color = dividerColor())
+            Divider()
         }
     }
 }
