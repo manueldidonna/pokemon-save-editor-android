@@ -70,8 +70,10 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     override val supportedInventoryTypes: List<CoreInventory.Type> =
         listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
 
-    override fun getInventory(type: CoreInventory.Type): CoreInventory? {
-        if (type !in supportedInventoryTypes) return null
+    override fun getInventory(type: CoreInventory.Type): CoreInventory {
+        require(type in supportedInventoryTypes) {
+            "Type $type is not supported by this Inventory instance"
+        }
         return Inventory(type, data)
     }
 

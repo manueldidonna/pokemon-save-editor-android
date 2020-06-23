@@ -34,7 +34,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
     val resources = PokemonResourcesAmbient.current.items
 
     var inventory: Inventory by state {
-        saveData.getInventory(saveData.supportedInventoryTypes.first())!!
+        saveData.getInventory(saveData.supportedInventoryTypes.first())
     }
 
     var items: List<Inventory.Item> by state {
@@ -46,7 +46,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
     Stack(modifier = modifier) {
         Column {
             InventoryTypes(types = saveData.supportedInventoryTypes) { type ->
-                inventory = saveData.getInventory(type)!!
+                inventory = saveData.getInventory(type)
                 items = inventory.getAllItems()
             }
             ItemsList(

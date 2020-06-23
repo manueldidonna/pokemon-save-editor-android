@@ -18,10 +18,7 @@ interface SaveData {
 
     val supportedInventoryTypes: List<Inventory.Type>
 
-    /**
-     * Return null if [type] is not supported
-     */
-    fun getInventory(type: Inventory.Type) : Inventory?
+    fun getInventory(type: Inventory.Type): Inventory
 
     fun exportToBytes(): UByteArray
 
