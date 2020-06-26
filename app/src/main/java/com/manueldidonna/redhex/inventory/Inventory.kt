@@ -4,24 +4,20 @@ import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
-import androidx.ui.foundation.AdapterList
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.*
+import androidx.ui.graphics.Color
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
+import androidx.ui.material.icons.twotone.ArrowBack
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.*
-import com.manueldidonna.redhex.common.ui.LightColors
-import com.manueldidonna.redhex.common.ui.PreviewScreen
-import com.manueldidonna.redhex.common.ui.ThemedDialog
-import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
+import com.manueldidonna.redhex.common.ui.*
 import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlin.math.roundToInt
 
@@ -52,7 +48,13 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
 
     Stack(modifier = modifier.fillMaxSize()) {
         Column {
-            InventoryTypes(types = saveData.supportedInventoryTypes) { type ->
+            val toolbarTitle = remember(inventory.size) {
+                "Free slots ${inventory.run { capacity - size }}/${inventory.capacity}"
+            }
+            InventoryToolbar(
+                title = toolbarTitle,
+                types = saveData.supportedInventoryTypes
+            ) { type ->
                 inventory = saveData.getInventory(type)
                 items = inventory.getAllItems(spritesRetriever, resources)
             }
@@ -98,6 +100,65 @@ private fun Inventory.getAllItems(
         InventoryItem(index, id, quantity, itemNames[id], spritesRetriever.getItemSprite(id))
     }
     return List(size) { selectItem(it, mapTo = inventoryItem) }
+}
+
+@Composable
+private fun InventoryToolbar(
+    title: String,
+    types: List<Inventory.Type>,
+    onTypeChange: (Inventory.Type) -> Unit
+) {
+    Column {
+        TopAppBar(
+            modifier = Modifier.preferredHeight(ToolbarHeight),
+            title = { Text(text = title) },
+            elevation = 0.dp,
+            backgroundColor = translucentSurfaceColor()
+        )
+        InventoryTypes(types = types, onTypeChange = onTypeChange)
+    }
+}
+
+@Composable
+private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory.Type) -> Unit) {
+    val resources = PokemonResourcesAmbient.current.items
+    var selectedIndex by state { 0 }
+    TabRow(
+        backgroundColor = translucentSurfaceColor(),
+        items = types,
+        modifier = Modifier.zIndex(8f).fillMaxWidth(),
+        selectedIndex = selectedIndex,
+        scrollable = false // TODO: this should be scrollable
+    ) { index, type ->
+        Tab(
+            modifier = Modifier.preferredHeight(48.dp),
+            text = { Text(text = resources.getTypeName(type)) },
+            selected = index == selectedIndex,
+            onSelected = {
+                onTypeChange(type)
+                selectedIndex = index
+            }
+        )
+    }
+}
+
+@Composable
+private fun ItemsList(items: List<InventoryItem>, onItemClick: (item: Inventory.Item) -> Unit) {
+    VerticalScroller {
+        items.forEach { item ->
+            ListItem(
+                text = { Text(text = item.name) },
+                secondaryText = { Text(text = "Qt. ${item.quantity}") },
+                onClick = { onItemClick(item) },
+                icon = {
+                    Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
+                        CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize)
+                    }
+                }
+            )
+            Divider()
+        }
+    }
 }
 
 @Composable
@@ -167,44 +228,6 @@ private fun ItemEditor(
                     onCloseRequest()
                 }
             )
-        }
-    }
-}
-
-@Composable
-private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory.Type) -> Unit) {
-    val resources = PokemonResourcesAmbient.current.items
-    var selectedIndex by state { 0 }
-    TabRow(
-        backgroundColor = translucentSurfaceColor(),
-        items = types,
-        modifier = Modifier.zIndex(8f).fillMaxWidth(),
-        selectedIndex = selectedIndex,
-        scrollable = false // TODO: this should be scrollable
-    ) { index, type ->
-        Tab(
-            modifier = Modifier.preferredHeight(48.dp),
-            text = { Text(text = resources.getTypeName(type)) },
-            selected = index == selectedIndex,
-            onSelected = {
-                onTypeChange(type)
-                selectedIndex = index
-            }
-        )
-    }
-}
-
-@Composable
-private fun ItemsList(items: List<InventoryItem>, onItemClick: (item: Inventory.Item) -> Unit) {
-    VerticalScroller {
-        items.forEach { item ->
-            ListItem(
-                text = { Text(text = item.name) },
-                secondaryText = { Text(text = "Qt. ${item.quantity}") },
-                onClick = { onItemClick(item) },
-                icon = { CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize) }
-            )
-            Divider()
         }
     }
 }

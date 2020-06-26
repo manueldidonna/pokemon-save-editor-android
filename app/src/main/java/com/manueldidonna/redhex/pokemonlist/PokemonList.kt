@@ -7,10 +7,7 @@ import androidx.compose.stateFor
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Image
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.*
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.*
 import androidx.ui.material.*
@@ -156,7 +153,11 @@ private fun ShowPokemonPreviews(
                     Text(text = pk.nickname, color = activeTextColor)
                 }
             },
-            icon = { PokemonSprite(source = pk?.sprite?.value) },
+            icon = {
+                Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
+                    PokemonSprite(source = pk?.sprite?.value)
+                }
+            },
             onClick = { onSlotSelection(index) },
             secondaryText = PokemonLabel(pk)
         )
