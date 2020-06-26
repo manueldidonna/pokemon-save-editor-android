@@ -10,7 +10,12 @@ val PokemonSpriteSize: Modifier = Modifier.preferredSize(40.dp, 32.dp)
 
 val ItemSpriteSize: Modifier = Modifier.preferredSize(32.dp)
 
-inline class SpriteSource(val value: Any)
+inline class SpriteSource(val value: Any) {
+
+    companion object {
+        val Invalid = SpriteSource("")
+    }
+}
 
 interface SpritesRetriever {
     fun getPokemonSprite(speciesId: Int): SpriteSource
