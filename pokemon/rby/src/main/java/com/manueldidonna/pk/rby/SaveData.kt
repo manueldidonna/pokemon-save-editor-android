@@ -27,45 +27,6 @@ internal class SaveData(
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
 
-    override val boxCount: Int = 12
-
-    override var currentBoxIndex: Int
-        get() = (data[0x284C] and 0x7Fu).toInt()
-        set(value) {
-            require(value in 0..11) { " Box index must be 0-11 but is $value" }
-            if (value == currentBoxIndex) return
-            val oldValue = currentBoxIndex
-            val newBoxOffset = getBoxDataOffset(value)
-            data[0x284C] = (data[0x284C] and 0x80u) or (value and 0x7F).toUByte()
-            val oldBoxOffset = getBoxDataOffset(oldValue)
-            data.copyInto(data, oldBoxOffset, CurrentBoxOffset, CurrentBoxOffset + BoxSize)
-            data.copyInto(data, CurrentBoxOffset, newBoxOffset, newBoxOffset + BoxSize)
-        }
-
-    override fun getStorage(index: StorageIndex): CoreStorage {
-        val dataOffset = if (index.isParty) PartyOffset else getBoxDataOffset(index.value)
-        val size = if (index.isParty) PartySize else BoxSize
-        return Storage(
-            data = data.copyOfRange(dataOffset, dataOffset + size),
-            startOffset = 0,
-            index = index,
-            capacity = if (index.isParty) 6 else 20,
-            version = version
-        )
-    }
-
-    override fun getMutableStorage(index: StorageIndex): MutableStorage {
-        val dataOffset = if (index.isParty) PartyOffset else getBoxDataOffset(index.value)
-        return Storage(data, dataOffset, index, if (index.isParty) 6 else 20, version)
-    }
-
-    private fun getBoxDataOffset(index: Int): Int {
-        require(index in 0..11) { " Box index must be 0-11" }
-        return if (index == currentBoxIndex) CurrentBoxOffset else {
-            if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
-        }
-    }
-
     override val supportedInventoryTypes: List<CoreInventory.Type> =
         listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
 
@@ -74,6 +35,64 @@ internal class SaveData(
             "Type $type is not supported by this Inventory instance"
         }
         return Inventory(type, data)
+    }
+
+    override val indices: IntRange = StorageCollection.PartyIndex until 12
+
+    private var currentBoxIndex: Int
+        get() = (data[CurrentIndexOffset] and 0x7Fu).toInt()
+        set(value) {
+            if (value == currentBoxIndex) return
+            val oldBoxOffset = getBoxDataOffset(currentBoxIndex)
+            val newBoxOffset = getBoxDataOffset(value)
+            // switch box
+            data.copyInto(data, oldBoxOffset, CurrentBoxOffset, CurrentBoxOffset + BoxSize)
+            data.copyInto(data, CurrentBoxOffset, newBoxOffset, newBoxOffset + BoxSize)
+            // update current index
+            data[CurrentIndexOffset] =
+                (data[CurrentIndexOffset] and 0x80u) or (value and 0x7F).toUByte()
+        }
+
+    override var currentIndex: Int = currentBoxIndex
+        set(value) {
+            require(value in indices) { "Index $value is out of bounds [$indices]" }
+            if (value == field) return
+            // Update current box index
+            if (!value.isPartyIndex) {
+                currentBoxIndex = value
+            }
+            field = value
+        }
+
+    override fun getStorage(index: Int): CoreStorage {
+        require(index in indices) { "Index $index is out of bounds [$indices]" }
+        val dataOffset = getStorageOffset(index)
+        val size = if (index.isPartyIndex) PartySize else BoxSize
+        return Storage(
+            data = data.copyOfRange(dataOffset, dataOffset + size),
+            startOffset = 0,
+            index = index,
+            capacity = if (index.isPartyIndex) 6 else 20,
+            version = version
+        )
+    }
+
+    override fun getMutableStorage(index: Int): MutableStorage {
+        require(index in indices) { "Index $index is out of bounds [$indices]" }
+        val dataOffset = getStorageOffset(index)
+        return Storage(data, dataOffset, index, if (index.isPartyIndex) 6 else 20, version)
+    }
+
+    private fun getStorageOffset(index: Int): Int {
+        return when (index) {
+            StorageCollection.PartyIndex -> PartyOffset
+            currentBoxIndex -> CurrentBoxOffset
+            else -> getBoxDataOffset(index)
+        }
+    }
+
+    private fun getBoxDataOffset(index: Int): Int {
+        return if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
     }
 
     /**
@@ -100,5 +119,6 @@ internal class SaveData(
     companion object {
         private const val PartyOffset = 0x2F2C
         private const val CurrentBoxOffset = 0x30C0
+        private const val CurrentIndexOffset = 0x284C
     }
 }

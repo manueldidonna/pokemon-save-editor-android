@@ -1,6 +1,9 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.MutableStorage
+import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isPartyIndex
 import com.manueldidonna.pk.rby.utils.NameSize
 import com.manueldidonna.pk.rby.utils.PokemonDataSize
 import com.manueldidonna.pk.rby.utils.PokemonPartyDataSize
@@ -19,12 +22,12 @@ import com.manueldidonna.pk.rby.utils.PokemonSize
 internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
-    override val index: StorageIndex,
+    override val index: Int,
     override val capacity: Int,
     override val version: Version
 ) : MutableStorage {
 
-    override val name = if (index.isParty) "PARTY" else "Box ${index.value + 1}"
+    override val name = if (index.isPartyIndex) "PARTY" else "Box ${index + 1}"
 
     override var size: Int
         get() = data[startOffset].toInt()
@@ -172,11 +175,11 @@ internal class Storage(
     }
 
     // don't use this value to export/import pokemon. Use PokemonDataSize instead
-    private val pokemonSize = if (index.isParty) PokemonPartyDataSize else PokemonDataSize
+    private val pokemonSize = if (index.isPartyIndex) PokemonPartyDataSize else PokemonDataSize
 
-    private val trainerNameOffset = startOffset + if (index.isParty) 0x110 else 0x2AA
-    private val nameOffset = startOffset + if (index.isParty) 0x152 else 0x386
-    private val dataOffset = startOffset + if (index.isParty) 0x8 else 0x16
+    private val trainerNameOffset = startOffset + if (index.isPartyIndex) 0x110 else 0x2AA
+    private val nameOffset = startOffset + if (index.isPartyIndex) 0x152 else 0x386
+    private val dataOffset = startOffset + if (index.isPartyIndex) 0x8 else 0x16
 
     private val Int.dataOfs: Int get() = dataOffset + (pokemonSize * this)
     private val Int.trainerNameOfs: Int get() = trainerNameOffset + (NameSize * this)

@@ -57,7 +57,7 @@ internal class Pokemon(
     private val startOffset: Int,
     private val trainerNameOffset: Int,
     private val pokemonNameOffset: Int,
-    private val index: StorageIndex,
+    private val index: Int,
     slot: Int,
     override val version: Version
 ) : MutablePokemon {
@@ -93,7 +93,7 @@ internal class Pokemon(
 
         fun newImmutableInstance(
             data: UByteArray,
-            index: StorageIndex,
+            index: Int,
             slot: Int,
             version: Version
         ): Pokemon {
@@ -141,7 +141,7 @@ internal class Pokemon(
         get() {
             return when {
                 // fast path, box pokemon. Read from the level offset
-                !index.isParty -> data[startOffset + 0x3].toInt()
+                !index.isPartyIndex -> data[startOffset + 0x3].toInt()
                 // mutable pokemon, read value in the party-only level offset
                 startOffset != 0 -> data[startOffset + 0x21].toInt()
                 // not mutable, party offsets aren't available. Calculate the level from the exp
@@ -294,7 +294,7 @@ internal class Pokemon(
         override fun level(value: Int): MutablePokemon.Mutator = apply {
             val coercedLevel = value.coerceIn(1, 100)
             data[startOffset + 0x3] = coercedLevel.toUByte()
-            if (index.isParty) {
+            if (index.isPartyIndex) {
                 data[startOffset + 0x21] = coercedLevel.toUByte()
             }
             // TODO: remove statistics invocation
@@ -420,7 +420,7 @@ internal class Pokemon(
             // current HP
             setStat(offset = 0x1, value = stats.health)
 
-            if (index.isParty) {
+            if (index.isPartyIndex) {
                 setStat(offset = 0x22, value = stats.health)
                 setStat(offset = 0x24, value = stats.attack)
                 setStat(offset = 0x26, value = stats.defense)

@@ -1,9 +1,6 @@
 package com.manueldidonna.redhex.pokemonlist
 
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.stateFor
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
@@ -15,13 +12,8 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.res.imageResource
-import androidx.ui.savedinstancestate.Saver
-import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.StorageIndex
-import com.manueldidonna.pk.core.isParty
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpriteSize
@@ -30,16 +22,6 @@ import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
-
-private val StorageIndexSaver = Saver<StorageIndex, Int>(
-    save = { it.value },
-    restore = {
-        if (it == StorageIndex.Party.value)
-            StorageIndex.Party
-        else
-            StorageIndex.Box(it, isCurrentBox = true)
-    }
-)
 
 private data class PokemonPreview(
     val nickname: String,
@@ -50,21 +32,19 @@ private data class PokemonPreview(
 @Composable
 fun PokemonList(
     modifier: Modifier = Modifier,
-    saveData: SaveData,
+    collection: StorageCollection,
     showPokemonDetails: (Pokemon.Position) -> Unit
 ) {
     val pokemonResources = PokemonResourcesAmbient.current.natures
     val spritesRetriever = SpritesRetrieverAmbient.current
 
-    var storageIndex: StorageIndex by savedInstanceState(saver = StorageIndexSaver) {
-        StorageIndex.Box(saveData.currentBoxIndex, isCurrentBox = true)
+    var currentIndex: Int by state { collection.currentIndex }
+
+    val storage: MutableStorage by stateFor(currentIndex) {
+        collection.getMutableStorage(currentIndex)
     }
 
-    val storage by stateFor(storageIndex.value) {
-        saveData.getMutableStorage(storageIndex)
-    }
-
-    val pokemonPreviews by stateFor(storage.index.value) {
+    val pokemonPreviews by stateFor(storage.index) {
         List(storage.capacity) { i ->
             storage.getPokemon(i).run {
                 if (isEmpty) return@run null
@@ -81,37 +61,19 @@ fun PokemonList(
         Toolbar(
             modifier = Modifier.height(ToolbarHeight).zIndex(8f).gravity(Alignment.TopCenter),
             title = storage.name,
-            onBack = {
-                storageIndex = storageIndex.nextIndex(saveData, increase = false)
-            },
-            onForward = {
-                storageIndex = storageIndex.nextIndex(saveData, increase = true)
-            }
+            onBack = { currentIndex = collection.decreaseIndex() },
+            onForward = { currentIndex = collection.increaseIndex() }
         )
         VerticalScroller {
             Spacer(modifier = Modifier.preferredHeight(ToolbarHeight))
             ShowPokemonPreviews(
                 previews = pokemonPreviews,
                 onSlotSelection = { slot ->
-                    showPokemonDetails(Pokemon.Position(storageIndex, slot))
+                    showPokemonDetails(Pokemon.Position(currentIndex, slot))
                 }
             )
         }
     }
-}
-
-private fun StorageIndex.nextIndex(saveData: SaveData, increase: Boolean): StorageIndex {
-    val newIndexValue = value + (if (increase) 1 else -1)
-    val maxIndexValue = saveData.boxCount - 1
-    val nextIndex = when {
-        isParty -> StorageIndex.Box(if (increase) 0 else maxIndexValue, isCurrentBox = true)
-        newIndexValue in 0..maxIndexValue -> StorageIndex.Box(newIndexValue, isCurrentBox = true)
-        else -> StorageIndex.Party
-    }
-    if (!nextIndex.isParty) {
-        saveData.currentBoxIndex = nextIndex.value
-    }
-    return nextIndex
 }
 
 @Composable

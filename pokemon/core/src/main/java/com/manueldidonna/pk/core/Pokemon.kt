@@ -14,7 +14,14 @@ interface Pokemon {
     val position: Position
 
     data class Position(
-        val index: StorageIndex,
+        /**
+         * @see [Storage.index]
+         */
+        val index: Int,
+
+        /**
+         * The position in the [Storage], in according to [Storage.capacity]
+         */
         val slot: Int
     )
 
