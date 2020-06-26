@@ -4,7 +4,7 @@ package com.manueldidonna.pk.core
  * An interface to get info about seen/owned pokemon
  */
 interface Pokedex {
-    val pokemonCounts: Int
+    val pokemonCount: Int
 
     fun getEntry(speciesId: Int): Entry
 
@@ -38,5 +38,5 @@ interface Pokedex {
 }
 
 fun Pokedex.getAllEntries(): List<Pokedex.Entry> {
-    return List(pokemonCounts) { getEntry(it + 1) }
+    return List(pokemonCount) { getEntry(it + 1) }
 }

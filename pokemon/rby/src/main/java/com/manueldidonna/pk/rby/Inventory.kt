@@ -60,18 +60,8 @@ internal class Inventory(
         require(index in 0 until capacity) {
             "Index ($index) out of Inventory bounds [0-$capacity]"
         }
-        // delete item at specified index
-        // TODO: move in a separate function
         if (item.id == 0 || item.quantity == 0) {
-            val lastIndexOffset = startOffset + 1 + (capacity - 1) * 2
-            //shift items left of 1 position
-            if (index < capacity - 1) {
-                val destinationOffset = startOffset + 1 + (index) * 2
-                val startShiftOffset = startOffset + 1 + (index + 1) * 2
-                data.copyInto(data, destinationOffset, startShiftOffset, lastIndexOffset + 2)
-            }
-            data.fill(0u, lastIndexOffset, lastIndexOffset + 2)
-            size--
+            deleteItem(index)
         } else {
             require(item.id in supportedItemIds) {
                 "Item id (${item.id}) is not supported"
@@ -81,6 +71,18 @@ internal class Inventory(
             data[offset] = getGameBoyItemId(item.id).toUByte()
             data[offset + 1] = item.quantity.coerceAtMost(maxAllowedQuantity).toUByte()
         }
+    }
+
+    private fun deleteItem(index: Int) {
+        val lastIndexOffset = startOffset + 1 + (capacity - 1) * 2
+        //shift items left of 1 position
+        if (index < capacity - 1) {
+            val destinationOffset = startOffset + 1 + (index) * 2
+            val startShiftOffset = startOffset + 1 + (index + 1) * 2
+            data.copyInto(data, destinationOffset, startShiftOffset, lastIndexOffset + 2)
+        }
+        data.fill(0u, lastIndexOffset, lastIndexOffset + 2)
+        size--
     }
 
     companion object {

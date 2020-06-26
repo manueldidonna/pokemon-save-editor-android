@@ -9,12 +9,7 @@ import com.manueldidonna.pk.core.Pokedex as CorePokedex
  */
 internal class Pokedex(private val data: UByteArray) : CorePokedex {
 
-    companion object {
-        private const val OwnedOffset = 0x25A3
-        private const val SeenOffset = 0x25B6
-    }
-
-    override val pokemonCounts: Int = 151
+    override val pokemonCount: Int = 151
 
     override fun getEntry(speciesId: Int): CorePokedex.Entry {
         require(speciesId in 1..151) { "Species Id not supported: $speciesId" }
@@ -38,5 +33,10 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
     private fun setFlag(offset: Int, bitIndex: Int, value: Boolean) {
         data[offset] = data[offset] and (1 shl bitIndex).inv().toUByte()
         data[offset] = data[offset] or ((if (value) 1 else 0) shl bitIndex).toUByte()
+    }
+
+    companion object {
+        private const val OwnedOffset = 0x25A3
+        private const val SeenOffset = 0x25B6
     }
 }

@@ -64,7 +64,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
             horizontalArrangement = Arrangement.Center
         ) {
             val seenPercentage =
-                entries.count { it.isSeen }.toDouble() / pokedex.pokemonCounts * 100
+                entries.count { it.isSeen }.toDouble() / pokedex.pokemonCount * 100
             Text(text = "${seenPercentage.toInt()}% Completed")
         }
     }

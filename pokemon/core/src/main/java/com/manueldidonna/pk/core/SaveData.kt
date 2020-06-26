@@ -6,7 +6,7 @@ interface SaveData {
 
     var trainer: Trainer
 
-    val boxCounts: Int
+    val boxCount: Int
 
     var currentBoxIndex: Int
 

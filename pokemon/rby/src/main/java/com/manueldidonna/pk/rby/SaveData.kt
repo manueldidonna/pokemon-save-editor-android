@@ -9,11 +9,10 @@ import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 import com.manueldidonna.pk.core.Storage as CoreStorage
 
-internal class SaveData(private val data: UByteArray) : CoreSaveData {
-
-    override val version = Version.FirstGeneration(
-        isYellow = data[PlayerStarterOffset] == 0x54.toUByte() // starter is Pikachu
-    )
+internal class SaveData(
+    private val data: UByteArray,
+    override val version: Version
+) : CoreSaveData {
 
     override var trainer: Trainer
         get() = Trainer(
@@ -26,7 +25,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
             data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535u).toShort())
         }
 
-    override val boxCounts: Int = 12
+    override val boxCount: Int = 12
 
     override var currentBoxIndex: Int
         get() = (data[0x284C] and 0x7Fu).toInt()
@@ -48,7 +47,7 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
             data = data.copyOfRange(dataOffset, dataOffset + size),
             startOffset = 0,
             index = index,
-            pokemonCounts = if (index.isParty) 6 else 20,
+            capacity = if (index.isParty) 6 else 20,
             version = version
         )
     }
@@ -101,6 +100,5 @@ internal class SaveData(private val data: UByteArray) : CoreSaveData {
     companion object {
         private const val PartyOffset = 0x2F2C
         private const val CurrentBoxOffset = 0x30C0
-        private const val PlayerStarterOffset = 0x29C3
     }
 }

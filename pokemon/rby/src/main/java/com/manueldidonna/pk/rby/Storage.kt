@@ -20,29 +20,29 @@ internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
     override val index: StorageIndex,
-    override val pokemonCounts: Int,
+    override val capacity: Int,
     override val version: Version
 ) : MutableStorage {
 
     override val name = if (index.isParty) "PARTY" else "Box ${index.value + 1}"
 
-    override var currentPokemonCounts: Int
+    override var size: Int
         get() = data[startOffset].toInt()
         private set(value) {
-            val coercedValue = value.coerceIn(0, pokemonCounts)
+            val coercedValue = value.coerceIn(0, capacity)
             data[startOffset] = (coercedValue).toUByte()
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
 
     override fun getPokemon(slot: Int): com.manueldidonna.pk.core.Pokemon {
-        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
+        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
         return Pokemon.newImmutableInstance(exportPokemonToBytes(slot), index, slot, version)
     }
 
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
-        val coercedSlot = slot.coerceAtMost(currentPokemonCounts)
+        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
+        val coercedSlot = slot.coerceAtMost(size)
         val pokemon = Pokemon(
             data = data,
             speciesOffset = startOffset + 1 + 1 * coercedSlot,
@@ -53,18 +53,18 @@ internal class Storage(
             slot = coercedSlot,
             version = version
         )
-        if (coercedSlot == currentPokemonCounts)
-            currentPokemonCounts++
+        if (coercedSlot == size)
+            size++
         if (pokemon.isEmpty)
             Pokemon.EmptyTemplate.apply(pokemon)
         return pokemon
     }
 
     override fun exportPokemonToBytes(slot: Int): UByteArray {
-        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
+        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
 
         // I treat it as an empty location
-        if (slot > currentPokemonCounts - 1)
+        if (slot > size - 1)
             return UByteArray(PokemonSize)
 
         return UByteArray(PokemonSize).apply {
@@ -85,15 +85,15 @@ internal class Storage(
 
     override fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
+        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
 
         if (bytes.all { it == 0.toUByte() })
             return false // empty pk
 
         // increase pokemon counts if needed
-        val increaseCount = slot >= currentPokemonCounts
+        val increaseCount = slot >= size
 
-        val coercedSlot = slot.coerceAtMost(currentPokemonCounts - 1 + if (increaseCount) 1 else 0)
+        val coercedSlot = slot.coerceAtMost(size - 1 + if (increaseCount) 1 else 0)
 
         // verify the correctness of the data
         val immutablePokemon = Pokemon.newImmutableInstance(bytes, index, coercedSlot, version)
@@ -102,7 +102,7 @@ internal class Storage(
             return false // empty pk
 
         if (increaseCount)
-            currentPokemonCounts++
+            size++
 
         data[startOffset + 0x1 + coercedSlot] = immutablePokemon.speciesId.toUByte()
         bytes.apply {
@@ -123,12 +123,12 @@ internal class Storage(
 
     override fun deletePokemon(slot: Int) {
         require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until pokemonCounts) { "Pokemon slot $slot is out of bounds" }
+        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
 
-        if (slot >= currentPokemonCounts)
+        if (slot >= size)
             return // empty slot
 
-        val endSlot = currentPokemonCounts - 1
+        val endSlot = size - 1
 
         // In gen 1 there couldn't be empty slots between the pokemon in the storage
         // Move back the pokemon from 1 position if the passed slot isn't the last one
@@ -168,7 +168,7 @@ internal class Storage(
         erasePokemonData(endSlot.nameOfs, NameSize)
 
         // decrease the number of pokemon in the storage
-        currentPokemonCounts--
+        size--
     }
 
     // don't use this value to export/import pokemon. Use PokemonDataSize instead

@@ -65,7 +65,7 @@ fun PokemonList(
     }
 
     val pokemonPreviews by stateFor(storage.index.value) {
-        List(storage.pokemonCounts) { i ->
+        List(storage.capacity) { i ->
             storage.getPokemon(i).run {
                 if (isEmpty) return@run null
                 return@run PokemonPreview(
@@ -102,7 +102,7 @@ fun PokemonList(
 
 private fun StorageIndex.nextIndex(saveData: SaveData, increase: Boolean): StorageIndex {
     val newIndexValue = value + (if (increase) 1 else -1)
-    val maxIndexValue = saveData.boxCounts - 1
+    val maxIndexValue = saveData.boxCount - 1
     val nextIndex = when {
         isParty -> StorageIndex.Box(if (increase) 0 else maxIndexValue, isCurrentBox = true)
         newIndexValue in 0..maxIndexValue -> StorageIndex.Box(newIndexValue, isCurrentBox = true)

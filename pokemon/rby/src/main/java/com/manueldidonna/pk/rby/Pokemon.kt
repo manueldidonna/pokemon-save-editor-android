@@ -231,9 +231,11 @@ internal class Pokemon(
     override val status: CorePokemon.StatusCondition?
         get() {
             val statusValue = data[startOffset + 0x4].toInt()
-            for (entry in StatusToValue) {
-                if (entry.value == statusValue)
-                    return entry.key
+            if (statusValue != 0) {
+                for (entry in StatusToValue) {
+                    if (entry.value == statusValue)
+                        return entry.key
+                }
             }
             return null
         }
