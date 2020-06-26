@@ -3,6 +3,7 @@ package com.manueldidonna.redhex
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.*
+import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.Text
@@ -10,6 +11,7 @@ import androidx.ui.foundation.contentColor
 import androidx.ui.foundation.isSystemInDarkTheme
 import androidx.ui.graphics.toArgb
 import androidx.ui.graphics.vector.VectorAsset
+import androidx.ui.layout.padding
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Category
@@ -109,7 +111,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         val selectedDestinationName = savedInstanceState { BottomDestination.Home.name }
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
         Scaffold(
-            bottomAppBar = {
+            bottomBar = {
                 BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
                     val inactiveColor = EmphasisAmbient.current.medium.applyEmphasis(contentColor())
                     for (value in BottomDestination.values()) {
@@ -126,7 +128,9 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                     }
                 }
             },
-            bodyContent = { modifier ->
+            bodyContent = { padding ->
+                // TODO: find a better solution
+                val modifier = Modifier.padding(padding)
                 when (destination) {
                     BottomDestination.Home -> PokemonList(modifier, saveData, ::showPokemonDetails)
                     BottomDestination.Settings -> SettingsScreen()

@@ -5,6 +5,7 @@ import androidx.compose.frames.modelListOf
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.*
+import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.*
 import androidx.ui.material.EmphasisAmbient
@@ -137,9 +138,10 @@ private inline fun MovesChooser(
     crossinline onMoveSelected: (id: Int) -> Unit
 ) {
     ThemedDialog(onCloseRequest = dismiss) {
-        AdapterList(data = resources.getAllMoves()
-            .mapIndexed { index, s -> Pair(index, s) }
-            .sortedBy { it.second }
+        LazyColumnItems(
+            items = resources.getAllMoves()
+                .mapIndexed { index, s -> Pair(index, s) }
+                .sortedBy { it.second }
         ) {
             ListItem(
                 text = it.second,

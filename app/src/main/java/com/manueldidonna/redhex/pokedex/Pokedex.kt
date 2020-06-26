@@ -3,12 +3,14 @@ package com.manueldidonna.redhex.pokedex
 import androidx.compose.Composable
 import androidx.compose.frames.ModelList
 import androidx.compose.remember
-import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.core.zIndex
 import androidx.ui.foundation.*
+import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.graphics.ColorFilter
-import androidx.ui.layout.*
+import androidx.ui.layout.Arrangement
+import androidx.ui.layout.Column
+import androidx.ui.layout.preferredHeight
+import androidx.ui.layout.size
 import androidx.ui.material.Divider
 import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.ListItem
@@ -26,6 +28,7 @@ import com.manueldidonna.redhex.common.PokemonSpriteSize
 import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.LightColors
+import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
 
@@ -35,29 +38,26 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
         ModelList<Pokedex.Entry>().apply { addAll(pokedex.getAllEntries()) }
     }
 
-    Stack(modifier) {
+    Column(modifier) {
         TranslucentToolbar(
-            modifier = Modifier.preferredHeight(56.dp).gravity(Alignment.TopCenter).zIndex(8f),
+            modifier = Modifier.preferredHeight(ToolbarHeight),
             horizontalArrangement = Arrangement.Center
         ) {
             val percentage = entries.count { it.isSeen }.toDouble() / pokedex.pokemonCount * 100
             Text(text = "${percentage.toInt()}% Completed")
         }
-        VerticalScroller {
-            Spacer(modifier = Modifier.preferredHeight(56.dp))
-            EntriesList(
-                entries = entries,
-                onEntryClick = { entry ->
-                    val newEntry = when {
-                        entry.isOwned -> Pokedex.Entry.neverSeen(entry.speciesId)
-                        entry.isSeen -> Pokedex.Entry.owned(entry.speciesId)
-                        else -> Pokedex.Entry.onlySeen(entry.speciesId)
-                    }
-                    pokedex.setEntry(newEntry)
-                    entries[newEntry.speciesId - 1] = newEntry
+        EntriesList(
+            entries = entries,
+            onEntryClick = { entry ->
+                val newEntry = when {
+                    entry.isOwned -> Pokedex.Entry.neverSeen(entry.speciesId)
+                    entry.isSeen -> Pokedex.Entry.owned(entry.speciesId)
+                    else -> Pokedex.Entry.onlySeen(entry.speciesId)
                 }
-            )
-        }
+                pokedex.setEntry(newEntry)
+                entries[newEntry.speciesId - 1] = newEntry
+            }
+        )
     }
 }
 
@@ -65,7 +65,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
 private fun EntriesList(entries: List<Pokedex.Entry>, onEntryClick: (Pokedex.Entry) -> Unit) {
     val resources = PokemonResourcesAmbient.current.species
     val spritesRetriever = SpritesRetrieverAmbient.current
-    for (entry in entries) {
+    LazyColumnItems(items = entries) { entry ->
         PokedexEntry(
             entry = entry,
             name = resources.getSpeciesById(entry.speciesId),

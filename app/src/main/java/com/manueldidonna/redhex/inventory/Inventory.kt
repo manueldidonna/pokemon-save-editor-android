@@ -5,12 +5,11 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
 import androidx.ui.foundation.*
-import androidx.ui.graphics.Color
+import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
-import androidx.ui.material.icons.twotone.ArrowBack
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
@@ -144,20 +143,18 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
 
 @Composable
 private fun ItemsList(items: List<InventoryItem>, onItemClick: (item: Inventory.Item) -> Unit) {
-    VerticalScroller {
-        items.forEach { item ->
-            ListItem(
-                text = { Text(text = item.name) },
-                secondaryText = { Text(text = "Qt. ${item.quantity}") },
-                onClick = { onItemClick(item) },
-                icon = {
-                    Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
-                        CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize)
-                    }
+    LazyColumnItems(items = items) { item ->
+        ListItem(
+            text = { Text(text = item.name) },
+            secondaryText = { Text(text = "Qt. ${item.quantity}") },
+            onClick = { onItemClick(item) },
+            icon = {
+                Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
+                    CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize)
                 }
-            )
-            Divider()
-        }
+            }
+        )
+        Divider()
     }
 }
 
@@ -220,7 +217,7 @@ private fun ItemEditor(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
         )
-        AdapterList(data = items) { itemWithName ->
+        LazyColumnItems(items = items, itemContent = { itemWithName ->
             ListItem(
                 text = itemWithName.second,
                 onClick = {
@@ -228,7 +225,7 @@ private fun ItemEditor(
                     onCloseRequest()
                 }
             )
-        }
+        })
     }
 }
 
