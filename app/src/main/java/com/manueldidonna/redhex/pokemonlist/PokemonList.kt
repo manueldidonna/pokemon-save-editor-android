@@ -27,12 +27,12 @@ import com.manueldidonna.pk.core.StorageIndex
 import com.manueldidonna.pk.core.isParty
 import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
+import com.manueldidonna.redhex.common.PokemonSpriteSize
+import com.manueldidonna.redhex.common.SpriteSource
+import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
-import java.io.File
 
 private val StorageIndexSaver = Saver<StorageIndex, Int>(
     save = { it.value },
@@ -47,7 +47,7 @@ private val StorageIndexSaver = Saver<StorageIndex, Int>(
 private data class PokemonPreview(
     val nickname: String,
     val label: String,
-    val sprite: File
+    val sprite: SpriteSource
 )
 
 @Composable
@@ -57,7 +57,7 @@ fun PokemonList(
     showPokemonDetails: (Pokemon.Position) -> Unit
 ) {
     val pokemonResources = PokemonResourcesAmbient.current.natures
-    val spritesRetriever = PokemonSpritesRetrieverAmbient.current
+    val spritesRetriever = SpritesRetrieverAmbient.current
 
     var storageIndex: StorageIndex by savedInstanceState(saver = StorageIndexSaver) {
         StorageIndex.Box(saveData.currentBoxIndex, isCurrentBox = true)
@@ -74,7 +74,7 @@ fun PokemonList(
                 return@run PokemonPreview(
                     nickname = nickname,
                     label = "${pokemonResources.getNatureById(natureId)} - Lv.$level",
-                    sprite = File(spritesRetriever.getSpritesPathFromId(speciesId))
+                    sprite = spritesRetriever.getPokemonSprite(speciesId)
                 )
             }
         }
@@ -156,18 +156,24 @@ private fun ShowPokemonPreviews(
                     Text(text = pk.nickname, color = activeTextColor)
                 }
             },
-            icon = { PokemonSprite(source = pk?.sprite) },
+            icon = { PokemonSprite(source = pk?.sprite?.value) },
             onClick = { onSlotSelection(index) },
-            secondaryText = if (pk == null) null else {
-                { Text(text = pk.label) }
-            }
+            secondaryText = PokemonLabel(pk)
         )
         Divider()
     }
 }
 
 @Composable
-private fun PokemonSprite(source: File?) {
+private fun PokemonLabel(pk: PokemonPreview?): @Composable (() -> Unit)? {
+    if (pk == null) return null
+    return {
+        Text(text = pk.label)
+    }
+}
+
+@Composable
+private fun PokemonSprite(source: Any?) {
     // placeholder for empty slot
     if (source == null) {
         val emphasis = EmphasisAmbient.current.disabled

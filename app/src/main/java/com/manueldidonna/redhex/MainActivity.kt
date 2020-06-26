@@ -21,9 +21,9 @@ import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
+import com.manueldidonna.redhex.common.AssetsSpritesRetriever
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
+import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.DarkColors
 import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.details.PokemonDetailsEvents
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
                     PokemonResourcesAmbient provides PokemonTextResources.English,
-                    PokemonSpritesRetrieverAmbient provides PokemonSpritesRetriever.from(this),
+                    SpritesRetrieverAmbient provides AssetsSpritesRetriever,
                     children = { ActivityContent() }
                 )
             }

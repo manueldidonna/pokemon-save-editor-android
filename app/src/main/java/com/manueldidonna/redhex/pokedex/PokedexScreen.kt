@@ -20,12 +20,12 @@ import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.getAllEntries
 import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
+import com.manueldidonna.redhex.common.PokemonSpriteSize
+import com.manueldidonna.redhex.common.SpriteSource
+import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.Label
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
-import java.io.File
 
 @Composable
 fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
@@ -34,7 +34,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
         ModelList<Pokedex.Entry>().apply { addAll(pokedex.getAllEntries()) }
     }
 
-    val spritesRetriever = PokemonSpritesRetrieverAmbient.current
+    val spritesRetriever = SpritesRetrieverAmbient.current
 
     Stack(modifier) {
         VerticalScroller {
@@ -43,7 +43,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
                     Spacer(modifier = Modifier.preferredHeight(56.dp))
                 PokedexEntry(
                     species = species.getSpeciesById(entry.speciesId),
-                    spriteSource = File(spritesRetriever.getSpritesPathFromId(entry.speciesId)),
+                    spriteSource = spritesRetriever.getPokemonSprite(entry.speciesId),
                     isSeen = entry.isSeen,
                     isOwned = entry.isOwned,
                     id = entry.speciesId,
@@ -73,7 +73,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
 @Composable
 private fun PokedexEntry(
     species: String,
-    spriteSource: Any,
+    spriteSource: SpriteSource,
     id: Int,
     isSeen: Boolean,
     isOwned: Boolean,
@@ -96,7 +96,7 @@ private fun PokedexEntry(
                 asset = imageResource(R.drawable.pokeball_s)
             )
         } else {
-            CoilImage(data = spriteSource, modifier = PokemonSpriteSize)
+            CoilImage(data = spriteSource.value, modifier = PokemonSpriteSize)
         }
         Text(
             text = "#$id",

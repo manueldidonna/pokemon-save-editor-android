@@ -1,15 +1,13 @@
 package com.manueldidonna.redhex.inventory
 
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.state
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
 import androidx.ui.foundation.AdapterList
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.Text
+import androidx.ui.foundation.VerticalScroller
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
@@ -17,43 +15,50 @@ import androidx.ui.material.icons.twotone.Add
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.Inventory
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.getAllItems
-import com.manueldidonna.redhex.common.PokemonResourcesAmbient
+import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.resources.text.PokemonTextResources
+import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.common.ui.PreviewScreen
 import com.manueldidonna.redhex.common.ui.ThemedDialog
 import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
+import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlin.math.roundToInt
 
 private val NullItem = Inventory.Item.empty(index = -1)
 
+private data class InventoryItem(
+    override val index: Int,
+    override val id: Int,
+    override val quantity: Int,
+    val name: String,
+    val spriteSource: SpriteSource
+) : Inventory.Item
+
 @Composable
 fun Inventory(modifier: Modifier, saveData: SaveData) {
     val resources = PokemonResourcesAmbient.current.items
+    val spritesRetriever = SpritesRetrieverAmbient.current
 
     var inventory: Inventory by state {
         saveData.getInventory(saveData.supportedInventoryTypes.first())
     }
 
-    var items: List<Inventory.Item> by state {
-        inventory.getAllItems()
+    var items: List<InventoryItem> by state {
+        inventory.getAllItems(spritesRetriever, resources)
     }
 
     var selectedItem: Inventory.Item by state { NullItem }
 
-    Stack(modifier = modifier) {
+    Stack(modifier = modifier.fillMaxSize()) {
         Column {
             InventoryTypes(types = saveData.supportedInventoryTypes) { type ->
                 inventory = saveData.getInventory(type)
-                items = inventory.getAllItems()
+                items = inventory.getAllItems(spritesRetriever, resources)
             }
-            ItemsList(
-                items = items,
-                names = resources.getAllItems(saveData.version),
-                onItemClick = { item -> selectedItem = item }
-            )
+            ItemsList(items = items) { item ->
+                selectedItem = item
+            }
         }
         if (inventory.size < inventory.capacity)
             FloatingActionButton(
@@ -63,20 +68,19 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
             )
     }
 
-
     if (selectedItem != NullItem) {
         val onCloseRequest = { selectedItem = NullItem }
         // TODO: use a bottom sheet
         ThemedDialog(onCloseRequest = onCloseRequest) {
             ItemEditor(
                 item = selectedItem,
-                itemNames = resources.getAllItems(saveData.version),
+                resources = resources,
                 itemIds = inventory.supportedItemIds,
                 maxAllowedQuantity = inventory.maxAllowedQuantity,
                 onItemChange = { item ->
                     if (inventory.getItem(item.index) != item) {
                         inventory.setItem(item)
-                        items = inventory.getAllItems()
+                        items = inventory.getAllItems(spritesRetriever, resources)
                     }
                 },
                 onCloseRequest = onCloseRequest
@@ -85,15 +89,32 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
     }
 }
 
+private fun Inventory.getAllItems(
+    spritesRetriever: SpritesRetriever,
+    resources: PokemonTextResources.Items
+): List<InventoryItem> {
+    val itemNames = resources.getAllItems()
+    val inventoryItem: (Int, Int, Int) -> InventoryItem = { index, id, quantity ->
+        InventoryItem(index, id, quantity, itemNames[id], spritesRetriever.getItemSprite(id))
+    }
+    return List(size) { selectItem(it, mapTo = inventoryItem) }
+}
+
 @Composable
 private fun ItemEditor(
     item: Inventory.Item,
     maxAllowedQuantity: Int,
-    itemNames: List<String>,
+    resources: PokemonTextResources.Items,
     itemIds: List<Int>,
     onItemChange: (Inventory.Item) -> Unit,
     onCloseRequest: () -> Unit
 ) {
+    // TODO: add a search field
+    val items: List<Pair<Int, String>> = remember {
+        val names = resources.getAllItems()
+        itemIds.map { Pair(it, names[it]) }.sortedBy { it.second }
+    }
+
     var quantity by state {
         item.quantity.coerceIn(1, maxAllowedQuantity)
     }
@@ -102,7 +123,7 @@ private fun ItemEditor(
         // show current item name
         if (item.id != 0) {
             Text(
-                text = itemNames[item.id],
+                text = resources.getAllItems()[item.id],
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
             )
@@ -130,7 +151,7 @@ private fun ItemEditor(
             value = quantity.toFloat(),
             valueRange = 1f..maxAllowedQuantity.toFloat(),
             onValueChange = { quantity = it.roundToInt() },
-            onValueChangeEnd = { onItemChange(item.copy(quantity = quantity)) }
+            onValueChangeEnd = { onItemChange(item.toImmutable(quantity = quantity)) }
         )
         Divider(modifier = Modifier.padding(vertical = 8.dp))
         Text(
@@ -138,11 +159,11 @@ private fun ItemEditor(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
         )
-        AdapterList(data = itemIds) { id ->
+        AdapterList(data = items) { itemWithName ->
             ListItem(
-                text = itemNames[id],
+                text = itemWithName.second,
                 onClick = {
-                    onItemChange(item.copy(id = id, quantity = quantity))
+                    onItemChange(item.toImmutable(id = itemWithName.first, quantity = quantity))
                     onCloseRequest()
                 }
             )
@@ -174,18 +195,17 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
 }
 
 @Composable
-private fun ItemsList(
-    items: List<Inventory.Item>,
-    names: List<String>,
-    onItemClick: (item: Inventory.Item) -> Unit
-) {
-    AdapterList(data = items) { item ->
-        ListItem(
-            text = { Text(text = names[item.id]) },
-            secondaryText = { Text(text = "Qt. ${item.quantity}") },
-            onClick = { onItemClick(item) }
-        )
-        Divider()
+private fun ItemsList(items: List<InventoryItem>, onItemClick: (item: Inventory.Item) -> Unit) {
+    VerticalScroller {
+        items.forEach { item ->
+            ListItem(
+                text = { Text(text = item.name) },
+                secondaryText = { Text(text = "Qt. ${item.quantity}") },
+                onClick = { onItemClick(item) },
+                icon = { CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize) }
+            )
+            Divider()
+        }
     }
 }
 
@@ -193,10 +213,8 @@ private fun ItemsList(
 @Composable
 private fun PreviewItemsList() {
     PreviewScreen(colors = LightColors) {
-        // TODO: show items' sprite
         ItemsList(
-            items = List(3) { Inventory.Item(it, 0, 99) },
-            names = listOf("MasterBall"),
+            items = List(3) { InventoryItem(it, 0, 99, "Master Ball", SpriteSource("")) },
             onItemClick = {}
         )
     }
@@ -205,10 +223,15 @@ private fun PreviewItemsList() {
 @Preview
 @Composable
 private fun PreviewItemEditor() {
+    val fakeResources = object : PokemonTextResources.Items {
+        override fun getAllItems(): List<String> = List(10) { "Master Ball" }
+        override fun getTypeName(type: Inventory.Type): String = "General"
+    }
+
     PreviewScreen(colors = LightColors) {
         ItemEditor(
-            item = Inventory.Item(0, 1, 85),
-            itemNames = List(10) { "Master Ball" },
+            item = Inventory.Item.Immutable(0, 1, 85),
+            resources = fakeResources,
             itemIds = List(10) { it },
             onItemChange = {},
             onCloseRequest = {},

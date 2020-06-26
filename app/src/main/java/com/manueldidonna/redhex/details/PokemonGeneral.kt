@@ -17,11 +17,11 @@ import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.PokemonSpriteSize
+import com.manueldidonna.redhex.common.PokemonSpriteSize
+import com.manueldidonna.redhex.common.SpriteSource
+import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.ThemedDialog
 import dev.chrisbanes.accompanist.coil.CoilImage
-import java.io.File
 import kotlin.math.roundToInt
 
 @Composable
@@ -39,11 +39,13 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
 
 @Composable
 private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
+    val resources = PokemonResourcesAmbient.current.species
+    val spritesRetriever = SpritesRetrieverAmbient.current
+
     var speciesId by state { pokemon.speciesId }
-    val species = PokemonResourcesAmbient.current.species
-    val spritesRetriever = PokemonSpritesRetrieverAmbient.current
-    val spriteSource = remember(speciesId) {
-        File(spritesRetriever.getSpritesPathFromId(speciesId))
+
+    val spriteSource: SpriteSource = remember(speciesId) {
+        spritesRetriever.getPokemonSprite(speciesId)
     }
 
     var showSpeciesDialog by state { false }
@@ -56,11 +58,11 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
     ) {
         Spacer(modifier = Modifier.preferredWidth(16.dp))
         CoilImage(
-            data = spriteSource,
+            data = spriteSource.value,
             modifier = PokemonSpriteSize
         )
         Text(
-            text = species.getSpeciesById(speciesId),
+            text = resources.getSpeciesById(speciesId),
             style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
@@ -68,7 +70,7 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
     if (showSpeciesDialog) {
         val onCloseRequest = { showSpeciesDialog = false }
         ThemedDialog(onCloseRequest = onCloseRequest) {
-            AdapterList(data = species.getAllSpecies()
+            AdapterList(data = resources.getAllSpecies()
                 .drop(1) // TODO: manage empty species id
                 .mapIndexed { index, s -> Pair(index, s) }
             ) {
