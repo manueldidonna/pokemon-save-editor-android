@@ -1,5 +1,7 @@
 package com.manueldidonna.pk.rby
 
+import com.manueldidonna.pk.rby.converter.getGameBoyItemId
+import com.manueldidonna.pk.rby.converter.getUniversalItemId
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 
 internal class Inventory(
@@ -41,16 +43,16 @@ internal class Inventory(
             data[startOffset + 1 + (size * 2)] = 0xFFu
         }
 
-    override fun getItem(index: Int): CoreInventory.Item {
+    override fun <T> selectItem(index: Int, mapTo: (index: Int, id: Int, quantity: Int) -> T): T {
         require(index in 0 until capacity) {
             "Index ($index) out of Inventory bounds [0-$capacity]"
         }
         if (index >= size)
-            return CoreInventory.Item.empty(index)
-        return CoreInventory.Item(
-            index = index,
-            id = data[startOffset + (index * 2) + 1].toInt(),
-            quantity = data[startOffset + (index * 2) + 2].toInt()
+            return mapTo(index, 0, 0)
+        return mapTo(
+            index,
+            getUniversalItemId(data[startOffset + (index * 2) + 1].toInt()),
+            data[startOffset + (index * 2) + 2].toInt()
         )
     }
 
@@ -59,6 +61,7 @@ internal class Inventory(
             "Index ($index) out of Inventory bounds [0-$capacity]"
         }
         // delete item at specified index
+        // TODO: move in a separate function
         if (item.id == 0 || item.quantity == 0) {
             val lastIndexOffset = startOffset + 1 + (capacity - 1) * 2
             //shift items left of 1 position
@@ -75,7 +78,7 @@ internal class Inventory(
             }
             if (index >= size) size++
             val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
-            data[offset] = item.id.toUByte()
+            data[offset] = getGameBoyItemId(item.id).toUByte()
             data[offset + 1] = item.quantity.coerceAtMost(maxAllowedQuantity).toUByte()
         }
     }
@@ -97,7 +100,7 @@ internal class Inventory(
                 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
                 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246,
                 247, 248, 249, 250
-            )
+            ).map { getUniversalItemId(it) }
         }
     }
 }

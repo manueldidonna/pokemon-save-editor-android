@@ -28,7 +28,7 @@ interface PokemonTextResources {
     val items: Items
 
     interface Items {
-        fun getAllItems(version: Version): List<String>
+        fun getAllItems(): List<String>
         fun getTypeName(type: Inventory.Type): String
     }
 
