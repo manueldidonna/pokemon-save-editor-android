@@ -6,12 +6,28 @@ package com.manueldidonna.pk.core
  * A generic interface to store and retrieve pokemon. It's immutable
  */
 interface Storage {
-    val version: Version
+    val version: Version // TODO: remove
+
     val index: StorageIndex
-    val name: String
-    val pokemonCounts: Int
-    val currentPokemonCounts: Int
+
+    val name: String // TODO: remove
+
+    /**
+     * The max amount of [Pokemon] that can be stored in the Inventory
+     */
+    val capacity: Int
+
+    /**
+     * Current number of [Pokemon] stored in the Inventory
+     */
+    val size: Int
+
+    /**
+     * Return an immutable [Pokemon] instance.
+     * Should throw an [IllegalStateException] if [slot] isn't lower than [capacity]
+     */
     fun getPokemon(slot: Int): Pokemon
+
     fun exportPokemonToBytes(slot: Int): UByteArray
 }
 
@@ -20,8 +36,10 @@ interface Storage {
  */
 interface MutableStorage : Storage {
     fun getMutablePokemon(slot: Int): MutablePokemon
-    fun deletePokemon(slot: Int)
+
     fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean
+
+    fun deletePokemon(slot: Int) // TODO: remove
 }
 
 /**

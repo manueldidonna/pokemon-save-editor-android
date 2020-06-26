@@ -21,9 +21,13 @@ interface Pokemon {
     val trainer: Trainer
 
     val speciesId: Int
+
     val nickname: String
+
     val level: Int
+
     val experiencePoints: Int
+
     val natureId: Int
 
     val moves: Moves
@@ -77,6 +81,7 @@ interface MutablePokemon : Pokemon {
     interface Template {
         val name: String
         val description: String
+        // TODO: remove speciesId or add a property like 'Type' or 'Info'
         val speciesId: Int
         fun apply(pokemon: MutablePokemon)
     }
@@ -88,13 +93,22 @@ interface MutablePokemon : Pokemon {
 
     interface Mutator {
         fun speciesId(value: Int): Mutator
+
         fun nickname(value: String, ignoreCase: Boolean = false): Mutator
+
         fun trainer(value: Trainer, ignoreNameCase: Boolean = false): Mutator
+
         fun experiencePoints(value: Int): Mutator
+
         fun level(value: Int): Mutator
+
         fun moveId(id: Int, moveIndex: Int): Mutator
+
         fun movePowerPoints(moveIndex: Int, moveId: Int = -1, points: Int = -1): Mutator
+
+        // TODO: merge this and movePowerPoints() in the same function
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
+
         fun status(value: Pokemon.StatusCondition? = null): Mutator
 
         fun individualValues(
@@ -115,6 +129,7 @@ interface MutablePokemon : Pokemon {
             specialDefense: Int = -1
         ): Mutator
 
+        // TODO: remove statistics
         fun statistics(
             health: Int = -1,
             attack: Int = -1,
