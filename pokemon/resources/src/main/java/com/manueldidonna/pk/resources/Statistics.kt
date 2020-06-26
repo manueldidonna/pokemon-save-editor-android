@@ -2,6 +2,7 @@ package com.manueldidonna.pk.resources
 
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isFirstGeneration
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -20,7 +21,7 @@ private val GameBoyHealthFormula: StatisticsFormula = { level, base, iv, ev ->
 
 
 fun calculateStatistics(level: Int, base: Stats, ivs: Stats, evs: Stats, version: Version): Stats {
-    require(version is Version.FirstGeneration) {
+    require(version.isFirstGeneration) {
         "Only first generation games are supported"
     }
     val stat: StatisticsFormula = GameBoyDefaultFormula
@@ -38,7 +39,7 @@ fun calculateStatistics(level: Int, base: Stats, ivs: Stats, evs: Stats, version
 }
 
 fun getBaseStatistics(speciesId: Int, version: Version): Stats {
-    require(version is Version.FirstGeneration) {
+    require(version.isFirstGeneration) {
         "Only first generation games are supported"
     }
     require(speciesId in 1..151) {

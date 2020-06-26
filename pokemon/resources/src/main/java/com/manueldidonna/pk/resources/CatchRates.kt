@@ -1,9 +1,10 @@
 package com.manueldidonna.pk.resources
 
 import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isFirstGeneration
 
 fun getCatchRate(speciesId: Int, version: Version): Int {
-    require(version is Version.FirstGeneration) { "Only first generation games are supported" }
+    require(version.isFirstGeneration) { "Only first generation games are supported" }
     require(speciesId in 1..151) { "Species ID not supported: $speciesId" }
     return CatchRates[speciesId - 1]
 }

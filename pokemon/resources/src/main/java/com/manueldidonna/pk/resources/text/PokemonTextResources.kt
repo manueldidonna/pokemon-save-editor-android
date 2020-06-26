@@ -1,7 +1,6 @@
 package com.manueldidonna.pk.resources.text
 
 import com.manueldidonna.pk.core.Inventory
-import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.resources.text.english.EnglishPokemonTextResources
 
 interface PokemonTextResources {

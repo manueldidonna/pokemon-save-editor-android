@@ -2,12 +2,12 @@ package com.manueldidonna.pk.core
 
 /**
  * Version should be used primarily to retrieve the correct game resources.
- * The logic to manipulate the data shouldn't depends on this interface
+ * The logic to manipulate the data shouldn't depends on this class
  */
-sealed class Version {
-    abstract val index: Int
-
-    data class FirstGeneration(val isYellow: Boolean) : Version() {
-        override val index: Int = 0
-    }
+enum class Version(val value: Int) {
+    RedBlue(100),
+    Yellow(101)
 }
+
+inline val Version.isFirstGeneration: Boolean
+    get() = this == Version.RedBlue || this == Version.Yellow

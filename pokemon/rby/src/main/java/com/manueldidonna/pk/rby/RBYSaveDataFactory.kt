@@ -12,7 +12,8 @@ object RBYSaveDataFactory : SaveData.Factory {
             data.size != 0x8000 && data.size != 0x802C -> null
             isListValid(data, 0x2F2C, 20) && isListValid(data, 0x30C0, 20) -> {
                 val isPikachuStarter = data[PlayerStarterOffset] == 0x54.toUByte()
-                SaveData(data, version = Version.FirstGeneration(isYellow = isPikachuStarter))
+                val version = if (isPikachuStarter) Version.Yellow else Version.RedBlue
+                SaveData(data, version)
             }
             // TODO: support japanese save data
             //  isListValid(data, 0x2ED5, 30) && isListValid(data, 0x302D, 30) -> SaveData(data)
