@@ -1,5 +1,7 @@
 package com.manueldidonna.pk.resources.text
 
+import com.manueldidonna.pk.core.Inventory
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.resources.text.english.EnglishPokemonTextResources
 
 interface PokemonTextResources {
@@ -21,6 +23,13 @@ interface PokemonTextResources {
     interface Species {
         fun getSpeciesById(id: Int): String
         fun getAllSpecies(): List<String>
+    }
+
+    val items: Items
+
+    interface Items {
+        fun getAllItems(): List<String>
+        fun getTypeName(type: Inventory.Type): String
     }
 
     companion object {

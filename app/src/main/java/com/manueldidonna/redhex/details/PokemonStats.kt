@@ -15,7 +15,6 @@ import androidx.ui.text.font.FontWeight
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.redhex.dividerColor
 
 private class ObservableStatisticValues(
     values: Pokemon.StatisticValues
@@ -54,7 +53,7 @@ fun PokemonStats(pokemon: MutablePokemon) {
                 pokemon.mutator.individualValues(health = it); ivs.update(pokemon.iV)
             }
         )
-        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         StatValue(
             statName = "Attack",
@@ -67,7 +66,7 @@ fun PokemonStats(pokemon: MutablePokemon) {
                 pokemon.mutator.individualValues(attack = it); ivs.update(pokemon.iV)
             }
         )
-        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         StatValue(
             statName = "Defense",
@@ -80,7 +79,7 @@ fun PokemonStats(pokemon: MutablePokemon) {
                 pokemon.mutator.individualValues(defense = it); ivs.update(pokemon.iV)
             }
         )
-        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         StatValue(
             statName = "Speed",
@@ -93,7 +92,7 @@ fun PokemonStats(pokemon: MutablePokemon) {
                 pokemon.mutator.individualValues(speed = it); ivs.update(pokemon.iV)
             }
         )
-        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         StatValue(
             statName = "Special Attack",
@@ -106,7 +105,7 @@ fun PokemonStats(pokemon: MutablePokemon) {
                 pokemon.mutator.individualValues(specialAttack = it); ivs.update(pokemon.iV)
             }
         )
-        Divider(color = dividerColor(), modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         StatValue(
             statName = "Special Defense",

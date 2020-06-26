@@ -3,80 +3,81 @@ package com.manueldidonna.redhex
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.*
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.Text
+import androidx.ui.foundation.contentColor
 import androidx.ui.foundation.isSystemInDarkTheme
 import androidx.ui.graphics.toArgb
 import androidx.ui.graphics.vector.VectorAsset
-import androidx.ui.layout.Stack
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.layout.padding
-import androidx.ui.material.BottomNavigation
-import androidx.ui.material.BottomNavigationItem
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Surface
+import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.twotone.Category
 import androidx.ui.material.icons.twotone.Home
-import androidx.ui.material.icons.twotone.List
+import androidx.ui.material.icons.twotone.InsertChart
 import androidx.ui.material.icons.twotone.Settings
 import androidx.ui.savedinstancestate.savedInstanceState
-import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
+import com.manueldidonna.redhex.common.AssetsSpritesRetriever
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.pokemon.PokemonSpritesRetriever
+import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.DarkColors
 import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.details.PokemonDetailsEvents
 import com.manueldidonna.redhex.details.PokemonDetailsScreen
-import com.manueldidonna.redhex.home.HomeEvents
-import com.manueldidonna.redhex.home.HomeScreen
-import com.manueldidonna.redhex.pokedex.PokedexScreen
+import com.manueldidonna.redhex.inventory.Inventory
+import com.manueldidonna.redhex.pokedex.Pokedex
+import com.manueldidonna.redhex.pokemonlist.PokemonList
 
-
-object MainState {
+// TODO: find a better solution
+object AppState {
     var saveData by mutableStateOf<SaveData?>(null)
-    var route by mutableStateOf<Route>(Route.Root)
-
-    sealed class Route {
-        object Root : Route()
-        data class Details(val position: Pokemon.Position) : Route()
-    }
+    var currentScreen by mutableStateOf<AppScreen>(AppScreen.Main)
 }
 
-class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
+sealed class AppScreen {
+    object Main : AppScreen()
+    data class PokemonDetails(val position: Pokemon.Position) : AppScreen()
+}
+
+class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(if (isSystemInDarkTheme()) DarkColors else LightColors) {
+            MaterialTheme(
+                colors = if (isSystemInDarkTheme()) DarkColors else LightColors
+            ) {
+                window.statusBarColor = MaterialTheme.colors.surface.toArgb()
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
                     PokemonResourcesAmbient provides PokemonTextResources.English,
-                    PokemonSpritesRetrieverAmbient provides PokemonSpritesRetriever.from(this)
-                ) {
-                    window.statusBarColor = MaterialTheme.colors.surface.toArgb()
-                    ActivityScreen()
-                }
+                    SpritesRetrieverAmbient provides AssetsSpritesRetriever,
+                    children = { ActivityContent() }
+                )
             }
         }
     }
 
     @Composable
-    private fun ActivityScreen() {
-        val saveData: SaveData? = MainState.saveData
+    private fun ActivityContent() {
+        val saveData: SaveData? = AppState.saveData
         if (saveData == null) {
             LoadSaveDataScreen()
         } else {
-            val route = MainState.route
-            if (route is MainState.Route.Details) {
-                val (index, slot) = route.position
+            ShowScreen(screen = AppState.currentScreen, saveData = saveData)
+        }
+    }
+
+    @Composable
+    private fun ShowScreen(screen: AppScreen, saveData: SaveData) {
+        when (screen) {
+            AppScreen.Main -> MainScreen(saveData)
+            is AppScreen.PokemonDetails -> {
+                val (index, slot) = screen.position
                 Surface {
                     PokemonDetailsScreen(
                         pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
@@ -84,59 +85,55 @@ class MainActivity : AppCompatActivity(), HomeEvents, PokemonDetailsEvents {
                         listener = this
                     )
                 }
-            } else {
-                SurfaceWithBottomNavigation { destination, modifier ->
-                    when (destination) {
-                        BottomDestination.Home -> HomeScreen(modifier, saveData, this)
-                        BottomDestination.Settings -> SettingsScreen()
-                        BottomDestination.Pokedex -> PokedexScreen(modifier, saveData.getPokedex())
-                    }
-                }
             }
         }
     }
 
-    override fun showPokemonDetails(position: Pokemon.Position) {
-        MainState.route = MainState.Route.Details(position)
+    private fun showPokemonDetails(position: Pokemon.Position) {
+        AppState.currentScreen = AppScreen.PokemonDetails(position)
     }
 
     override fun goBackToPokemonList() {
-        MainState.route = MainState.Route.Root
+        AppState.currentScreen = AppScreen.Main
     }
 
     private enum class BottomDestination(val icon: VectorAsset) {
         Home(Icons.TwoTone.Home),
-        Pokedex(Icons.TwoTone.List),
+        Pokedex(Icons.TwoTone.InsertChart),
+        Inventory(Icons.TwoTone.Category),
         Settings(Icons.TwoTone.Settings)
     }
 
     @Composable
-    private fun SurfaceWithBottomNavigation(
-        content: @Composable() (BottomDestination, Modifier) -> Unit
-    ) {
+    private fun MainScreen(saveData: SaveData) {
         val selectedDestinationName = savedInstanceState { BottomDestination.Home.name }
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
-
-
-        Stack(modifier = Modifier.fillMaxSize()) {
-            Surface(modifier = Modifier.matchParentSize()) {
-                content(destination, Modifier.padding(bottom = 56.dp))
-            }
-            BottomNavigation(
-                backgroundColor = MaterialTheme.colors.surface,
-                modifier = Modifier.gravity(Alignment.BottomStart)
-            ) {
-                for (value in BottomDestination.values()) {
-                    BottomNavigationItem(
-                        icon = { Icon(asset = value.icon) },
-                        text = { Text(text = value.name) },
-                        selected = destination == value,
-                        onSelected = {
-                            selectedDestinationName.value = value.name
-                        }
-                    )
+        Scaffold(
+            bottomAppBar = {
+                BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
+                    val inactiveColor = EmphasisAmbient.current.medium.applyEmphasis(contentColor())
+                    for (value in BottomDestination.values()) {
+                        BottomNavigationItem(
+                            icon = { Icon(asset = value.icon) },
+                            text = { Text(text = value.name) },
+                            selected = destination == value,
+                            activeColor = MaterialTheme.colors.primary,
+                            inactiveColor = inactiveColor,
+                            onSelected = {
+                                selectedDestinationName.value = value.name
+                            }
+                        )
+                    }
+                }
+            },
+            bodyContent = { modifier ->
+                when (destination) {
+                    BottomDestination.Home -> PokemonList(modifier, saveData, ::showPokemonDetails)
+                    BottomDestination.Settings -> SettingsScreen()
+                    BottomDestination.Pokedex -> Pokedex(modifier, saveData.getPokedex())
+                    BottomDestination.Inventory -> Inventory(modifier, saveData)
                 }
             }
-        }
+        )
     }
 }

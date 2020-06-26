@@ -16,6 +16,10 @@ interface SaveData {
 
     fun getPokedex(): Pokedex
 
+    val supportedInventoryTypes: List<Inventory.Type>
+
+    fun getInventory(type: Inventory.Type): Inventory
+
     fun exportToBytes(): UByteArray
 
     interface Factory {

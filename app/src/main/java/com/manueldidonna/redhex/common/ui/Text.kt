@@ -17,7 +17,7 @@ fun Label(modifier: Modifier = Modifier, text: String) {
     Box(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
+        backgroundColor = MaterialTheme.colors.secondaryVariant,
         paddingBottom = 4.dp,
         paddingTop = 4.dp,
         paddingEnd = 8.dp,
@@ -26,7 +26,7 @@ fun Label(modifier: Modifier = Modifier, text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.subtitle2.copy(fontSize = 12.sp),
-            color = emphasis.applyEmphasis(MaterialTheme.colors.onSurface)
+            color = emphasis.applyEmphasis(MaterialTheme.colors.onSecondary)
         )
     }
 }
