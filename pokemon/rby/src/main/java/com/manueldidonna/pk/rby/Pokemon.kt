@@ -87,8 +87,7 @@ internal class Pokemon(
                     .trainer(Trainer("TRAINER", 12345u, 0u))
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
-                    .statistics(all = 99999)
-                    .status()
+                    .status(null)
             }
         }
 
@@ -264,7 +263,7 @@ internal class Pokemon(
             data[startOffset + 0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
             // set max statistics per species
             baseStatistics = getBaseStatistics(value, version)
-            statistics(all = 9999)
+            maximizeStatistics()
         }
 
         override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
@@ -299,7 +298,7 @@ internal class Pokemon(
                 data[startOffset + 0x21] = coercedLevel.toUByte()
             }
             // TODO: remove statistics invocation
-            statistics(all = 9999) // set max statistics per level
+            maximizeStatistics()
             val sanitizedExperience = sanitizeExperiencePoints(
                 points = experiencePoints,
                 level = coercedLevel,
@@ -375,7 +374,7 @@ internal class Pokemon(
             setValue(specialDefense, shiftAmount = 0)
             data.writeBidEndianShort(startOffset + 0x1B, totalIVs.toShort())
             // TODO: remove statistics invocation
-            statistics(all = 9999) // set max statistics per ivs
+            maximizeStatistics()
         }
 
         /**
@@ -405,24 +404,12 @@ internal class Pokemon(
             setValue(specialAttack, effortOffset = 0x19)
             setValue(specialDefense, effortOffset = 0x19)
             // TODO: remove statistics invocation
-            statistics(all = 9999) // set max statistics per evs
+            maximizeStatistics()
         }
 
-        override fun statistics(
-            health: Int,
-            attack: Int,
-            defense: Int,
-            speed: Int,
-            specialAttack: Int,
-            specialDefense: Int
-        ): MutablePokemon.Mutator = apply {
-            fun setStat(offset: Int, value: Int, max: Int) {
-                if (value > 0) {
-                    data.writeBidEndianShort(
-                        startOffset + offset,
-                        value.coerceAtMost(max).toShort()
-                    )
-                }
+        private fun maximizeStatistics() {
+            fun setStat(offset: Int, value: Int) {
+                data.writeBidEndianShort(startOffset + offset, value.toShort())
             }
 
             val baseStatistics = baseStatistics
@@ -431,15 +418,14 @@ internal class Pokemon(
             val stats = calculateStatistics(level, baseStatistics, iV, eV, version)
 
             // current HP
-            setStat(offset = 0x1, value = health, max = stats.health)
+            setStat(offset = 0x1, value = stats.health)
 
             if (index.isParty) {
-                setStat(offset = 0x22, value = health, max = stats.health)
-                setStat(offset = 0x24, value = attack, max = stats.attack)
-                setStat(offset = 0x26, value = defense, max = stats.defense)
-                setStat(offset = 0x28, value = speed, max = stats.speed)
-                setStat(offset = 0x2A, value = specialAttack, max = stats.specialAttack)
-                setStat(offset = 0x2A, value = specialDefense, max = stats.specialDefense)
+                setStat(offset = 0x22, value = stats.health)
+                setStat(offset = 0x24, value = stats.attack)
+                setStat(offset = 0x26, value = stats.defense)
+                setStat(offset = 0x28, value = stats.speed)
+                setStat(offset = 0x2A, value = stats.specialAttack)
             }
         }
     }

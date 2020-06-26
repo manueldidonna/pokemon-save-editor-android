@@ -81,6 +81,7 @@ interface MutablePokemon : Pokemon {
     interface Template {
         val name: String
         val description: String
+
         // TODO: remove speciesId or add a property like 'Type' or 'Info'
         val speciesId: Int
         fun apply(pokemon: MutablePokemon)
@@ -109,7 +110,7 @@ interface MutablePokemon : Pokemon {
         // TODO: merge this and movePowerPoints() in the same function
         fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
 
-        fun status(value: Pokemon.StatusCondition? = null): Mutator
+        fun status(value: Pokemon.StatusCondition?): Mutator
 
         fun individualValues(
             health: Int = -1,
@@ -128,16 +129,6 @@ interface MutablePokemon : Pokemon {
             specialAttack: Int = -1,
             specialDefense: Int = -1
         ): Mutator
-
-        // TODO: remove statistics
-        fun statistics(
-            health: Int = -1,
-            attack: Int = -1,
-            defense: Int = -1,
-            speed: Int = -1,
-            specialAttack: Int = -1,
-            specialDefense: Int = -1
-        ): Mutator
     }
 }
 
@@ -147,8 +138,4 @@ fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = appl
 
 fun MutablePokemon.Mutator.individualValues(all: Int): MutablePokemon.Mutator = apply {
     individualValues(all, all, all, all, all, all)
-}
-
-fun MutablePokemon.Mutator.statistics(all: Int): MutablePokemon.Mutator = apply {
-    statistics(all, all, all, all, all, all)
 }
