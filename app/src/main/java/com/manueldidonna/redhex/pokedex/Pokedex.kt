@@ -16,6 +16,7 @@ import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Done
 import androidx.ui.res.imageResource
+import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.getAllEntries
@@ -24,6 +25,7 @@ import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSpriteSize
 import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
+import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 import dev.chrisbanes.accompanist.coil.CoilImage
 
@@ -110,5 +112,27 @@ private fun PokemonSprite(source: Any?) {
         )
     } else {
         CoilImage(data = source, modifier = PokemonSpriteSize)
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewPokedexEntry() {
+    MaterialTheme(colors = LightColors) {
+        Column {
+            val entries = listOf(
+                Pokedex.Entry.neverSeen(25),
+                Pokedex.Entry.onlySeen(25),
+                Pokedex.Entry.owned(25)
+            )
+            for (entry in entries) {
+                PokedexEntry(
+                    entry = entry,
+                    name = "Pikachu",
+                    source = SpriteSource(""),
+                    onClick = {}
+                )
+            }
+        }
     }
 }
