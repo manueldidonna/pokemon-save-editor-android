@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                 Surface {
                     PokemonDetailsScreen(
                         pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
-                        pokedex = saveData.getPokedex(),
+                        pokedex = saveData.pokedex,
                         listener = this
                     )
                 }
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                 when (destination) {
                     BottomDestination.Home -> PokemonList(modifier, saveData, ::showPokemonDetails)
                     BottomDestination.Settings -> SettingsScreen()
-                    BottomDestination.Pokedex -> Pokedex(modifier, saveData.getPokedex())
+                    BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
                     BottomDestination.Inventory -> Inventory(modifier, saveData)
                 }
             }

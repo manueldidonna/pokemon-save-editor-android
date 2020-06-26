@@ -6,6 +6,12 @@ interface SaveData {
 
     var trainer: Trainer
 
+    val pokedex: Pokedex
+
+    val supportedInventoryTypes: List<Inventory.Type>
+
+    fun getInventory(type: Inventory.Type): Inventory
+
     val boxCount: Int
 
     var currentBoxIndex: Int
@@ -13,12 +19,6 @@ interface SaveData {
     fun getStorage(index: StorageIndex): Storage
 
     fun getMutableStorage(index: StorageIndex): MutableStorage
-
-    fun getPokedex(): Pokedex
-
-    val supportedInventoryTypes: List<Inventory.Type>
-
-    fun getInventory(type: Inventory.Type): Inventory
 
     fun exportToBytes(): UByteArray
 

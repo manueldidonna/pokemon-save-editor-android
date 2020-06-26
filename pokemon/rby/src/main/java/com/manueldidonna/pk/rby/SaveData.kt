@@ -25,6 +25,8 @@ internal class SaveData(
             data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535u).toShort())
         }
 
+    override val pokedex: CorePokedex by lazy { Pokedex(data) }
+
     override val boxCount: Int = 12
 
     override var currentBoxIndex: Int
@@ -63,8 +65,6 @@ internal class SaveData(
             if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
         }
     }
-
-    override fun getPokedex(): CorePokedex = Pokedex(data)
 
     override val supportedInventoryTypes: List<CoreInventory.Type> =
         listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
