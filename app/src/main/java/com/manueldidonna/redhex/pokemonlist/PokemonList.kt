@@ -3,19 +3,19 @@ package com.manueldidonna.redhex.pokemonlist
 import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.*
+import androidx.ui.foundation.Box
+import androidx.ui.foundation.ContentGravity
+import androidx.ui.foundation.Icon
+import androidx.ui.foundation.Text
 import androidx.ui.foundation.lazy.LazyColumnItems
-import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
-import androidx.ui.res.imageResource
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
-import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
@@ -74,7 +74,7 @@ private fun Storage.getPokemonPreviews(
                 PokemonPreview(
                     nickname = "Empty Slot",
                     label = "",
-                    source = SpriteSource.Invalid,
+                    source = SpriteSource.Pokeball,
                     slot = position.slot,
                     isEmpty = true
                 )
@@ -146,20 +146,5 @@ private fun PokemonLabel(text: String): @Composable (() -> Unit)? {
     if (text.isEmpty()) return null
     return {
         Text(text = text)
-    }
-}
-
-@Composable
-private fun PokemonSprite(source: SpriteSource) {
-    // placeholder for empty slot
-    if (source.value == SpriteSource.Invalid.value) {
-        val emphasis = EmphasisAmbient.current.disabled
-        Image(
-            modifier = PokemonSpriteSize,
-            colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface)),
-            asset = imageResource(R.drawable.pokeball_s)
-        )
-    } else {
-        CoilImage(data = source.value, modifier = PokemonSpriteSize)
     }
 }

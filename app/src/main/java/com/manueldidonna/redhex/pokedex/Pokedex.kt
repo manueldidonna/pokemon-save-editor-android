@@ -4,33 +4,31 @@ import androidx.compose.Composable
 import androidx.compose.frames.ModelList
 import androidx.compose.remember
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.*
+import androidx.ui.foundation.Box
+import androidx.ui.foundation.ContentGravity
+import androidx.ui.foundation.Icon
+import androidx.ui.foundation.Text
 import androidx.ui.foundation.lazy.LazyColumnItems
-import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.Arrangement
 import androidx.ui.layout.Column
 import androidx.ui.layout.preferredHeight
 import androidx.ui.layout.size
 import androidx.ui.material.Divider
-import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.ListItem
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.Done
-import androidx.ui.res.imageResource
+import androidx.ui.material.icons.twotone.CheckCircle
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.getAllEntries
-import com.manueldidonna.redhex.R
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpriteSize
+import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
-import dev.chrisbanes.accompanist.coil.CoilImage
 
 @Composable
 fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
@@ -77,7 +75,7 @@ private fun EntriesList(entries: List<Pokedex.Entry>, onEntryClick: (Pokedex.Ent
 }
 
 private val OwnedIcon = @Composable {
-    Icon(asset = Icons.TwoTone.Done, tint = MaterialTheme.colors.secondary)
+    Icon(asset = Icons.TwoTone.CheckCircle, tint = MaterialTheme.colors.secondary)
 }
 
 @Composable
@@ -94,25 +92,10 @@ private fun PokedexEntry(
         onClick = onClick,
         icon = {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
-                PokemonSprite(source = if (entry.isSeen) source.value else null)
+                PokemonSprite(source = if (entry.isSeen) source else SpriteSource.Pokeball)
             }
         }
     )
-}
-
-@Composable
-private fun PokemonSprite(source: Any?) {
-    // placeholder for empty slot
-    if (source == null) {
-        val emphasis = EmphasisAmbient.current.disabled
-        Image(
-            modifier = PokemonSpriteSize,
-            colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface)),
-            asset = imageResource(R.drawable.pokeball_s)
-        )
-    } else {
-        CoilImage(data = source, modifier = PokemonSpriteSize)
-    }
 }
 
 @Composable
