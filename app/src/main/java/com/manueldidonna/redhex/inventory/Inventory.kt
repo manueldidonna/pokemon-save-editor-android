@@ -4,7 +4,10 @@ import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.zIndex
-import androidx.ui.foundation.*
+import androidx.ui.foundation.Box
+import androidx.ui.foundation.ContentGravity
+import androidx.ui.foundation.Icon
+import androidx.ui.foundation.Text
 import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.layout.*
 import androidx.ui.material.*
@@ -73,18 +76,18 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
         val onCloseRequest = { selectedItem = NullItem }
         // TODO: use a bottom sheet
         ThemedDialog(onCloseRequest = onCloseRequest) {
-            ItemEditor(
+            InventoryItemEditor(
                 item = selectedItem,
                 resources = resources,
                 itemIds = inventory.supportedItemIds,
                 maxAllowedQuantity = inventory.maxAllowedQuantity,
                 onItemChange = { item ->
-                    if (inventory.getItem(item.index) != item) {
+                    if (item != null && inventory.getItem(item.index) != item) {
                         inventory.setItem(item)
                         items = inventory.getAllItems(spritesRetriever, resources)
                     }
-                },
-                onCloseRequest = onCloseRequest
+                    onCloseRequest()
+                }
             )
         }
     }
@@ -158,77 +161,6 @@ private fun ItemsList(items: List<InventoryItem>, onItemClick: (item: Inventory.
     }
 }
 
-@Composable
-private fun ItemEditor(
-    item: Inventory.Item,
-    maxAllowedQuantity: Int,
-    resources: PokemonTextResources.Items,
-    itemIds: List<Int>,
-    onItemChange: (Inventory.Item) -> Unit,
-    onCloseRequest: () -> Unit
-) {
-    // TODO: add a search field
-    val items: List<Pair<Int, String>> = remember {
-        val names = resources.getAllItems()
-        itemIds.map { Pair(it, names[it]) }.sortedBy { it.second }
-    }
-
-    var quantity by state {
-        item.quantity.coerceIn(1, maxAllowedQuantity)
-    }
-
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        // show current item name
-        if (item.id != 0) {
-            Text(
-                text = resources.getAllItems()[item.id],
-                style = MaterialTheme.typography.h6,
-                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
-            )
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
-        }
-
-        Row(
-            verticalGravity = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            Text(
-                text = "Quantity",
-                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium),
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = quantity.toString(),
-                style = MaterialTheme.typography.subtitle2,
-                color = MaterialTheme.colors.primary
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Slider(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            value = quantity.toFloat(),
-            valueRange = 1f..maxAllowedQuantity.toFloat(),
-            onValueChange = { quantity = it.roundToInt() },
-            onValueChangeEnd = { onItemChange(item.toImmutable(quantity = quantity)) }
-        )
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(
-            text = "Choose an item",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
-        )
-        LazyColumnItems(items = items, itemContent = { itemWithName ->
-            ListItem(
-                text = itemWithName.second,
-                onClick = {
-                    onItemChange(item.toImmutable(id = itemWithName.first, quantity = quantity))
-                    onCloseRequest()
-                }
-            )
-        })
-    }
-}
-
 @Preview
 @Composable
 private fun PreviewItemsList() {
@@ -236,26 +168,6 @@ private fun PreviewItemsList() {
         ItemsList(
             items = List(3) { InventoryItem(it, 0, 99, "Master Ball", SpriteSource("")) },
             onItemClick = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewItemEditor() {
-    val fakeResources = object : PokemonTextResources.Items {
-        override fun getAllItems(): List<String> = List(10) { "Master Ball" }
-        override fun getTypeName(type: Inventory.Type): String = "General"
-    }
-
-    PreviewScreen(colors = LightColors) {
-        ItemEditor(
-            item = Inventory.Item.Immutable(0, 1, 85),
-            resources = fakeResources,
-            itemIds = List(10) { it },
-            onItemChange = {},
-            onCloseRequest = {},
-            maxAllowedQuantity = 99
         )
     }
 }
