@@ -41,8 +41,16 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
             modifier = Modifier.preferredHeight(ToolbarHeight),
             horizontalArrangement = Arrangement.Center
         ) {
-            val percentage = entries.count { it.isSeen }.toDouble() / pokedex.pokemonCount * 100
-            Text(text = "${percentage.toInt()}% Completed")
+            val title: String = remember(entries) {
+                val seenCount = entries.count { it.isSeen }
+                if (seenCount != pokedex.pokemonCount) {
+                    "${seenCount.toDouble() / pokedex.pokemonCount * 100}% Completed"
+                } else {
+                    val ownedCount = entries.count { it.isOwned }
+                    "${ownedCount.toDouble() / pokedex.pokemonCount * 100}% Owned"
+                }
+            }
+            Text(text = title)
         }
         EntriesList(
             entries = entries,
