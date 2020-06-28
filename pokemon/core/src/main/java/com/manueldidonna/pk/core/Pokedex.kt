@@ -6,7 +6,10 @@ package com.manueldidonna.pk.core
 interface Pokedex {
     val pokemonCount: Int
 
-    fun getEntry(speciesId: Int): Entry
+    fun <E> selectEntry(
+        speciesId: Int,
+        mapTo: (speciesId: Int, isSeen: Boolean, isOwned: Boolean) -> E
+    ): E
 
     fun setEntry(entry: Entry)
 
@@ -35,6 +38,10 @@ interface Pokedex {
             }
         }
     }
+}
+
+fun Pokedex.getEntry(speciesId: Int): Pokedex.Entry {
+    return selectEntry(speciesId, Pokedex.Entry::Immutable)
 }
 
 fun Pokedex.getAllEntries(): List<Pokedex.Entry> {
