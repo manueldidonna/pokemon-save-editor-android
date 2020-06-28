@@ -44,10 +44,10 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
             val title: String = remember(entries) {
                 val seenCount = entries.count { it.isSeen }
                 if (seenCount != pokedex.pokemonCount) {
-                    "${seenCount.toDouble() / pokedex.pokemonCount * 100}% Completed"
+                    "${(seenCount.toDouble() / pokedex.pokemonCount * 100).toInt()}% Completed"
                 } else {
                     val ownedCount = entries.count { it.isOwned }
-                    "${ownedCount.toDouble() / pokedex.pokemonCount * 100}% Owned"
+                    "${(ownedCount.toDouble() / pokedex.pokemonCount * 100).toInt()}% Owned"
                 }
             }
             Text(text = title)
