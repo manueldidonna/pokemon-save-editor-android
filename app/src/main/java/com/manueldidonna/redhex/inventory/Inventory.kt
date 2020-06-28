@@ -83,7 +83,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
                 maxAllowedQuantity = inventory.maxAllowedQuantity,
                 onItemChange = { item ->
                     if (item != null && inventory.getItem(item.index) != item) {
-                        inventory.setItem(item)
+                        inventory.stackItem(item)
                         items = inventory.getAllItems(spritesRetriever, resources)
                     }
                     onCloseRequest()

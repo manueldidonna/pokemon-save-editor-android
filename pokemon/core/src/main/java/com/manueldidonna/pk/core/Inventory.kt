@@ -101,10 +101,58 @@ interface Inventory {
     }
 }
 
+/**
+ * Get an instance of [Inventory.Item] from the Inventory at [index]
+ */
 fun Inventory.getItem(index: Int): Inventory.Item {
     return selectItem(index, mapTo = Inventory.Item::Immutable)
 }
 
+/**
+ * Execute an action with the id and the quantity of an item at [index]
+ *
+ * The same limitations of [Inventory.selectItem] are applied to this function as well
+ */
+inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity: Int) -> Unit) {
+    selectItem(index) { _, id, quantity -> block(id, quantity) }
+}
+
+/**
+ * Insert the [item] into the Inventory, allowing to stack its quantity
+ * if it already exists at a different index [Inventory.Item.index]
+ */
+fun Inventory.stackItem(item: Inventory.Item) {
+    // fast path, max quantity can't be added to an existent item, or the inventory/item is empty
+    if (item.quantity == maxAllowedQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
+        setItem(item)
+        return
+    }
+    var itemQuantity = item.quantity
+    for (i in 0 until size) {
+        // check if exists an item with the same id
+        withItem(index = i) { id, quantity ->
+            if (id == item.id) {
+                // if the index is the same, the user is editing an existing item,
+                // so consume the quantity and overwrite the item
+                if (i == item.index) {
+                    setItem(item)
+                    itemQuantity = 0
+                } else if (quantity < maxAllowedQuantity) {
+                    val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxAllowedQuantity)
+                    setItem(Inventory.Item.Immutable(i, id, newItemQuantity))
+                    itemQuantity -= newItemQuantity - quantity
+                }
+            }
+        }
+        if (itemQuantity <= 0) return
+    }
+    // insert the item in a new slot of the inventory
+    setItem(item.toImmutable(quantity = itemQuantity))
+}
+
+/**
+ * Convert a generic [Inventory.Item] implementation to an [Inventory.Item.Immutable] data class
+ */
 fun Inventory.Item.toImmutable(
     index: Int = this.index,
     id: Int = this.id,

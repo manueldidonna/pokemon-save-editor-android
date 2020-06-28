@@ -33,7 +33,7 @@ fun InventoryItemEditor(
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         // show current item name
-        if (isEditing) {
+        if (itemId > 0) {
             Text(
                 text = resources.getAllItems()[itemId],
                 style = MaterialTheme.typography.h6,
@@ -70,8 +70,8 @@ fun InventoryItemEditor(
                     onItemChange(item.toImmutable(quantity = quantity, id = itemId))
                 }
             ) {
-                if(isEditing) {
-                    Text(text = if(itemId == 0) "Delete" else "Modify")
+                if (isEditing) {
+                    Text(text = if (itemId == 0) "Delete" else "Modify")
                 } else {
                     Text(text = "Add")
                 }
