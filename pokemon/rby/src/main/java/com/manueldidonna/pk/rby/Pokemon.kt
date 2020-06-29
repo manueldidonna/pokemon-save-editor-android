@@ -84,7 +84,7 @@ internal class Pokemon(
                     .moveId(id = 0, moveIndex = 2)
                     .moveId(id = 0, moveIndex = 3)
                     .nickname("TEMPLATE")
-                    .trainer(Trainer("TRAINER", 12345u, 0u))
+                    .trainer(Trainer("TRAINER", 12345, 0))
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
                     .status(null)
@@ -127,8 +127,8 @@ internal class Pokemon(
     override val trainer: Trainer
         get() = Trainer(
             name = getStringFromGameBoyData(data, trainerNameOffset, 11, false),
-            visibleId = data.readBigEndianUShort(startOffset + 0x0C).toUInt(),
-            secretId = 0u // unused in gen 1
+            visibleId = data.readBigEndianUShort(startOffset + 0x0C).toInt(),
+            secretId = 0 // unused in gen 1
         )
 
     override val speciesId: Int
@@ -274,7 +274,7 @@ internal class Pokemon(
         override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator {
             data.writeBidEndianShort(
                 startOffset + 0xC,
-                value.visibleId.coerceAtMost(65535u).toShort()
+                value.visibleId.coerceAtMost(65535).toShort()
             )
             getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase)
                 .copyInto(data, trainerNameOffset)

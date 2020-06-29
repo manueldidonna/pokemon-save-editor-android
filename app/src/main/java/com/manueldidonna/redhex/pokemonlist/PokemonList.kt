@@ -1,6 +1,9 @@
 package com.manueldidonna.redhex.pokemonlist
 
-import androidx.compose.*
+import androidx.compose.Composable
+import androidx.compose.getValue
+import androidx.compose.setValue
+import androidx.compose.stateFor
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.Box
@@ -13,13 +16,16 @@ import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
+import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.MutableStorage
+import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.pk.core.Storage
+import com.manueldidonna.pk.core.StorageCollection
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
-import dev.chrisbanes.accompanist.coil.CoilImage
 
 private data class PokemonPreview(
     val isEmpty: Boolean,
@@ -38,7 +44,10 @@ fun PokemonList(
     val resources = PokemonResourcesAmbient.current.natures
     val spritesRetriever = SpritesRetrieverAmbient.current
 
-    var currentIndex: Int by state { collection.currentIndex }
+    // TODO: persist across navigation events
+    var currentIndex: Int by savedInstanceState {
+        collection.indices.first
+    }
 
     val storage: MutableStorage by stateFor(currentIndex) {
         collection.getMutableStorage(currentIndex)
@@ -52,8 +61,8 @@ fun PokemonList(
         Toolbar(
             modifier = Modifier.height(ToolbarHeight),
             title = storage.name,
-            onBack = { currentIndex = collection.decreaseIndex() },
-            onForward = { currentIndex = collection.increaseIndex() }
+            onBack = { currentIndex = decreaseIndex(currentIndex, collection.indices) },
+            onForward = { currentIndex = increaseIndex(currentIndex, collection.indices) }
         )
         ShowPokemonPreviews(
             previews = pokemonPreviews,
@@ -62,6 +71,16 @@ fun PokemonList(
             }
         )
     }
+}
+
+private fun increaseIndex(currentIndex: Int, indices: IntRange): Int {
+    val index = currentIndex + 1
+    return if (index > indices.last) indices.first else index
+}
+
+private fun decreaseIndex(currentIndex: Int, indices: IntRange): Int {
+    val index = currentIndex - 1
+    return if (index < indices.first) indices.last else index
 }
 
 private fun Storage.getPokemonPreviews(

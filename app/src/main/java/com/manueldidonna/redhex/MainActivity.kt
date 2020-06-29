@@ -14,10 +14,7 @@ import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.padding
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.Category
-import androidx.ui.material.icons.twotone.Home
-import androidx.ui.material.icons.twotone.InsertChart
-import androidx.ui.material.icons.twotone.Settings
+import androidx.ui.material.icons.twotone.*
 import androidx.ui.savedinstancestate.savedInstanceState
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
@@ -100,15 +97,15 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
     }
 
     private enum class BottomDestination(val icon: VectorAsset) {
-        Home(Icons.TwoTone.Home),
-        Pokedex(Icons.TwoTone.InsertChart),
+        Storage(Icons.TwoTone.Inbox),
+        Pokedex(Icons.TwoTone.LocalLibrary),
         Inventory(Icons.TwoTone.Category),
-        Settings(Icons.TwoTone.Settings)
+        More(Icons.TwoTone.Menu)
     }
 
     @Composable
     private fun MainScreen(saveData: SaveData) {
-        val selectedDestinationName = savedInstanceState { BottomDestination.Home.name }
+        val selectedDestinationName = savedInstanceState { BottomDestination.Storage.name }
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
         Scaffold(
             bottomBar = {
@@ -132,8 +129,8 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                 // TODO: find a better solution
                 val modifier = Modifier.padding(padding)
                 when (destination) {
-                    BottomDestination.Home -> PokemonList(modifier, saveData, ::showPokemonDetails)
-                    BottomDestination.Settings -> SettingsScreen()
+                    BottomDestination.Storage -> PokemonList(modifier, saveData, ::showPokemonDetails)
+                    BottomDestination.More -> SettingsScreen()
                     BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
                     BottomDestination.Inventory -> Inventory(modifier, saveData)
                 }

@@ -17,12 +17,12 @@ internal class SaveData(
     override var trainer: Trainer
         get() = Trainer(
             name = getStringFromGameBoyData(data, 0x2598, NameSize, false),
-            visibleId = data.readBigEndianUShort(0x2605).toUInt(),
-            secretId = 0u
+            visibleId = data.readBigEndianUShort(0x2605).toInt(),
+            secretId = 0
         )
         set(value) {
             getGameBoyDataFromString(value.name, 7, false, 11, false).copyInto(data, 0x2598)
-            data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535u).toShort())
+            data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535).toShort())
         }
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
@@ -38,31 +38,6 @@ internal class SaveData(
     }
 
     override val indices: IntRange = StorageCollection.PartyIndex until 12
-
-    private var currentBoxIndex: Int
-        get() = (data[CurrentIndexOffset] and 0x7Fu).toInt()
-        set(value) {
-            if (value == currentBoxIndex) return
-            val oldBoxOffset = getBoxDataOffset(currentBoxIndex)
-            val newBoxOffset = getBoxDataOffset(value)
-            // switch box
-            data.copyInto(data, oldBoxOffset, CurrentBoxOffset, CurrentBoxOffset + BoxSize)
-            data.copyInto(data, CurrentBoxOffset, newBoxOffset, newBoxOffset + BoxSize)
-            // update current index
-            data[CurrentIndexOffset] =
-                (data[CurrentIndexOffset] and 0x80u) or (value and 0x7F).toUByte()
-        }
-
-    override var currentIndex: Int = currentBoxIndex
-        set(value) {
-            require(value in indices) { "Index $value is out of bounds [$indices]" }
-            if (value == field) return
-            // Update current box index
-            if (!value.isPartyIndex) {
-                currentBoxIndex = value
-            }
-            field = value
-        }
 
     override fun getStorage(index: Int): CoreStorage {
         require(index in indices) { "Index $index is out of bounds [$indices]" }
@@ -86,7 +61,8 @@ internal class SaveData(
     private fun getStorageOffset(index: Int): Int {
         return when (index) {
             StorageCollection.PartyIndex -> PartyOffset
-            currentBoxIndex -> CurrentBoxOffset
+            // current box index
+            (data[CurrentIndexOffset] and 0x7Fu).toInt() -> CurrentBoxOffset
             else -> getBoxDataOffset(index)
         }
     }
