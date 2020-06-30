@@ -168,25 +168,6 @@ internal class Pokemon(
         )
     }
 
-    override val moves: CorePokemon.Moves by lazy {
-        object : CorePokemon.Moves {
-            override fun getId(index: Int): Int {
-                require(index in 0..3) { "Move index must be in 0..3" }
-                return data[startOffset + 0x08 + index].toInt()
-            }
-
-            override fun getPowerPoints(index: Int): Int {
-                require(index in 0..3) { "Move index must be in 0..3" }
-                return data[startOffset + 0x1D + index].toInt() and 0x3F
-            }
-
-            override fun getUps(index: Int): Int {
-                require(index in 0..3) { "Move index must be in 0..3" }
-                return (data[startOffset + 0x1D + index].toInt() and 0xC0) ushr 6
-            }
-        }
-    }
-
     /**
      * [CorePokemon.StatisticValues.specialDefense] is equal to [CorePokemon.StatisticValues.specialAttack]
      */

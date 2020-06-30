@@ -37,14 +37,6 @@ interface Pokemon {
 
     val natureId: Int
 
-    val moves: Moves
-
-    interface Moves {
-        fun getId(index: Int): Int
-        fun getPowerPoints(index: Int): Int
-        fun getUps(index: Int): Int
-    }
-
     /**
      * Get info about a specific move.
      * Use 'selectMove(index, Pokemon::Move)' to get a [Move] instance
