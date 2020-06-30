@@ -1,7 +1,8 @@
 package com.manueldidonna.pk.resources
 
-fun getPowerPoints(moveId: Int): Int {
-    return MovePowerPoints[moveId].toInt()
+fun getPowerPoints(moveId: Int, ups: Int): Int {
+    val points = MovePowerPoints[moveId].toInt()
+    return points + (points * (ups.coerceIn(0, 3)) / 5)
 }
 
 private val MovePowerPoints = byteArrayOf(

@@ -9,6 +9,7 @@ import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
 import com.manueldidonna.pk.rby.info.ifNull
+import com.manueldidonna.pk.rby.info.isEvolutionOf
 import com.manueldidonna.pk.rby.utils.*
 import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
@@ -79,10 +80,10 @@ internal class Pokemon(
                 pokemon.mutator
                     .speciesId(151)
                     .level(1)
-                    .moveId(id = 1, moveIndex = 0)
-                    .moveId(id = 0, moveIndex = 1)
-                    .moveId(id = 0, moveIndex = 2)
-                    .moveId(id = 0, moveIndex = 3)
+                    .move(index = 0, move = CorePokemon.Move.maxPowerPoints(1))
+                    .move(index = 1, move = CorePokemon.Move.Empty)
+                    .move(index = 2, move = CorePokemon.Move.Empty)
+                    .move(index = 3, move = CorePokemon.Move.Empty)
                     .nickname("TEMPLATE")
                     .trainer(Trainer("TRAINER", 12345, 0))
                     .individualValues(all = 15)
@@ -157,6 +158,15 @@ internal class Pokemon(
      */
     override val natureId: Int
         get() = experiencePoints % 25
+
+    override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
+        require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
+        return mapTo(
+            data[startOffset + 0x08 + index].toInt(),
+            data[startOffset + 0x1D + index].toInt() and 0x3F,
+            (data[startOffset + 0x1D + index].toInt() and 0xC0) ushr 6
+        )
+    }
 
     override val moves: CorePokemon.Moves by lazy {
         object : CorePokemon.Moves {
@@ -255,8 +265,10 @@ internal class Pokemon(
             data[speciesOffset] = getGameBoySpecies(value).toUByte()
             data[startOffset] = getGameBoySpecies(value).toUByte()
             // set cache rate
-            // TODO: catch rate doesn't change with evolution. Check it!
-            data[startOffset + 0x7] = getCatchRate(value, version).toUByte()
+            if (!value.isEvolutionOf(speciesId)) {
+                // TODO: check if the pokemon is catchable in the game
+                data[startOffset + 0x7] = getCatchRate(value, version).toUByte()
+            }
             // set types
             val firstType = getFirstType(value)
             data[startOffset + 0x5] = firstType.value.toUByte()
@@ -309,37 +321,18 @@ internal class Pokemon(
             }
         }
 
-        override fun moveId(id: Int, moveIndex: Int): MutablePokemon.Mutator = apply {
-            require(moveIndex in 0..3) { "Move index must be in 0..3" }
-            data[startOffset + 0x08 + moveIndex] = id.toUByte()
-            movePowerPoints(moveIndex = moveIndex, moveId = id)
-        }
-
-        override fun movePowerPoints(
-            moveIndex: Int,
-            moveId: Int,
-            points: Int
-        ): MutablePokemon.Mutator = apply {
-            require(moveIndex in 0..3) { "Move index must be in 0..3" }
-            require(moveId != -1 || points != -1) { "moveId or points must be greater than -1" }
-            val ppIndex = startOffset + 0X1D + moveIndex
-            val realPoints = if (moveId > 0) getPowerPoints(moveId) else points.coerceIn(0, 63)
-            data[ppIndex] = (data[ppIndex] and 0xC0u) or realPoints.toUByte()
-        }
-
-        override fun movePowerPointUps(
-            moveIndex: Int,
-            moveId: Int,
-            ups: Int
-        ): MutablePokemon.Mutator = apply {
-            require(moveIndex in 0..3) { "Move index must be in 0..3" }
-            val coercedUps = ups.coerceIn(0, 3)
-            val upsIndex = startOffset + 0X1D + moveIndex
-            data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((coercedUps and 0x3) shl 6).toUByte()
-            if (moveId > 0) {
-                val points = getPowerPoints(moveId)
-                movePowerPoints(moveIndex, points = points + (points * coercedUps / 5))
-            }
+        override fun move(index: Int, move: CorePokemon.Move): MutablePokemon.Mutator = apply {
+            require(index in 0..3) { "Index $index is out of bounds [0 - 3]" }
+            // set id
+            data[startOffset + 0x08 + index] = move.id.toUByte()
+            // set ups
+            val ups = move.ups.coerceIn(0, 3)
+            val upsIndex = startOffset + 0X1D + index
+            data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((ups and 0x3) shl 6).toUByte()
+            // set power points
+            val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups))
+            val ppIndex = startOffset + 0X1D + index
+            data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
         }
 
         override fun status(value: CorePokemon.StatusCondition?): MutablePokemon.Mutator = apply {

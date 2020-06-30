@@ -45,6 +45,28 @@ interface Pokemon {
         fun getUps(index: Int): Int
     }
 
+    /**
+     * Get info about a specific move.
+     * Use 'selectMove(index, Pokemon::Move)' to get a [Move] instance
+     *
+     * Should throw an [IllegalStateException] if [index] is out of bounds [0 - 3]
+     */
+    fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T
+
+    data class Move(
+        val id: Int,
+        val powerPoints: Int,
+        val ups: Int
+    ) {
+        companion object {
+            val Empty: Move = Move(id = 0, powerPoints = 0, ups = 0)
+
+            fun maxPowerPoints(id: Int, ups: Int = 3): Move {
+                return Move(id = id, powerPoints = 999, ups = ups)
+            }
+        }
+    }
+
     val iV: StatisticValues
 
     val eV: StatisticValues
@@ -110,12 +132,7 @@ interface MutablePokemon : Pokemon {
 
         fun level(value: Int): Mutator
 
-        fun moveId(id: Int, moveIndex: Int): Mutator
-
-        fun movePowerPoints(moveIndex: Int, moveId: Int = -1, points: Int = -1): Mutator
-
-        // TODO: merge this and movePowerPoints() in the same function
-        fun movePowerPointUps(moveIndex: Int, moveId: Int, ups: Int): Mutator
+        fun move(index: Int, move: Pokemon.Move): Mutator
 
         fun status(value: Pokemon.StatusCondition?): Mutator
 
