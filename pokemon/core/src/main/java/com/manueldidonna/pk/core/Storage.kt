@@ -25,8 +25,6 @@ interface Storage {
      * Should throw an [IllegalStateException] if [slot] isn't lower than [capacity]
      */
     fun getPokemon(slot: Int): Pokemon
-
-    fun exportPokemonToBytes(slot: Int): UByteArray
 }
 
 /**
@@ -35,9 +33,22 @@ interface Storage {
 interface MutableStorage : Storage {
     fun getMutablePokemon(slot: Int): MutablePokemon
 
-    fun importPokemonFromBytes(slot: Int, bytes: UByteArray): Boolean
+    /**
+     * Returns true if the pokemon has been inserted.
+     */
+    fun insertPokemon(slot: Int, pokemon: Pokemon): Boolean
 
-    fun deletePokemon(slot: Int) // TODO: remove
+    fun deletePokemon(slot: Int)
+}
+
+/**
+ * Insert [pokemon] into the storage.
+ * If [MutableStorage.insertPokemon] returns false, delete data from [slot]
+ */
+fun MutableStorage.insertOrDelete(slot: Int, pokemon: Pokemon) {
+    if (!insertPokemon(slot, pokemon)) {
+        deletePokemon(slot)
+    }
 }
 
 /**
@@ -66,26 +77,14 @@ interface StorageCollection {
 inline val Int.isPartyIndex: Boolean
     get() = this == StorageCollection.PartyIndex
 
-fun StorageCollection.movePokemon(from: Pokemon.Position, to: Pokemon.Position) {
-    if (from == to) return // do nothing
-
-    val fromBox = getMutableStorage(from.index)
-    val fromData = fromBox.exportPokemonToBytes(from.slot) // not valid
-    fromBox.deletePokemon(from.slot)
-    getMutableStorage(to.index).importPokemonFromBytes(to.slot, fromData)
-}
-
 fun StorageCollection.swapPokemon(first: Pokemon.Position, second: Pokemon.Position) {
     if (first == second) return // do nothing
 
-    val firstBox = getMutableStorage(first.index)
-    val secondBox = getMutableStorage(second.index)
-    val firstData = firstBox.exportPokemonToBytes(first.slot)
-    val secondData = secondBox.exportPokemonToBytes(second.slot)
-    if (!firstBox.importPokemonFromBytes(first.slot, secondData)) {
-        firstBox.deletePokemon(first.slot)
-    }
-    if (!secondBox.importPokemonFromBytes(second.slot, firstData)) {
-        secondBox.deletePokemon(second.slot)
-    }
+    val firstStorage = getMutableStorage(first.index)
+    val firstPokemon = firstStorage.getPokemon(first.slot)
+    val secondStorage = getMutableStorage(second.index)
+    val secondPokemon = secondStorage.getPokemon(second.slot)
+
+    firstStorage.insertOrDelete(first.slot, secondPokemon)
+    secondStorage.insertOrDelete(second.slot, firstPokemon)
 }

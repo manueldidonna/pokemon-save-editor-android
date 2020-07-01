@@ -7,6 +7,8 @@ package com.manueldidonna.pk.core
  * Each [Pokemon] implementation must enforces this rule.
  */
 interface Pokemon {
+    fun asBytes(): UByteArray
+
     val isEmpty: Boolean
 
     val version: Version

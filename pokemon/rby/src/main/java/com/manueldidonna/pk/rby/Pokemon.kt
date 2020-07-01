@@ -10,7 +10,10 @@ import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
 import com.manueldidonna.pk.rby.info.ifNull
 import com.manueldidonna.pk.rby.info.isEvolutionOf
-import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.rby.utils.readBigEndianInt
+import com.manueldidonna.pk.rby.utils.readBigEndianUShort
+import com.manueldidonna.pk.rby.utils.writeBidEndianInt
+import com.manueldidonna.pk.rby.utils.writeBidEndianShort
 import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
@@ -52,7 +55,7 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * For a mutable instance the real offsets are [trainerNameOffset] & [pokemonNameOffset]
  *
  */
-internal class Pokemon(
+internal class Pokemon private constructor(
     private val data: UByteArray,
     private val speciesOffset: Int,
     private val startOffset: Int,
@@ -64,6 +67,26 @@ internal class Pokemon(
 ) : MutablePokemon {
 
     companion object {
+        /**
+         * Box Data + Trainer Name + Nickname
+         */
+        internal const val FullDataSizeInBox = 33 + 0xb * 2
+
+        /**
+         * Pokemon Data stored in the box, without trainer name and nickname
+         */
+        internal const val DataSizeInBox = 33
+
+        /**
+         * Box Data + Party data, without trainer name and nickname
+         */
+        internal const val DataSizeInParty = 44
+
+        /**
+         * Used by trainer name and pokemon nicknames
+         */
+        internal const val NameMaxSize = 11
+
         private val StatusToValue = mapOf(
             CorePokemon.StatusCondition.Asleep to 0x4,
             CorePokemon.StatusCondition.Poisoned to 0x8,
@@ -92,32 +115,79 @@ internal class Pokemon(
             }
         }
 
-        fun newImmutableInstance(
+        fun newMutableInstance(
             data: UByteArray,
             index: Int,
             slot: Int,
-            version: Version
-        ): Pokemon {
-            require(data.size == PokemonSize) {
-                "Data size is different than $PokemonSize"
-            }
+            version: Version,
+            startOffset: Int
+        ): MutablePokemon {
+            val pokemonSize = if (index.isPartyIndex) DataSizeInParty else DataSizeInBox
+            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
             return Pokemon(
                 data = data,
-                speciesOffset = 0,
-                startOffset = 0,
-                trainerNameOffset = PokemonDataSize,
-                pokemonNameOffset = PokemonDataSize + NameSize,
+                speciesOffset = startOffset + 1 + 1 * slot,
+                startOffset = dataOfs + (pokemonSize * slot),
+                trainerNameOffset = trainerNameOfs + (NameMaxSize * slot),
+                pokemonNameOffset = nickOfs + (NameMaxSize * slot),
                 index = index,
                 slot = slot,
                 version = version
             )
         }
+
+        fun newImmutableInstance(
+            data: UByteArray,
+            index: Int,
+            slot: Int,
+            version: Version,
+            startOffset: Int
+        ): Pokemon {
+            require(data.size == FullDataSizeInBox) {
+                "Data size ${data.size} should be $FullDataSizeInBox"
+            }
+
+            return Pokemon(
+                data = getPokemonData(data, startOffset, index, slot),
+                speciesOffset = 0,
+                startOffset = 0,
+                trainerNameOffset = DataSizeInBox,
+                pokemonNameOffset = DataSizeInBox + NameMaxSize,
+                index = index,
+                slot = slot,
+                version = version
+            )
+        }
+
+        private fun getPokemonData(
+            data: UByteArray,
+            startOffset: Int,
+            index: Int,
+            slot: Int
+        ): UByteArray {
+            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
+            return UByteArray(FullDataSizeInBox).apply {
+                // Copy Pokemon Box Data
+                data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)
+                // Copy Trainer Name
+                data.copyInto(this, DataSizeInBox, trainerNameOfs, trainerNameOfs + NameMaxSize)
+                // Copy Pokemon Name
+                data.copyInto(this, DataSizeInBox + NameMaxSize, nickOfs, nickOfs + NameMaxSize)
+            }
+        }
     }
 
     init {
-        require(startOffset != 0 || data.size == PokemonSize) {
+        require(startOffset != 0 || data.size == FullDataSizeInBox) {
             "This instance is neither mutable or immutable"
         }
+    }
+
+    override fun asBytes(): UByteArray {
+        if (data.size == FullDataSizeInBox)
+            return data.copyOf()
+        val (index, slot) = position
+        return getPokemonData(data, startOffset, index, slot)
     }
 
     override val isEmpty: Boolean

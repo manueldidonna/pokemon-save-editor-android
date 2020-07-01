@@ -3,7 +3,8 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
-import com.manueldidonna.pk.rby.utils.*
+import com.manueldidonna.pk.rby.utils.readBigEndianUShort
+import com.manueldidonna.pk.rby.utils.writeBidEndianShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
@@ -16,7 +17,8 @@ internal class SaveData(
 
     override var trainer: Trainer
         get() = Trainer(
-            name = getStringFromGameBoyData(data, 0x2598, NameSize, false),
+            // TODO: extract NAMEmAXsIZE TO A SEPARATE COnsTANT
+            name = getStringFromGameBoyData(data, 0x2598, Pokemon.NameMaxSize, false),
             visibleId = data.readBigEndianUShort(0x2605).toInt(),
             secretId = 0
         )
@@ -42,7 +44,7 @@ internal class SaveData(
     override fun getStorage(index: Int): CoreStorage {
         require(index in indices) { "Index $index is out of bounds [$indices]" }
         val dataOffset = getStorageOffset(index)
-        val size = if (index.isPartyIndex) PartySize else BoxSize
+        val size = if (index.isPartyIndex) Storage.PartySize else Storage.BoxSize
         return Storage(
             data = data.copyOfRange(dataOffset, dataOffset + size),
             startOffset = 0,
