@@ -115,8 +115,7 @@ internal class Storage(
         // In gen 1 there couldn't be empty slots between the pokemon in the storage
         // Move back the pokemon from 1 position if the passed slot isn't the last one
         if (slot < endSlot) {
-
-            // TODO: shift pokemon
+            TODO("Shift pokemon")
         }
 
         // erase data
@@ -159,6 +158,7 @@ internal class Storage(
                 nicknameOffset = startOffset + NicknameBoxOffset
                 trainerNameOffset = startOffset + TrainerNameBoxOffset
             }
+
             return Triple(dataOffset, trainerNameOffset, nicknameOffset)
         }
     }

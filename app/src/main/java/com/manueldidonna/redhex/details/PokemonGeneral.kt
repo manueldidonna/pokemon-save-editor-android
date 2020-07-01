@@ -3,11 +3,12 @@ package com.manueldidonna.redhex.details
 import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.AdapterList
+import androidx.ui.foundation.Box
+import androidx.ui.foundation.ContentGravity
 import androidx.ui.foundation.Text
-import androidx.ui.foundation.TextFieldValue
-import androidx.ui.foundation.clickable
+import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.input.KeyboardType
+import androidx.ui.input.TextFieldValue
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.text.TextRange
@@ -17,11 +18,10 @@ import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpriteSize
+import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.ThemedDialog
-import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlin.math.roundToInt
 
 @Composable
@@ -30,59 +30,65 @@ private val LabelTextStyle
 
 @Composable
 fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
-    SpeciesEditorField(pokemon, pokedex)
+    val resources = PokemonResourcesAmbient.current
+    var speciesId: Int by state { pokemon.speciesId }
+    val speciesName: String = remember(speciesId) {
+        resources.species.getSpeciesById(speciesId)
+    }
+    Species(speciesId, speciesName) {
+        pokemon.mutator
+            .speciesId(it)
+            .level(pokemon.level)
+            .nickname(resources.species.getSpeciesById(it), ignoreCase = true)
+        pokedex.setEntry(Pokedex.Entry.owned(it))
+        speciesId = pokemon.speciesId
+    }
     Divider()
-    ExperienceEditorField(pokemon)
+    Experience(pokemon)
     Divider()
-    TrainerEditorField(pokemon)
+    var trainer: Trainer by state { pokemon.trainer }
+    Trainer(trainer = trainer) {
+        pokemon.mutator.trainer(it, ignoreNameCase = false)
+        trainer = pokemon.trainer
+    }
 }
 
 @Composable
-private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
+private fun Species(
+    speciesId: Int,
+    speciesName: String,
+    onSpeciesChange: (Int) -> Unit
+) {
     val resources = PokemonResourcesAmbient.current.species
     val spritesRetriever = SpritesRetrieverAmbient.current
-
-    var speciesId by state { pokemon.speciesId }
 
     val spriteSource: SpriteSource = remember(speciesId) {
         spritesRetriever.getPokemonSprite(speciesId)
     }
 
     var showSpeciesDialog by state { false }
-    Row(
-        verticalGravity = Alignment.CenterVertically,
-        modifier = Modifier
-            .preferredHeight(56.dp)
-            .fillMaxWidth()
-            .clickable(onClick = { showSpeciesDialog = true })
-    ) {
-        Spacer(modifier = Modifier.preferredWidth(16.dp))
-        CoilImage(
-            data = spriteSource.value,
-            modifier = PokemonSpriteSize
-        )
-        Text(
-            text = resources.getSpeciesById(speciesId),
-            style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
+
+    ListItem(
+        icon = {
+            Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
+                PokemonSprite(source = spriteSource)
+            }
+        },
+        text = { Text(text = speciesName) },
+        onClick = { showSpeciesDialog = true }
+    )
+
     if (showSpeciesDialog) {
         val onCloseRequest = { showSpeciesDialog = false }
         ThemedDialog(onCloseRequest = onCloseRequest) {
-            AdapterList(data = resources.getAllSpecies()
+            LazyColumnItems(items = resources.getAllSpecies()
                 .drop(1) // TODO: manage empty species id
                 .mapIndexed { index, s -> Pair(index, s) }
             ) {
                 ListItem(
                     text = it.second,
                     onClick = {
-                        pokemon.mutator
-                            .speciesId(it.first + 1)
-                            .level(pokemon.level)
-                            .nickname(it.second, ignoreCase = true)
-                        pokedex.setEntry(Pokedex.Entry.owned(it.first + 1))
-                        speciesId = pokemon.speciesId
+                        onSpeciesChange(it.first + 1)
                         onCloseRequest()
                     }
                 )
@@ -92,18 +98,24 @@ private fun SpeciesEditorField(pokemon: MutablePokemon, pokedex: Pokedex) {
 }
 
 @Composable
-private fun ExperienceEditorField(pokemon: MutablePokemon) {
+private fun Experience(pokemon: MutablePokemon) {
     var level by state { pokemon.level }
-    Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp)) {
-        Row {
-            Text(text = "Level", style = LabelTextStyle, modifier = Modifier.weight(1f))
+    Column(modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)) {
+        NumberField(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), label = "Experience points", value = 24594, onValueChange = {})
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(verticalGravity = Alignment.CenterVertically) {
+            Text(
+                text = "Level",
+                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium),
+                modifier = Modifier.weight(1f)
+            )
             Text(
                 text = level.toString(),
-                style = MaterialTheme.typography.body1,
-                color = EmphasisAmbient.current.medium.applyEmphasis(MaterialTheme.colors.onSurface)
+                style = MaterialTheme.typography.subtitle2,
+                color = MaterialTheme.colors.primary
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Slider(
             modifier = Modifier.fillMaxWidth(),
             value = level.toFloat(),
@@ -115,60 +127,74 @@ private fun ExperienceEditorField(pokemon: MutablePokemon) {
 }
 
 @Composable
-private fun TrainerEditorField(pokemon: MutablePokemon) {
-    var trainer: Trainer by state { pokemon.trainer }
-    var nameSelection by state { TextRange(0, 0) }
-    var visibleIdSelection by state { TextRange(0, 0) }
-    var secretIdSelection by state { TextRange(0, 0) }
+private fun Trainer(
+    trainer: Trainer,
+    onTrainerChange: (Trainer) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
-        FilledTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = TextFieldValue(text = trainer.name, selection = nameSelection),
-            onValueChange = {
-                pokemon.mutator.trainer(trainer.copy(name = it.text))
-                nameSelection = it.selection
-                trainer = pokemon.trainer
-            },
-            label = { Text(text = "Trainer Name") },
-            keyboardType = KeyboardType.Text
+        TextField(
+            Modifier.fillMaxWidth(),
+            label = "Trainer Name",
+            value = trainer.name,
+            onValueChange = { name -> onTrainerChange(trainer.copy(name)) }
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row {
-            FilledTextField(
-                modifier = Modifier.weight(1f),
-                value = TextFieldValue(
-                    text = if (trainer.visibleId == 0u) "" else trainer.visibleId.toString(),
-                    selection = visibleIdSelection
-                ),
-                onValueChange = {
-                    if (it.text.all(Char::isDigit)) {
-                        visibleIdSelection = it.selection
-                        pokemon.mutator
-                            .trainer(trainer.copy(visibleId = it.text.ifEmpty { "0" }.toUInt()))
-                        trainer = pokemon.trainer
-                    }
-                },
-                label = { Text(text = "Visible ID") },
-                keyboardType = KeyboardType.Number
+            NumberField(
+                Modifier.weight(1f),
+                label = "Visible ID",
+                value = trainer.visibleId,
+                onValueChange = { id -> onTrainerChange(trainer.copy(visibleId = id)) }
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            FilledTextField(
-                modifier = Modifier.weight(1f),
-                value = TextFieldValue(
-                    text = if (trainer.secretId == 0u) "" else trainer.secretId.toString(),
-                    selection = secretIdSelection
-                ),
-                onValueChange = {
-                    if (it.text.all(Char::isDigit)) {
-                        secretIdSelection = it.selection
-                        pokemon.mutator
-                            .trainer(trainer.copy(secretId = it.text.ifEmpty { "0" }.toUInt()))
-                        trainer = pokemon.trainer
-                    }
-                },
-                label = { Text(text = "Secret ID") },
-                keyboardType = KeyboardType.Number
+            Spacer(Modifier.width(8.dp))
+            NumberField(
+                Modifier.weight(1f),
+                label = "Secret ID",
+                value = trainer.secretId,
+                onValueChange = { id -> onTrainerChange(trainer.copy(secretId = id)) }
             )
         }
     }
+}
+
+@Composable
+private fun TextField(
+    modifier: Modifier,
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var selection by state { TextRange.Zero }
+    OutlinedTextField(
+        modifier = modifier,
+        value = TextFieldValue(text = value, selection = selection),
+        onValueChange = {
+            selection = it.selection
+            onValueChange(it.text)
+        },
+        label = { Text(text = label) },
+        keyboardType = KeyboardType.Text
+    )
+}
+
+@Composable
+private fun NumberField(
+    modifier: Modifier,
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit
+) {
+    var selection by state { TextRange.Zero }
+    OutlinedTextField(
+        modifier = modifier,
+        value = TextFieldValue(text = value.toString(), selection = selection),
+        onValueChange = {
+            if (it.text.all(Char::isDigit)) {
+                selection = it.selection
+                onValueChange(it.text.ifEmpty { "0" }.toInt())
+            }
+        },
+        label = { Text(text = label) },
+        keyboardType = KeyboardType.Number
+    )
 }

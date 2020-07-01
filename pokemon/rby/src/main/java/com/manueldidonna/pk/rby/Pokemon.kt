@@ -66,108 +66,6 @@ internal class Pokemon private constructor(
     override val version: Version
 ) : MutablePokemon {
 
-    companion object {
-        /**
-         * Box Data + Trainer Name + Nickname
-         */
-        internal const val FullDataSizeInBox = 33 + 0xb * 2
-
-        /**
-         * Pokemon Data stored in the box, without trainer name and nickname
-         */
-        internal const val DataSizeInBox = 33
-
-        /**
-         * Box Data + Party data, without trainer name and nickname
-         */
-        internal const val DataSizeInParty = 44
-
-        /**
-         * Used by trainer name and pokemon nicknames
-         */
-        internal const val NameMaxSize = 11
-
-        val EmptyTemplate = object : MutablePokemon.Template {
-            override val name = "Empty Pokemon"
-            override val description = "An empty template for R/B/Y games"
-            override val speciesId = 151
-            override fun apply(pokemon: MutablePokemon) {
-                pokemon.mutator
-                    .speciesId(151)
-                    .level(1)
-                    .move(index = 0, move = CorePokemon.Move.maxPowerPoints(1))
-                    .move(index = 1, move = CorePokemon.Move.Empty)
-                    .move(index = 2, move = CorePokemon.Move.Empty)
-                    .move(index = 3, move = CorePokemon.Move.Empty)
-                    .nickname("TEMPLATE")
-                    .trainer(Trainer("TRAINER", 12345, 0))
-                    .individualValues(all = 15)
-                    .effortValues(all = 999999)
-            }
-        }
-
-        fun newMutableInstance(
-            data: UByteArray,
-            index: Int,
-            slot: Int,
-            version: Version,
-            startOffset: Int
-        ): MutablePokemon {
-            val pokemonSize = if (index.isPartyIndex) DataSizeInParty else DataSizeInBox
-            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
-            return Pokemon(
-                data = data,
-                speciesOffset = startOffset + 1 + 1 * slot,
-                startOffset = dataOfs + (pokemonSize * slot),
-                trainerNameOffset = trainerNameOfs + (NameMaxSize * slot),
-                pokemonNameOffset = nickOfs + (NameMaxSize * slot),
-                index = index,
-                slot = slot,
-                version = version
-            )
-        }
-
-        fun newImmutableInstance(
-            data: UByteArray,
-            index: Int,
-            slot: Int,
-            version: Version,
-            startOffset: Int
-        ): Pokemon {
-            require(data.size == FullDataSizeInBox) {
-                "Data size ${data.size} should be $FullDataSizeInBox"
-            }
-
-            return Pokemon(
-                data = getPokemonData(data, startOffset, index, slot),
-                speciesOffset = 0,
-                startOffset = 0,
-                trainerNameOffset = DataSizeInBox,
-                pokemonNameOffset = DataSizeInBox + NameMaxSize,
-                index = index,
-                slot = slot,
-                version = version
-            )
-        }
-
-        private fun getPokemonData(
-            data: UByteArray,
-            startOffset: Int,
-            index: Int,
-            slot: Int
-        ): UByteArray {
-            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
-            return UByteArray(FullDataSizeInBox).apply {
-                // Copy Pokemon Box Data
-                data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)
-                // Copy Trainer Name
-                data.copyInto(this, DataSizeInBox, trainerNameOfs, trainerNameOfs + NameMaxSize)
-                // Copy Pokemon Name
-                data.copyInto(this, DataSizeInBox + NameMaxSize, nickOfs, nickOfs + NameMaxSize)
-            }
-        }
-    }
-
     init {
         require(startOffset != 0 || data.size == FullDataSizeInBox) {
             "This instance is neither mutable or immutable"
@@ -446,6 +344,108 @@ internal class Pokemon private constructor(
                 setStat(offset = 0x26, value = stats.defense)
                 setStat(offset = 0x28, value = stats.speed)
                 setStat(offset = 0x2A, value = stats.specialAttack)
+            }
+        }
+    }
+
+    companion object {
+        /**
+         * Box Data + Trainer Name + Nickname
+         */
+        internal const val FullDataSizeInBox = 33 + 0xb * 2
+
+        /**
+         * Pokemon Data stored in the box, without trainer name and nickname
+         */
+        internal const val DataSizeInBox = 33
+
+        /**
+         * Box Data + Party data, without trainer name and nickname
+         */
+        internal const val DataSizeInParty = 44
+
+        /**
+         * Used by trainer name and pokemon nicknames
+         */
+        internal const val NameMaxSize = 11
+
+        val EmptyTemplate = object : MutablePokemon.Template {
+            override val name = "Empty Pokemon"
+            override val description = "An empty template for R/B/Y games"
+            override val speciesId = 151
+            override fun apply(pokemon: MutablePokemon) {
+                pokemon.mutator
+                    .speciesId(151)
+                    .level(1)
+                    .move(index = 0, move = CorePokemon.Move.maxPowerPoints(1))
+                    .move(index = 1, move = CorePokemon.Move.Empty)
+                    .move(index = 2, move = CorePokemon.Move.Empty)
+                    .move(index = 3, move = CorePokemon.Move.Empty)
+                    .nickname("TEMPLATE")
+                    .trainer(Trainer("TRAINER", 12345, 0))
+                    .individualValues(all = 15)
+                    .effortValues(all = 999999)
+            }
+        }
+
+        fun newMutableInstance(
+            data: UByteArray,
+            index: Int,
+            slot: Int,
+            version: Version,
+            startOffset: Int
+        ): MutablePokemon {
+            val pokemonSize = if (index.isPartyIndex) DataSizeInParty else DataSizeInBox
+            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
+            return Pokemon(
+                data = data,
+                speciesOffset = startOffset + 1 + 1 * slot,
+                startOffset = dataOfs + (pokemonSize * slot),
+                trainerNameOffset = trainerNameOfs + (NameMaxSize * slot),
+                pokemonNameOffset = nickOfs + (NameMaxSize * slot),
+                index = index,
+                slot = slot,
+                version = version
+            )
+        }
+
+        fun newImmutableInstance(
+            data: UByteArray,
+            index: Int,
+            slot: Int,
+            version: Version,
+            startOffset: Int
+        ): Pokemon {
+            require(data.size == FullDataSizeInBox) {
+                "Data size ${data.size} should be $FullDataSizeInBox"
+            }
+
+            return Pokemon(
+                data = getPokemonData(data, startOffset, index, slot),
+                speciesOffset = 0,
+                startOffset = 0,
+                trainerNameOffset = DataSizeInBox,
+                pokemonNameOffset = DataSizeInBox + NameMaxSize,
+                index = index,
+                slot = slot,
+                version = version
+            )
+        }
+
+        private fun getPokemonData(
+            data: UByteArray,
+            startOffset: Int,
+            index: Int,
+            slot: Int
+        ): UByteArray {
+            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
+            return UByteArray(FullDataSizeInBox).apply {
+                // Copy Pokemon Box Data
+                data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)
+                // Copy Trainer Name
+                data.copyInto(this, DataSizeInBox, trainerNameOfs, trainerNameOfs + NameMaxSize)
+                // Copy Pokemon Name
+                data.copyInto(this, DataSizeInBox + NameMaxSize, nickOfs, nickOfs + NameMaxSize)
             }
         }
     }
