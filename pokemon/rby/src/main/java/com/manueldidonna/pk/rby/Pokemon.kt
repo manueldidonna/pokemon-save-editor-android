@@ -118,6 +118,19 @@ internal class Pokemon private constructor(
     override val natureId: Int
         get() = experiencePoints % 25
 
+    /**
+     * This property han been introduced in the second gen. games. When this pokemon is transf
+     */
+    override val isShiny: Boolean
+        get() {
+            with(iV) {
+                if (speed != 10) return false
+                if (specialAttack != 10) return false
+                if (defense != 10) return false
+                return attack in ShinyAttackValues
+            }
+        }
+
     override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
         require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
         return mapTo(
@@ -265,6 +278,22 @@ internal class Pokemon private constructor(
             data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
         }
 
+        override fun shiny(value: Boolean): MutablePokemon.Mutator = apply {
+            if (isShiny == value) return@apply
+            if (value) {
+                individualValues(
+                    health = 10,
+                    defense = 10,
+                    specialAttack = 10,
+                    speed = 10,
+                    attack = ShinyAttackValues.random()
+                )
+            } else {
+                // TODO: find a better way
+                individualValues(defense = 9)
+            }
+        }
+
         /**
          * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
          * If both are greater than -1, [specialDefense] will override [specialAttack]
@@ -369,6 +398,8 @@ internal class Pokemon private constructor(
          */
         internal const val NameMaxSize = 11
 
+        private val ShinyAttackValues = listOf(2, 3, 6, 7, 10, 11, 14, 15)
+
         val EmptyTemplate = object : MutablePokemon.Template {
             override val name = "Empty Pokemon"
             override val description = "An empty template for R/B/Y games"
@@ -395,14 +426,14 @@ internal class Pokemon private constructor(
             version: Version,
             startOffset: Int
         ): MutablePokemon {
-            val pokemonSize = if (index.isPartyIndex) DataSizeInParty else DataSizeInBox
-            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
+            val (dataOfs, trainerNameOfs, nickOfs) =
+                Storage.getPokemonOffsets(index, startOffset, slot)
             return Pokemon(
                 data = data,
                 speciesOffset = startOffset + 1 + 1 * slot,
-                startOffset = dataOfs + (pokemonSize * slot),
-                trainerNameOffset = trainerNameOfs + (NameMaxSize * slot),
-                pokemonNameOffset = nickOfs + (NameMaxSize * slot),
+                startOffset = dataOfs,
+                trainerNameOffset = trainerNameOfs,
+                pokemonNameOffset = nickOfs,
                 index = index,
                 slot = slot,
                 version = version
@@ -416,10 +447,6 @@ internal class Pokemon private constructor(
             version: Version,
             startOffset: Int
         ): Pokemon {
-            require(data.size == FullDataSizeInBox) {
-                "Data size ${data.size} should be $FullDataSizeInBox"
-            }
-
             return Pokemon(
                 data = getPokemonData(data, startOffset, index, slot),
                 speciesOffset = 0,
@@ -438,7 +465,8 @@ internal class Pokemon private constructor(
             index: Int,
             slot: Int
         ): UByteArray {
-            val (dataOfs, trainerNameOfs, nickOfs) = Storage.getPokemonOffsets(index, startOffset)
+            val (dataOfs, trainerNameOfs, nickOfs) =
+                Storage.getPokemonOffsets(index, startOffset, slot)
             return UByteArray(FullDataSizeInBox).apply {
                 // Copy Pokemon Box Data
                 data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)

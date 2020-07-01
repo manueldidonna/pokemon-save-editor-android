@@ -39,6 +39,8 @@ interface Pokemon {
 
     val natureId: Int
 
+    val isShiny: Boolean
+
     /**
      * Get info about a specific move.
      * Use 'selectMove(index, Pokemon::Move)' to get a [Move] instance
@@ -121,6 +123,8 @@ interface MutablePokemon : Pokemon {
         fun level(value: Int): Mutator
 
         fun move(index: Int, move: Pokemon.Move): Mutator
+
+        fun shiny(value: Boolean): Mutator
 
         fun individualValues(
             health: Int = -1,

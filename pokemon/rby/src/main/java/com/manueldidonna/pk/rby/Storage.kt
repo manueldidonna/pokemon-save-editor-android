@@ -79,26 +79,25 @@ internal class Storage(
     }
 
     private fun setPokemonData(pokemonData: UByteArray, slot: Int) {
-        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(index, startOffset)
-        val size = if (index.isPartyIndex) Pokemon.DataSizeInParty else Pokemon.DataSizeInBox
+        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(index, startOffset, slot)
         with(pokemonData) {
             // insert pokemon data
             copyInto(
                 destination = data,
-                destinationOffset = dataOfs + (size * slot),
+                destinationOffset = dataOfs,
                 startIndex = 0,
-                endIndex = com.manueldidonna.pk.rby.Pokemon.DataSizeInBox
+                endIndex = Pokemon.DataSizeInBox
             )
             // insert trainer name and nickname
             copyInto(
                 destination = data,
-                destinationOffset = trainerNameOfs + (Pokemon.NameMaxSize * slot),
+                destinationOffset = trainerNameOfs,
                 startIndex = Pokemon.DataSizeInBox,
                 endIndex = Pokemon.DataSizeInBox + Pokemon.NameMaxSize
             )
             copyInto(
                 destination = data,
-                destinationOffset = nicknameOfs + (Pokemon.NameMaxSize * slot),
+                destinationOffset = nicknameOfs,
                 startIndex = Pokemon.DataSizeInBox + Pokemon.NameMaxSize
             )
         }
@@ -142,24 +141,35 @@ internal class Storage(
          * Return offsets respectively for data - trainer name - nickname
          *
          * Use destructuring declarations with the returned Triple instance:
-         * - val (data, trainerName, nickname) = getPokemonOffsets(index, slot)
+         * - val (data, trainerName, nickname) = getPokemonOffsets(index, startOffset, slot)
          */
-        internal fun getPokemonOffsets(index: Int, startOffset: Int): Triple<Int, Int, Int> {
+        internal fun getPokemonOffsets(
+            index: Int,
+            startOffset: Int,
+            slot: Int
+        ): Triple<Int, Int, Int> {
             val dataOffset: Int
             val trainerNameOffset: Int
             val nicknameOffset: Int
+            val size: Int
 
             if (index.isPartyIndex) {
+                size = Pokemon.DataSizeInParty
                 dataOffset = startOffset + PokemonDataPartyOffset
                 nicknameOffset = startOffset + NicknamePartyOffset
                 trainerNameOffset = startOffset + TrainerNamePartyOffset
             } else {
+                size = Pokemon.DataSizeInBox
                 dataOffset = startOffset + PokemonDataBoxOffset
                 nicknameOffset = startOffset + NicknameBoxOffset
                 trainerNameOffset = startOffset + TrainerNameBoxOffset
             }
 
-            return Triple(dataOffset, trainerNameOffset, nicknameOffset)
+            return Triple(
+                dataOffset + (size * slot),
+                trainerNameOffset + (Pokemon.NameMaxSize * slot),
+                nicknameOffset + (Pokemon.NameMaxSize * slot)
+            )
         }
     }
 }

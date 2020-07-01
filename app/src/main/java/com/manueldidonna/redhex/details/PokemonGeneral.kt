@@ -25,10 +25,6 @@ import com.manueldidonna.redhex.common.ui.ThemedDialog
 import kotlin.math.roundToInt
 
 @Composable
-private val LabelTextStyle
-    get() = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
-
-@Composable
 fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
     val resources = PokemonResourcesAmbient.current
     var speciesId: Int by state { pokemon.speciesId }
@@ -43,6 +39,15 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
         pokedex.setEntry(Pokedex.Entry.owned(it))
         speciesId = pokemon.speciesId
     }
+    Divider()
+    var isShiny by state { pokemon.isShiny }
+    Shiny(
+        isShiny = isShiny,
+        onChange = {
+            pokemon.mutator.shiny(it)
+            isShiny = pokemon.isShiny
+        }
+    )
     Divider()
     Experience(pokemon)
     Divider()
@@ -98,10 +103,23 @@ private fun Species(
 }
 
 @Composable
+private fun Shiny(isShiny: Boolean, onChange: (Boolean) -> Unit) {
+    ListItem(
+        text = { Text(text = "Shiny") },
+        trailing = { Checkbox(checked = isShiny, onCheckedChange = onChange) },
+        onClick = { onChange(!isShiny) }
+    )
+}
+
+@Composable
 private fun Experience(pokemon: MutablePokemon) {
     var level by state { pokemon.level }
     Column(modifier = Modifier.padding(vertical = 8.dp, horizontal = 24.dp)) {
-        NumberField(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), label = "Experience points", value = 24594, onValueChange = {})
+        NumberField(
+            modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(),
+            label = "Experience points",
+            value = 24594,
+            onValueChange = {})
         Spacer(modifier = Modifier.height(16.dp))
         Row(verticalGravity = Alignment.CenterVertically) {
             Text(
