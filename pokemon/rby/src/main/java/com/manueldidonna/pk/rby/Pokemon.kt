@@ -87,14 +87,6 @@ internal class Pokemon private constructor(
          */
         internal const val NameMaxSize = 11
 
-        private val StatusToValue = mapOf(
-            CorePokemon.StatusCondition.Asleep to 0x4,
-            CorePokemon.StatusCondition.Poisoned to 0x8,
-            CorePokemon.StatusCondition.Burned to 0x10,
-            CorePokemon.StatusCondition.Frozen to 0x20,
-            CorePokemon.StatusCondition.Paralyzed to 0x40
-        )
-
         val EmptyTemplate = object : MutablePokemon.Template {
             override val name = "Empty Pokemon"
             override val description = "An empty template for R/B/Y games"
@@ -111,7 +103,6 @@ internal class Pokemon private constructor(
                     .trainer(Trainer("TRAINER", 12345, 0))
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
-                    .status(null)
             }
         }
 
@@ -288,18 +279,6 @@ internal class Pokemon private constructor(
         }
     }
 
-    override val status: CorePokemon.StatusCondition?
-        get() {
-            val statusValue = data[startOffset + 0x4].toInt()
-            if (statusValue != 0) {
-                for (entry in StatusToValue) {
-                    if (entry.value == statusValue)
-                        return entry.key
-                }
-            }
-            return null
-        }
-
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 
     inner class Mutator : MutablePokemon.Mutator {
@@ -315,6 +294,8 @@ internal class Pokemon private constructor(
             // set species id
             data[speciesOffset] = getGameBoySpecies(value).toUByte()
             data[startOffset] = getGameBoySpecies(value).toUByte()
+            // set sane status
+            data[startOffset + 0x4] = 0u
             // set cache rate
             if (!value.isEvolutionOf(speciesId)) {
                 // TODO: check if the pokemon is catchable in the game
@@ -384,11 +365,6 @@ internal class Pokemon private constructor(
             val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups))
             val ppIndex = startOffset + 0X1D + index
             data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
-        }
-
-        override fun status(value: CorePokemon.StatusCondition?): MutablePokemon.Mutator = apply {
-            val statusValue = if (value != null) (StatusToValue.get(value) ?: 0) else 0
-            data[startOffset + 0x4] = statusValue.toUByte()
         }
 
         /**
