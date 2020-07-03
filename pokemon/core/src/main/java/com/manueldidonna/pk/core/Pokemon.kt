@@ -3,12 +3,12 @@ package com.manueldidonna.pk.core
 /**
  * [Pokemon] represents a read-only entity. Its data will never change.
  *
- * An immutable [Pokemon] cannot be casted to [MutablePokemon].
- * Each [Pokemon] implementation must enforces this rule.
+ * If you need to mutate the Pokemon, use [Pokemon.asMutablePokemon]
+ * @see [MutablePokemon]
+ *
+ * TODO: add clone()
  */
 interface Pokemon {
-    fun asBytes(): UByteArray
-
     val isEmpty: Boolean
 
     val version: Version
@@ -75,22 +75,19 @@ interface Pokemon {
         val specialDefense: Int
         val speed: Int
     }
+
+    fun asBytes(): UByteArray
+
+    // TODO: decide if this method should create a new instance or not
+    fun asMutablePokemon(): MutablePokemon
 }
 
 /**
  * [MutablePokemon] allows to mutate the pokemon data via a [MutablePokemon.Mutator],
  * it makes explicit the desire to modify the pokemon's data.
  *
- * [MutablePokemon] doesn't represent a specific pokemon, it will always reflects
- * the current data values at [position].
- * Ex: if you delete the pokemon at [position], also [MutablePokemon] instance data will be erased.
- *
  * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
- * it will continue to reflects any data changes at [position].
- *
- * To get a real immutable instance use [Box.getPokemon]
- *
- * TODO: add a function like "asPokemon()" to convert MutablePokemon to Pokemon
+ * it will continue to reflects any data changes.
  */
 interface MutablePokemon : Pokemon {
 

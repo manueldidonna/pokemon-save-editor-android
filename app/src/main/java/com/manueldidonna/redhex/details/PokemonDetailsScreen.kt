@@ -22,7 +22,7 @@ import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
 
 interface PokemonDetailsEvents {
-    fun goBackToPokemonList()
+    fun goBackToPokemonList(pokemon: MutablePokemon)
 }
 
 private enum class EditorTab {
@@ -30,7 +30,7 @@ private enum class EditorTab {
 }
 
 @Composable
-fun PokemonDetailsScreen(
+fun PokemonDetails(
     modifier: Modifier = Modifier,
     pokemon: MutablePokemon,
     pokedex: Pokedex,
@@ -49,7 +49,7 @@ fun PokemonDetailsScreen(
             }
         }
         EditorToolbar(
-            onNavigationClick = listener::goBackToPokemonList,
+            onNavigationClick = { listener.goBackToPokemonList(pokemon) },
             onTabChange = { tab -> selectedTab = tab }
         )
     }

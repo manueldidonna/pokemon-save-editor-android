@@ -31,12 +31,18 @@ interface Storage {
  * A mutable variant of [Storage]. It will reflects every changes at [Storage.index]
  */
 interface MutableStorage : Storage {
+    /**
+     * Use [MutableStorage.insertPokemon] to notify the Storage about any change
+     * in the returned [MutablePokemon]. These changes won't automatically update the Storage.
+     *
+     * This behavior encourages a strong immutability of the data.
+     */
     fun getMutablePokemon(slot: Int): MutablePokemon
 
     /**
      * Returns true if the pokemon has been inserted.
      */
-    fun insertPokemon(slot: Int, pokemon: Pokemon): Boolean
+    fun insertPokemon(pokemon: Pokemon, slot: Int = pokemon.position.slot): Boolean
 
     fun deletePokemon(slot: Int)
 }
@@ -45,8 +51,8 @@ interface MutableStorage : Storage {
  * Insert [pokemon] into the storage.
  * If [MutableStorage.insertPokemon] returns false, delete data from [slot]
  */
-fun MutableStorage.insertOrDelete(slot: Int, pokemon: Pokemon) {
-    if (!insertPokemon(slot, pokemon)) {
+fun MutableStorage.insertOrDelete(pokemon: Pokemon, slot: Int) {
+    if (!insertPokemon(pokemon, slot)) {
         deletePokemon(slot)
     }
 }
@@ -85,6 +91,6 @@ fun StorageCollection.swapPokemon(first: Pokemon.Position, second: Pokemon.Posit
     val secondStorage = getMutableStorage(second.index)
     val secondPokemon = secondStorage.getPokemon(second.slot)
 
-    firstStorage.insertOrDelete(first.slot, secondPokemon)
-    secondStorage.insertOrDelete(second.slot, firstPokemon)
+    firstStorage.insertOrDelete(secondPokemon, first.slot)
+    secondStorage.insertOrDelete(firstPokemon, second.slot)
 }

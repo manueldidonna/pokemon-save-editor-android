@@ -14,8 +14,12 @@ import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.padding
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.*
+import androidx.ui.material.icons.twotone.Category
+import androidx.ui.material.icons.twotone.Inbox
+import androidx.ui.material.icons.twotone.LocalLibrary
+import androidx.ui.material.icons.twotone.Menu
 import androidx.ui.savedinstancestate.savedInstanceState
+import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.resources.text.PokemonTextResources
@@ -25,8 +29,8 @@ import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.DarkColors
 import com.manueldidonna.redhex.common.ui.LightColors
+import com.manueldidonna.redhex.details.PokemonDetails
 import com.manueldidonna.redhex.details.PokemonDetailsEvents
-import com.manueldidonna.redhex.details.PokemonDetailsScreen
 import com.manueldidonna.redhex.inventory.Inventory
 import com.manueldidonna.redhex.pokedex.Pokedex
 import com.manueldidonna.redhex.pokemonlist.PokemonList
@@ -78,7 +82,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
             is AppScreen.PokemonDetails -> {
                 val (index, slot) = screen.position
                 Surface {
-                    PokemonDetailsScreen(
+                    PokemonDetails(
                         pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
                         pokedex = saveData.pokedex,
                         listener = this
@@ -92,7 +96,11 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         AppState.currentScreen = AppScreen.PokemonDetails(position)
     }
 
-    override fun goBackToPokemonList() {
+    override fun goBackToPokemonList(pokemon: MutablePokemon) {
+        AppState.saveData?.let { saveData ->
+            val (index, slot) = pokemon.position
+            saveData.getMutableStorage(index).insertPokemon(slot = slot, pokemon = pokemon)
+        }
         AppState.currentScreen = AppScreen.Main
     }
 
@@ -129,7 +137,11 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                 // TODO: find a better solution
                 val modifier = Modifier.padding(padding)
                 when (destination) {
-                    BottomDestination.Storage -> PokemonList(modifier, saveData, ::showPokemonDetails)
+                    BottomDestination.Storage -> PokemonList(
+                        modifier,
+                        saveData,
+                        ::showPokemonDetails
+                    )
                     BottomDestination.More -> SettingsScreen()
                     BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
                     BottomDestination.Inventory -> Inventory(modifier, saveData)

@@ -55,28 +55,25 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * For a mutable instance the real offsets are [trainerNameOffset] & [pokemonNameOffset]
  *
  */
-internal class Pokemon private constructor(
+internal class Pokemon(
+    override val version: Version,
     private val data: UByteArray,
-    private val speciesOffset: Int,
-    private val startOffset: Int,
-    private val trainerNameOffset: Int,
-    private val pokemonNameOffset: Int,
     private val index: Int,
-    slot: Int,
-    override val version: Version
+    slot: Int
 ) : MutablePokemon {
 
     init {
-        require(startOffset != 0 || data.size == FullDataSizeInBox) {
+        require(data.size == FullDataSizeInBox) {
             "This instance is neither mutable or immutable"
         }
     }
 
     override fun asBytes(): UByteArray {
-        if (data.size == FullDataSizeInBox)
-            return data.copyOf()
-        val (index, slot) = position
-        return getPokemonData(data, startOffset, index, slot)
+        return data.copyOf()
+    }
+
+    override fun asMutablePokemon(): MutablePokemon {
+        return this
     }
 
     override val isEmpty: Boolean
@@ -86,31 +83,29 @@ internal class Pokemon private constructor(
 
     override val trainer: Trainer
         get() = Trainer(
-            name = getStringFromGameBoyData(data, trainerNameOffset, 11, false),
-            visibleId = data.readBigEndianUShort(startOffset + 0x0C).toInt(),
+            name = getStringFromGameBoyData(data, DataSizeInBox, 11, false),
+            visibleId = data.readBigEndianUShort(0x0C).toInt(),
             secretId = 0 // unused in gen 1
         )
 
     override val speciesId: Int
-        get() = getNationalSpecies(data[startOffset].toInt())
+        get() = getNationalSpecies(data[0].toInt())
 
     override val nickname: String
-        get() = getStringFromGameBoyData(data, pokemonNameOffset, 11, false)
+        get() = getStringFromGameBoyData(data, DataSizeInBox + NameMaxSize, 11, false)
 
     override val level: Int
         get() {
             return when {
                 // fast path, box pokemon. Read from the level offset
-                !index.isPartyIndex -> data[startOffset + 0x3].toInt()
-                // mutable pokemon, read value in the party-only level offset
-                startOffset != 0 -> data[startOffset + 0x21].toInt()
-                // not mutable, party offsets aren't available. Calculate the level from the exp
+                !index.isPartyIndex -> data[0x3].toInt()
+                // party offsets aren't available. Calculate the level from the exp
                 else -> getLevel(experiencePoints, getExperienceGroup(speciesId))
             }
         }
 
     override val experiencePoints: Int
-        get() = data.readBigEndianInt(startOffset + 0xE) ushr 8
+        get() = data.readBigEndianInt(0xE) ushr 8
 
     /**
      * This value doesn't exist in gen1 but the pokemon bank derives it from the exp. points
@@ -134,9 +129,9 @@ internal class Pokemon private constructor(
     override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
         require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
         return mapTo(
-            data[startOffset + 0x08 + index].toInt(),
-            data[startOffset + 0x1D + index].toInt() and 0x3F,
-            (data[startOffset + 0x1D + index].toInt() and 0xC0) ushr 6
+            data[0x08 + index].toInt(),
+            data[0x1D + index].toInt() and 0x3F,
+            (data[0x1D + index].toInt() and 0xC0) ushr 6
         )
     }
 
@@ -146,7 +141,7 @@ internal class Pokemon private constructor(
     override val iV: CorePokemon.StatisticValues by lazy {
         object : CorePokemon.StatisticValues {
             private val DV16: Int
-                get() = data.readBigEndianUShort(startOffset + 0x1b).toInt()
+                get() = data.readBigEndianUShort(0x1b).toInt()
 
             override val health: Int
                 get() = (attack and 1 shl 3) or (defense and 1 shl 2) or (speed and 1 shl 1) or (specialAttack and 1 shl 0)
@@ -171,19 +166,19 @@ internal class Pokemon private constructor(
     override val eV: CorePokemon.StatisticValues by lazy {
         object : CorePokemon.StatisticValues {
             override val health: Int
-                get() = data.readBigEndianUShort(startOffset + 0x11).toInt()
+                get() = data.readBigEndianUShort(0x11).toInt()
 
             override val attack: Int
-                get() = data.readBigEndianUShort(startOffset + 0x13).toInt()
+                get() = data.readBigEndianUShort(0x13).toInt()
 
             override val defense: Int
-                get() = data.readBigEndianUShort(startOffset + 0x15).toInt()
+                get() = data.readBigEndianUShort(0x15).toInt()
 
             override val speed: Int
-                get() = data.readBigEndianUShort(startOffset + 0x17).toInt()
+                get() = data.readBigEndianUShort(0x17).toInt()
 
             override val specialAttack: Int
-                get() = data.readBigEndianUShort(startOffset + 0x19).toInt()
+                get() = data.readBigEndianUShort(0x19).toInt()
 
             override val specialDefense: Int
                 get() = specialAttack
@@ -194,52 +189,43 @@ internal class Pokemon private constructor(
 
     inner class Mutator : MutablePokemon.Mutator {
 
-        init {
-            require(startOffset != 0) { "This Pokemon instance is read-only" }
-        }
-
-        private var baseStatistics: CorePokemon.StatisticValues? = null
-
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
             require(value in 1..151) { "Not supported species id: $value" }
             // set species id
-            data[speciesOffset] = getGameBoySpecies(value).toUByte()
-            data[startOffset] = getGameBoySpecies(value).toUByte()
+            data[0] = getGameBoySpecies(value).toUByte()
             // set sane status
-            data[startOffset + 0x4] = 0u
+            data[0x4] = 0u
             // set cache rate
             if (!value.isEvolutionOf(speciesId)) {
                 // TODO: check if the pokemon is catchable in the game
-                data[startOffset + 0x7] = getCatchRate(value, version).toUByte()
+                data[0x7] = getCatchRate(value, version).toUByte()
             }
             // set types
             val firstType = getFirstType(value)
-            data[startOffset + 0x5] = firstType.value.toUByte()
-            data[startOffset + 0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
-            // set max statistics per species
-            baseStatistics = getBaseStatistics(value, version)
-            maximizeStatistics()
+            data[0x5] = firstType.value.toUByte()
+            data[0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
+            // set max health
+            val base = getBaseStatistics(speciesId, version)
+            val health = calculateStatistics(level, base, iV, eV, version).health
+            data.writeBidEndianShort(0x1, health.toShort())
         }
 
         override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
             getGameBoyDataFromString(value, 10, false, 11, ignoreCase)
-                .copyInto(data, pokemonNameOffset)
+                .copyInto(data, DataSizeInBox + NameMaxSize)
         }
 
         override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator {
-            data.writeBidEndianShort(
-                startOffset + 0xC,
-                value.visibleId.coerceAtMost(65535).toShort()
-            )
+            data.writeBidEndianShort(0xC, value.visibleId.coerceAtMost(65535).toShort())
             getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase)
-                .copyInto(data, trainerNameOffset)
+                .copyInto(data, DataSizeInBox)
             return this
         }
 
         override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
             val experienceGroup = getExperienceGroup(speciesId)
             val coercedValue = value.coerceAtMost(getExperiencePoints(100, experienceGroup))
-            data.writeBidEndianInt(startOffset + 0xE, coercedValue shl 8, write3Bytes = true)
+            data.writeBidEndianInt(0xE, coercedValue shl 8, write3Bytes = true)
             val newLevel = getLevel(coercedValue, experienceGroup)
             if (newLevel != level) {
                 level(newLevel)
@@ -248,12 +234,7 @@ internal class Pokemon private constructor(
 
         override fun level(value: Int): MutablePokemon.Mutator = apply {
             val coercedLevel = value.coerceIn(1, 100)
-            data[startOffset + 0x3] = coercedLevel.toUByte()
-            if (index.isPartyIndex) {
-                data[startOffset + 0x21] = coercedLevel.toUByte()
-            }
-            // TODO: remove statistics invocation
-            maximizeStatistics()
+            data[0x3] = coercedLevel.toUByte()
             val sanitizedExperience = sanitizeExperiencePoints(
                 points = experiencePoints,
                 level = coercedLevel,
@@ -267,14 +248,14 @@ internal class Pokemon private constructor(
         override fun move(index: Int, move: CorePokemon.Move): MutablePokemon.Mutator = apply {
             require(index in 0..3) { "Index $index is out of bounds [0 - 3]" }
             // set id
-            data[startOffset + 0x08 + index] = move.id.toUByte()
+            data[0x08 + index] = move.id.toUByte()
             // set ups
             val ups = move.ups.coerceIn(0, 3)
-            val upsIndex = startOffset + 0X1D + index
+            val upsIndex = 0X1D + index
             data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((ups and 0x3) shl 6).toUByte()
             // set power points
             val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups))
-            val ppIndex = startOffset + 0X1D + index
+            val ppIndex = 0X1D + index
             data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
         }
 
@@ -307,7 +288,7 @@ internal class Pokemon private constructor(
             specialDefense: Int
         ): MutablePokemon.Mutator = apply {
             // health is ignored, in gen 1 it's determined by the other ivs
-            var totalIVs = data.readBigEndianUShort(startOffset + 0x1b).toInt()
+            var totalIVs = data.readBigEndianUShort(0x1b).toInt()
             fun setValue(value: Int, shiftAmount: Int) {
                 if (value >= 0) {
                     totalIVs = (totalIVs and (0xF shl shiftAmount).inv()) or
@@ -319,9 +300,7 @@ internal class Pokemon private constructor(
             setValue(speed, shiftAmount = 4)
             setValue(specialAttack, shiftAmount = 0)
             setValue(specialDefense, shiftAmount = 0)
-            data.writeBidEndianShort(startOffset + 0x1B, totalIVs.toShort())
-            // TODO: remove statistics invocation
-            maximizeStatistics()
+            data.writeBidEndianShort(0x1B, totalIVs.toShort())
         }
 
         /**
@@ -338,10 +317,7 @@ internal class Pokemon private constructor(
         ): MutablePokemon.Mutator = apply {
             fun setValue(value: Int, effortOffset: Int) {
                 if (value >= 0) {
-                    data.writeBidEndianShort(
-                        startOffset + effortOffset,
-                        value.coerceAtMost(65535).toShort()
-                    )
+                    data.writeBidEndianShort(effortOffset, value.coerceAtMost(65535).toShort())
                 }
             }
             setValue(health, effortOffset = 0x11)
@@ -350,38 +326,19 @@ internal class Pokemon private constructor(
             setValue(speed, effortOffset = 0x17)
             setValue(specialAttack, effortOffset = 0x19)
             setValue(specialDefense, effortOffset = 0x19)
-            // TODO: remove statistics invocation
-            maximizeStatistics()
-        }
-
-        private fun maximizeStatistics() {
-            fun setStat(offset: Int, value: Int) {
-                data.writeBidEndianShort(startOffset + offset, value.toShort())
-            }
-
-            val baseStatistics = baseStatistics
-                ?: getBaseStatistics(speciesId, version).also { baseStatistics = it }
-
-            val stats = calculateStatistics(level, baseStatistics, iV, eV, version)
-
-            // current HP
-            setStat(offset = 0x1, value = stats.health)
-
-            if (index.isPartyIndex) {
-                setStat(offset = 0x22, value = stats.health)
-                setStat(offset = 0x24, value = stats.attack)
-                setStat(offset = 0x26, value = stats.defense)
-                setStat(offset = 0x28, value = stats.speed)
-                setStat(offset = 0x2A, value = stats.specialAttack)
-            }
         }
     }
 
     companion object {
         /**
+         * Used by trainer name and pokemon nicknames
+         */
+        internal const val NameMaxSize = 11
+
+        /**
          * Box Data + Trainer Name + Nickname
          */
-        internal const val FullDataSizeInBox = 33 + 0xb * 2
+        internal const val FullDataSizeInBox = 33 + NameMaxSize * 2
 
         /**
          * Pokemon Data stored in the box, without trainer name and nickname
@@ -392,11 +349,6 @@ internal class Pokemon private constructor(
          * Box Data + Party data, without trainer name and nickname
          */
         internal const val DataSizeInParty = 44
-
-        /**
-         * Used by trainer name and pokemon nicknames
-         */
-        internal const val NameMaxSize = 11
 
         private val ShinyAttackValues = listOf(2, 3, 6, 7, 10, 11, 14, 15)
 
@@ -419,62 +371,28 @@ internal class Pokemon private constructor(
             }
         }
 
-        fun newMutableInstance(
-            data: UByteArray,
-            index: Int,
-            slot: Int,
-            version: Version,
-            startOffset: Int
-        ): MutablePokemon {
-            val (dataOfs, trainerNameOfs, nickOfs) =
-                Storage.getPokemonOffsets(index, startOffset, slot)
-            return Pokemon(
-                data = data,
-                speciesOffset = startOffset + 1 + 1 * slot,
-                startOffset = dataOfs,
-                trainerNameOffset = trainerNameOfs,
-                pokemonNameOffset = nickOfs,
-                index = index,
-                slot = slot,
-                version = version
-            )
-        }
-
-        fun newImmutableInstance(
-            data: UByteArray,
-            index: Int,
-            slot: Int,
-            version: Version,
-            startOffset: Int
-        ): Pokemon {
-            return Pokemon(
-                data = getPokemonData(data, startOffset, index, slot),
-                speciesOffset = 0,
-                startOffset = 0,
-                trainerNameOffset = DataSizeInBox,
-                pokemonNameOffset = DataSizeInBox + NameMaxSize,
-                index = index,
-                slot = slot,
-                version = version
-            )
-        }
-
-        private fun getPokemonData(
-            data: UByteArray,
-            startOffset: Int,
-            index: Int,
-            slot: Int
-        ): UByteArray {
-            val (dataOfs, trainerNameOfs, nickOfs) =
-                Storage.getPokemonOffsets(index, startOffset, slot)
-            return UByteArray(FullDataSizeInBox).apply {
-                // Copy Pokemon Box Data
-                data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)
-                // Copy Trainer Name
-                data.copyInto(this, DataSizeInBox, trainerNameOfs, trainerNameOfs + NameMaxSize)
-                // Copy Pokemon Name
-                data.copyInto(this, DataSizeInBox + NameMaxSize, nickOfs, nickOfs + NameMaxSize)
+        internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
+            // update level
+            val stats: CorePokemon.StatisticValues = with(pokemon) {
+                val base = getBaseStatistics(speciesId, version)
+                calculateStatistics(level, base, iV, eV, version)
             }
+
+            fun setStat(offset: Int, value: Int) {
+                into.writeBidEndianShort(pokemonOffset + offset, value.toShort())
+            }
+
+            // calculate level from exp
+            into[pokemonOffset + 0x21] = pokemon.run {
+                getLevel(experiencePoints, getExperienceGroup(speciesId)).toUByte()
+            }
+
+            // update current stats
+            setStat(offset = 0x22, value = stats.health)
+            setStat(offset = 0x24, value = stats.attack)
+            setStat(offset = 0x26, value = stats.defense)
+            setStat(offset = 0x28, value = stats.speed)
+            setStat(offset = 0x2A, value = stats.specialAttack)
         }
     }
 }
