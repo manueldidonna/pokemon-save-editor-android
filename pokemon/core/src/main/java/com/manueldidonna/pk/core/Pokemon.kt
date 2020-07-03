@@ -29,6 +29,8 @@ interface Pokemon {
 
     val trainer: Trainer
 
+    val isShiny: Boolean
+
     val speciesId: Int
 
     val nickname: String
@@ -39,7 +41,11 @@ interface Pokemon {
 
     val natureId: Int
 
-    val isShiny: Boolean
+    val heldItemId: Property<Int>
+        get() = Property.Nothing
+
+    val pokerus: Property<Pokerus>
+        get() = Property.Nothing
 
     /**
      * Get info about a specific move.
@@ -123,6 +129,10 @@ interface MutablePokemon : Pokemon {
 
         fun shiny(value: Boolean): Mutator
 
+        fun heldItemId(value: Int): Mutator = unsupportedProperty()
+
+        fun pokerus(pokerus: Pokerus): Mutator = unsupportedProperty()
+
         fun individualValues(
             health: Int = -1,
             attack: Int = -1,
@@ -141,6 +151,10 @@ interface MutablePokemon : Pokemon {
             specialDefense: Int = -1
         ): Mutator
     }
+}
+
+private fun MutablePokemon.Mutator.unsupportedProperty(): Nothing {
+    throw IllegalAccessException("Unsupported Pokemon Property")
 }
 
 fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = apply {
