@@ -12,9 +12,10 @@ internal class EnglishItems : PokemonTextResources.Items {
     override fun getTypeName(type: Inventory.Type): String {
         return when (type) {
             Inventory.Type.General -> "General"
-            Inventory.Type.Computer -> "PC"
+            Inventory.Type.Computer -> "Computer"
             Inventory.Type.Balls -> "Balls"
             Inventory.Type.Keys -> "Keys"
+            Inventory.Type.Machines -> "TM/HM"
         }
     }
 

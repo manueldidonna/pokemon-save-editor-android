@@ -3,3 +3,4 @@ include ':pokemon:rby'
 include ':pokemon:core'
 include ':app'
 rootProject.name = "RedHeX"
+include ':pokemon:gsc'

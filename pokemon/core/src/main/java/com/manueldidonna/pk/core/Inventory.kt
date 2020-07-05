@@ -14,7 +14,8 @@ interface Inventory {
         General,
         Computer,
         Balls,
-        Keys
+        Keys,
+        Machines // used for technical/hidden machines
     }
 
     /**

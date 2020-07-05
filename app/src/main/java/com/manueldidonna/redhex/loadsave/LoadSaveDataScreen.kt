@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex
+package com.manueldidonna.redhex.loadsave
 
 import android.content.Context
 import android.net.Uri
@@ -20,7 +20,7 @@ import androidx.ui.material.MaterialTheme
 import androidx.ui.material.Surface
 import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.tooling.preview.Preview
-import com.manueldidonna.pk.rby.RBYSaveDataFactory
+import com.manueldidonna.redhex.AppState
 import com.manueldidonna.redhex.common.PrepareActivityContract
 
 @Composable
@@ -49,14 +49,11 @@ fun LoadSaveDataScreen() {
 }
 
 private fun createSaveData(uri: Uri?, context: Context) {
-    Log.d("savedata", "preuri")
-
     if (uri == null) return
     context.contentResolver.openInputStream(uri).use { input ->
-        Log.d("savedata", "preinput")
-
         if (input == null) return
-        AppState.saveData = RBYSaveDataFactory.createSaveData(input.readBytes().toUByteArray())
+        AppState.saveData = ComposingSaveDataFactory()
+            .createSaveData(input.readBytes().toUByteArray())
         Log.d("savedata", AppState.saveData?.toString() ?: "")
     }
 }
