@@ -9,11 +9,13 @@ import androidx.ui.foundation.ContentGravity
 import androidx.ui.foundation.Icon
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.lazy.LazyColumnItems
+import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.Arrangement
 import androidx.ui.layout.Column
 import androidx.ui.layout.preferredHeight
 import androidx.ui.layout.size
 import androidx.ui.material.Divider
+import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.ListItem
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
@@ -23,12 +25,13 @@ import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.getAllEntries
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSprite
+import com.manueldidonna.redhex.common.PokemonSpriteSize
 import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
+import dev.chrisbanes.accompanist.coil.CoilImage
 
 @Composable
 fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
@@ -100,9 +103,23 @@ private fun PokedexEntry(
         onClick = onClick,
         icon = {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
-                PokemonSprite(source = if (entry.isSeen) source else SpriteSource.Pokeball)
+                PokedexSprite(source = source, isSeen = entry.isSeen)
             }
         }
+    )
+}
+
+@Composable
+private fun PokedexSprite(source: SpriteSource, isSeen: Boolean) {
+    var colorFilter: ColorFilter? = null
+    if (isSeen) {
+        val emphasis = EmphasisAmbient.current.disabled
+        colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface))
+    }
+    CoilImage(
+        modifier = PokemonSpriteSize,
+        colorFilter = colorFilter,
+        data = source.value
     )
 }
 
