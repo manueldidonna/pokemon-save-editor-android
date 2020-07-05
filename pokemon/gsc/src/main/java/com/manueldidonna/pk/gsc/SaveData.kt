@@ -10,8 +10,8 @@ internal class SaveData(
     override var trainer: Trainer
         get() = TODO("Not yet implemented")
         set(value) {}
-    override val pokedex: Pokedex
-        get() = TODO("Not yet implemented")
+
+    override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 
     override val supportedInventoryTypes: List<Inventory.Type> = listOf(
         Inventory.Type.General,

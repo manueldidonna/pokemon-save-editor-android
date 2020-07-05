@@ -3,8 +3,8 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
-import com.manueldidonna.pk.rby.utils.readBigEndianUShort
-import com.manueldidonna.pk.rby.utils.writeBidEndianShort
+import com.manueldidonna.pk.utils.readBigEndianUShort
+import com.manueldidonna.pk.utils.writeBidEndianShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData

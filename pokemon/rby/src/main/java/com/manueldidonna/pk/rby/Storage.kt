@@ -47,7 +47,7 @@ internal class Storage(
         return pokemon
     }
 
-    override fun insertPokemon(slot: Int, pokemon: CorePokemon): Boolean {
+    override fun insertPokemon(pokemon: CorePokemon, slot: Int): Boolean {
         require(pokemon.version.isFirstGeneration) {
             "Incompatible Pokemon version ${pokemon.version}"
         }

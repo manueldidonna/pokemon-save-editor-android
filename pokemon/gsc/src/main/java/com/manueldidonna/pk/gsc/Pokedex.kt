@@ -1,16 +1,25 @@
-package com.manueldidonna.pk.rby
+package com.manueldidonna.pk.gsc
 
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.utils.getBitAt
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 
-/**
- * Pokemon are indexed by their usual Pokedex order,
- * meaning the order is the same as in the National Pokedex.
- * However, indexes begin counting at 0, rather than 1
- */
-internal class Pokedex(private val data: UByteArray) : CorePokedex {
+internal class Pokedex(private val data: UByteArray, version: Version) : CorePokedex {
 
-    override val pokemonCount: Int = 151
+    override val pokemonCount: Int = 251
+
+    private val seenOffset: Int
+    private val ownedOffset: Int
+
+    init {
+        if (version == Version.Crystal) {
+            seenOffset = CrystalSeenOffset
+            ownedOffset = CrystalOwnedOffset
+        } else {
+            seenOffset = GoldSilverSeenOffset
+            ownedOffset = GoldSilverOwnedOffset
+        }
+    }
 
     override fun <E> selectEntry(
         speciesId: Int,
@@ -23,19 +32,19 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
         val offset = getEntryOffset(speciesId)
         return mapTo(
             speciesId,
-            data[SeenOffset + offset].toInt().getBitAt(bitIndex),
-            data[OwnedOffset + offset].toInt().getBitAt(bitIndex)
+            data[seenOffset + offset].toInt().getBitAt(bitIndex),
+            data[ownedOffset + offset].toInt().getBitAt(bitIndex)
         )
     }
 
-    override fun setEntry(entry: CorePokedex.Entry) {
+    override fun setEntry(entry: com.manueldidonna.pk.core.Pokedex.Entry) {
         require(entry.speciesId in 1..pokemonCount) {
             "SpeciesId ${entry.speciesId} is out of bounds [1 - $pokemonCount]"
         }
         val bitIndex = getEntryBitIndex(entry.speciesId)
         val offset = getEntryOffset(entry.speciesId)
-        setFlag(SeenOffset + offset, bitIndex, entry.isSeen)
-        setFlag(OwnedOffset + offset, bitIndex, entry.isOwned)
+        setFlag(seenOffset + offset, bitIndex, entry.isSeen)
+        setFlag(ownedOffset + offset, bitIndex, entry.isOwned)
     }
 
     private fun getEntryOffset(speciesId: Int): Int = (speciesId - 1) ushr 3
@@ -48,7 +57,9 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
     }
 
     companion object {
-        private const val OwnedOffset = 0x25A3
-        private const val SeenOffset = 0x25B6
+        private const val GoldSilverOwnedOffset = 0x2A4C
+        private const val GoldSilverSeenOffset = 0x2A6C
+        private const val CrystalOwnedOffset = 0x2A27
+        private const val CrystalSeenOffset = 0x2A47
     }
 }

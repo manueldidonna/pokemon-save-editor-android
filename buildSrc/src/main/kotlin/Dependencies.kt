@@ -5,6 +5,7 @@ object Modules {
         const val core = ":pokemon:core"
         const val rby = ":pokemon:rby"
         const val gsc = ":pokemon:gsc"
+        const val utils = ":pokemon:utils"
         const val resources = ":pokemon:resources"
     }
 }
