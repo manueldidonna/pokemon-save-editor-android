@@ -1,10 +1,26 @@
 package com.manueldidonna.pk.resources.text.english
 
+import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isFirstGeneration
+import com.manueldidonna.pk.core.isSecondGeneration
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 internal class EnglishMoves : PokemonTextResources.Moves {
 
-    private val moves = arrayOf(
+    override fun getMoveById(id: Int): String {
+        require(id in 0..251) { "id not supported: $id" }
+        return if (id == 0) "" else moves[id]
+    }
+
+    override fun getAllMoves(version: Version): List<String> {
+        return when {
+            version.isFirstGeneration -> moves.subList(0, 166)
+            version.isSecondGeneration -> moves
+            else -> throw IllegalStateException("Unsupported version: $version")
+        }
+    }
+
+    private val moves = listOf(
         "-------",
         "Pound",
         "Karate Chop",
@@ -170,15 +186,92 @@ internal class EnglishMoves : PokemonTextResources.Moves {
         "Super Fang",
         "Slash",
         "Substitute",
-        "Struggle"
+        "Struggle",
+        "Sketch",
+        "Triple Kick",
+        "Thief",
+        "Spider Web",
+        "Mind Reader",
+        "Nightmare",
+        "Flame Wheel",
+        "Snore",
+        "Curse",
+        "Flail",
+        "Conversion 2",
+        "Aeroblast",
+        "Cotton Spore",
+        "Reversal",
+        "Spite",
+        "Powder Snow",
+        "Protect",
+        "Mach Punch",
+        "Scary Face",
+        "Feint Attack",
+        "Sweet Kiss",
+        "Belly Drum",
+        "Sludge Bomb",
+        "Mud-Slap",
+        "Octazooka",
+        "Spikes",
+        "Zap Cannon",
+        "Foresight",
+        "Destiny Bond",
+        "Perish Song",
+        "Icy Wind",
+        "Detect",
+        "Bone Rush",
+        "Lock-On",
+        "Outrage",
+        "Sandstorm",
+        "Giga Drain",
+        "Endure",
+        "Charm",
+        "Rollout",
+        "False Swipe",
+        "Swagger",
+        "Milk Drink",
+        "Spark",
+        "Fury Cutter",
+        "Steel Wing",
+        "Mean Look",
+        "Attract",
+        "Sleep Talk",
+        "Heal Bell",
+        "Return",
+        "Present",
+        "Frustration",
+        "Safeguard",
+        "Pain Split",
+        "Sacred Fire",
+        "Magnitude",
+        "Dynamic Punch",
+        "Megahorn",
+        "Dragon Breath",
+        "Baton Pass",
+        "Encore",
+        "Pursuit",
+        "Rapid Spin",
+        "Sweet Scent",
+        "Iron Tail",
+        "Metal Claw",
+        "Vital Throw",
+        "Morning Sun",
+        "Synthesis",
+        "Moonlight",
+        "Hidden Power",
+        "Cross Chop",
+        "Twister",
+        "Rain Dance",
+        "Sunny Day",
+        "Crunch",
+        "Mirror Coat",
+        "Psych Up",
+        "Extreme Speed",
+        "Ancient Power",
+        "Shadow Ball",
+        "Future Sight",
+        "Rock Smash",
+        "Whirlpool",
+        "Beat Up"
     )
-
-    override fun getMoveById(id: Int): String {
-        require(id in 0..165) { "id not supported: $id" }
-        return if (id == 0) "" else moves[id]
-    }
-
-    override fun getAllMoves(): List<String> {
-        return moves.toList()
-    }
 }

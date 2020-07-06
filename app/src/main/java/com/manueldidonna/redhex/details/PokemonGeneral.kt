@@ -17,6 +17,7 @@ import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpriteSource
@@ -31,7 +32,7 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
     val speciesName: String = remember(speciesId) {
         resources.species.getSpeciesById(speciesId)
     }
-    Species(speciesId, speciesName) {
+    Species(pokemon.version, speciesId, speciesName) {
         pokemon.mutator
             .speciesId(it)
             .level(pokemon.level)
@@ -60,6 +61,7 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
 
 @Composable
 private fun Species(
+    version: Version,
     speciesId: Int,
     speciesName: String,
     onSpeciesChange: (Int) -> Unit
@@ -86,7 +88,7 @@ private fun Species(
     if (showSpeciesDialog) {
         val onCloseRequest = { showSpeciesDialog = false }
         ThemedDialog(onCloseRequest = onCloseRequest) {
-            LazyColumnItems(items = resources.getAllSpecies()
+            LazyColumnItems(items = resources.getAllSpecies(version)
                 .drop(1) // TODO: manage empty species id
                 .mapIndexed { index, s -> Pair(index, s) }
             ) {

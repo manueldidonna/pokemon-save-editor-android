@@ -47,7 +47,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
 
     if (selectedMoveIndex >= 0) {
         MoveChooser(
-            moves = resources.getAllMoves(),
+            moves = resources.getAllMoves(pokemon.version),
             onMoveSelected = { move ->
                 if (move != null) {
                     val availableIndex = pokemon.getEmptyMoveIndexOrElse(selectedMoveIndex)

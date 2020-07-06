@@ -1,10 +1,26 @@
 package com.manueldidonna.pk.resources.text.english
 
+import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isFirstGeneration
+import com.manueldidonna.pk.core.isSecondGeneration
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 internal class EnglishSpecies : PokemonTextResources.Species {
 
-    private val species = arrayOf(
+    override fun getAllSpecies(version: Version): List<String> {
+        return when {
+            version.isFirstGeneration -> species.subList(0, 152)
+            version.isSecondGeneration -> species
+            else -> throw IllegalStateException("Unsupported version: $version")
+        }
+    }
+
+    override fun getSpeciesById(id: Int): String {
+        require(id in 1..251) { "Id not supported: $id" }
+        return species[id]
+    }
+
+    private val species = listOf(
         "------",
         "Bulbasaur",
         "Ivysaur",
@@ -156,15 +172,107 @@ internal class EnglishSpecies : PokemonTextResources.Species {
         "Dragonair",
         "Dragonite",
         "Mewtwo",
-        "Mew"
+        "Mew",
+        "Chikorita",
+        "Bayleef",
+        "Meganium",
+        "Cyndaquil",
+        "Quilava",
+        "Typhlosion",
+        "Totodile",
+        "Croconaw",
+        "Feraligatr",
+        "Sentret",
+        "Furret",
+        "Hoothoot",
+        "Noctowl",
+        "Ledyba",
+        "Ledian",
+        "Spinarak",
+        "Ariados",
+        "Crobat",
+        "Chinchou",
+        "Lanturn",
+        "Pichu",
+        "Cleffa",
+        "Igglybuff",
+        "Togepi",
+        "Togetic",
+        "Natu",
+        "Xatu",
+        "Mareep",
+        "Flaaffy",
+        "Ampharos",
+        "Bellossom",
+        "Marill",
+        "Azumarill",
+        "Sudowoodo",
+        "Politoed",
+        "Hoppip",
+        "Skiploom",
+        "Jumpluff",
+        "Aipom",
+        "Sunkern",
+        "Sunflora",
+        "Yanma",
+        "Wooper",
+        "Quagsire",
+        "Espeon",
+        "Umbreon",
+        "Murkrow",
+        "Slowking",
+        "Misdreavus",
+        "Unown",
+        "Wobbuffet",
+        "Girafarig",
+        "Pineco",
+        "Forretress",
+        "Dunsparce",
+        "Gligar",
+        "Steelix",
+        "Snubbull",
+        "Granbull",
+        "Qwilfish",
+        "Scizor",
+        "Shuckle",
+        "Heracross",
+        "Sneasel",
+        "Teddiursa",
+        "Ursaring",
+        "Slugma",
+        "Magcargo",
+        "Swinub",
+        "Piloswine",
+        "Corsola",
+        "Remoraid",
+        "Octillery",
+        "Delibird",
+        "Mantine",
+        "Skarmory",
+        "Houndour",
+        "Houndoom",
+        "Kingdra",
+        "Phanpy",
+        "Donphan",
+        "Porygon2",
+        "Stantler",
+        "Smeargle",
+        "Tyrogue",
+        "Hitmontop",
+        "Smoochum",
+        "Elekid",
+        "Magby",
+        "Miltank",
+        "Blissey",
+        "Raikou",
+        "Entei",
+        "Suicune",
+        "Larvitar",
+        "Pupitar",
+        "Tyranitar",
+        "Lugia",
+        "Ho-Oh",
+        "Celebi"
     )
 
-    override fun getAllSpecies(): List<String> {
-        return species.toList()
-    }
-
-    override fun getSpeciesById(id: Int): String {
-        require(id in 1..151) { "Id not supported: $id" }
-        return species[id]
-    }
 }
