@@ -15,7 +15,8 @@ internal class EnglishItems : PokemonTextResources.Items {
             Inventory.Type.Computer -> "Computer"
             Inventory.Type.Balls -> "Balls"
             Inventory.Type.Keys -> "Keys"
-            Inventory.Type.Machines -> "TM/HM"
+            Inventory.Type.HiddenMachines -> "HM"
+            Inventory.Type.TechnicalMachines -> "TM"
         }
     }
 

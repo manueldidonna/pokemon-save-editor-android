@@ -153,7 +153,7 @@ interface MutablePokemon : Pokemon {
     }
 }
 
-private fun MutablePokemon.Mutator.unsupportedProperty(): Nothing {
+private fun unsupportedProperty(): Nothing {
     throw IllegalAccessException("Unsupported Pokemon Property")
 }
 

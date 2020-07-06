@@ -10,10 +10,10 @@ import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
 import com.manueldidonna.pk.rby.info.ifNull
 import com.manueldidonna.pk.rby.info.isEvolutionOf
-import com.manueldidonna.pk.rby.utils.readBigEndianInt
-import com.manueldidonna.pk.rby.utils.readBigEndianUShort
-import com.manueldidonna.pk.rby.utils.writeBidEndianInt
-import com.manueldidonna.pk.rby.utils.writeBidEndianShort
+import com.manueldidonna.pk.utils.readBigEndianInt
+import com.manueldidonna.pk.utils.readBigEndianUShort
+import com.manueldidonna.pk.utils.writeBidEndianInt
+import com.manueldidonna.pk.utils.writeBidEndianShort
 import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
@@ -254,7 +254,7 @@ internal class Pokemon(
             val upsIndex = 0X1D + index
             data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((ups and 0x3) shl 6).toUByte()
             // set power points
-            val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups))
+            val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups, version))
             val ppIndex = 0X1D + index
             data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
         }

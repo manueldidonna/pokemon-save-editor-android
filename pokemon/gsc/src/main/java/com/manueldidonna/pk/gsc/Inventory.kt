@@ -1,8 +1,7 @@
-package com.manueldidonna.pk.rby
+package com.manueldidonna.pk.gsc
 
-import com.manueldidonna.pk.rby.converter.SupportedItemIds
-import com.manueldidonna.pk.rby.converter.getGameBoyItemId
-import com.manueldidonna.pk.rby.converter.getUniversalItemId
+import com.manueldidonna.pk.gsc.converter.getLocalItemId
+import com.manueldidonna.pk.gsc.converter.getUniversalItemId
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 
 internal class Inventory(
@@ -10,40 +9,29 @@ internal class Inventory(
     private val data: UByteArray
 ) : CoreInventory {
 
-    override val maxAllowedQuantity: Int = 99
+    override val maxAllowedQuantity: Int = TODO()
 
-    override val supportedItemIds = SupportedItemIds
+    override val supportedItemIds: List<Int> = TODO()
 
-    override val capacity: Int
+    override val capacity: Int = TODO()
 
-    private val startOffset: Int
+    private val startOffset: Int = TODO()
 
-    init {
-        when (type) {
-            CoreInventory.Type.General -> {
-                capacity = 20
-                startOffset = BagOffset
-            }
-            CoreInventory.Type.Computer -> {
-                capacity = 50
-                startOffset = ComputerOffset
-            }
-            else -> throw IllegalStateException("Inventory Type not supported: $type")
-        }
-    }
+
 
     override var size: Int
         get() {
             val size = data[startOffset].toInt()
-            // uninitialized yellow (0xFF), sanity check for out-of-bounds values
+            // sanity check for out-of-bounds values
             return if (size > capacity) 0 else size
         }
         private set(value) {
             data[startOffset] = value.coerceIn(0, capacity).toUByte()
-            // end byte
+            // terminator
             data[startOffset + 1 + (size * 2)] = 0xFFu
         }
 
+    // gen 2 inventory store the count before the id
     override fun <T> selectItem(index: Int, mapTo: (index: Int, id: Int, quantity: Int) -> T): T {
         require(index in 0 until capacity) {
             "Index ($index) out of Inventory bounds [0-$capacity]"
@@ -52,8 +40,8 @@ internal class Inventory(
             return mapTo(index, 0, 0)
         return mapTo(
             index,
-            getUniversalItemId(data[startOffset + (index * 2) + 1].toInt()),
-            data[startOffset + (index * 2) + 2].toInt()
+            getUniversalItemId(data[startOffset + 1 + (index * 2) + 1].toInt()),
+            data[startOffset + 1 + (index * 2)].toInt()
         )
     }
 
@@ -69,9 +57,14 @@ internal class Inventory(
             }
             if (index >= size) size++
             val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
-            data[offset] = getGameBoyItemId(item.id).toUByte()
+            data[offset] = getLocalItemId(item.id).toUByte()
             data[offset + 1] = item.quantity.coerceAtMost(maxAllowedQuantity).toUByte()
         }
+    }
+
+    private fun setMachine(item: CoreInventory.Item) {
+        val index = supportedItemIds.indexOf(item.id)
+        data[startOffset + index] = item.quantity.coerceAtMost(1).toUByte()
     }
 
     private fun deleteItem(index: Int) {
@@ -87,7 +80,7 @@ internal class Inventory(
     }
 
     companion object {
-        private const val BagOffset = 0x25C9
+        private const val GeneralOffset = 0x25C9
         private const val ComputerOffset = 0x27E6
     }
 }

@@ -1,6 +1,7 @@
 package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 
 internal class SaveData(
@@ -13,15 +14,16 @@ internal class SaveData(
 
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 
-    override val supportedInventoryTypes: List<Inventory.Type> = listOf(
-        Inventory.Type.General,
-        Inventory.Type.Balls,
-        Inventory.Type.Machines,
-        Inventory.Type.Keys,
-        Inventory.Type.Computer
+    override val supportedInventoryTypes: List<CoreInventory.Type> = listOf(
+        CoreInventory.Type.General,
+        CoreInventory.Type.Balls,
+        CoreInventory.Type.TechnicalMachines,
+        CoreInventory.Type.HiddenMachines,
+        CoreInventory.Type.Keys,
+        CoreInventory.Type.Computer
     )
 
-    override fun getInventory(type: Inventory.Type): Inventory {
+    override fun getInventory(type: CoreInventory.Type): Inventory {
         TODO("Not yet implemented")
     }
 
