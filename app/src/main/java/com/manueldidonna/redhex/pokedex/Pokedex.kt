@@ -112,7 +112,7 @@ private fun PokedexEntry(
 @Composable
 private fun PokedexSprite(source: SpriteSource, isSeen: Boolean) {
     var colorFilter: ColorFilter? = null
-    if (isSeen) {
+    if (!isSeen) {
         val emphasis = EmphasisAmbient.current.disabled
         colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface))
     }
