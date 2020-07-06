@@ -8,9 +8,9 @@ internal class SaveData(
     override val version: Version,
     private val data: UByteArray
 ) : CoreSaveData {
-    override var trainer: Trainer
+
+    override val trainer: Trainer
         get() = TODO("Not yet implemented")
-        set(value) {}
 
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 

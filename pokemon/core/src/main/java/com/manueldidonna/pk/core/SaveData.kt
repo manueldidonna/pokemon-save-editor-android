@@ -3,7 +3,7 @@ package com.manueldidonna.pk.core
 interface SaveData : StorageCollection {
     val version: Version
 
-    var trainer: Trainer // TODO: make trainer immutable
+    val trainer: Trainer
 
     val pokedex: Pokedex
 

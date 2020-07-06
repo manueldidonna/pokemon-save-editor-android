@@ -1,10 +1,8 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianUShort
-import com.manueldidonna.pk.utils.writeBidEndianShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
@@ -15,17 +13,13 @@ internal class SaveData(
     override val version: Version
 ) : CoreSaveData {
 
-    override var trainer: Trainer
+    override val trainer: Trainer
         get() = Trainer(
             // TODO: extract NAMEmAXsIZE TO A SEPARATE COnsTANT
             name = getStringFromGameBoyData(data, 0x2598, Pokemon.NameMaxSize, false),
             visibleId = data.readBigEndianUShort(0x2605).toInt(),
             secretId = 0
         )
-        set(value) {
-            getGameBoyDataFromString(value.name, 7, false, 11, false).copyInto(data, 0x2598)
-            data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535).toShort())
-        }
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
 
