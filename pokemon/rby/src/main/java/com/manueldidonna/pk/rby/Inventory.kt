@@ -10,7 +10,7 @@ internal class Inventory(
     private val data: UByteArray
 ) : CoreInventory {
 
-    override val maxAllowedQuantity: Int = 99
+    override val maxQuantity: Int = 99
 
     override val supportedItemIds = SupportedItemIds
 
@@ -70,7 +70,7 @@ internal class Inventory(
             if (index >= size) size++
             val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
             data[offset] = getGameBoyItemId(item.id).toUByte()
-            data[offset + 1] = item.quantity.coerceAtMost(maxAllowedQuantity).toUByte()
+            data[offset + 1] = item.quantity.coerceAtMost(maxQuantity).toUByte()
         }
     }
 

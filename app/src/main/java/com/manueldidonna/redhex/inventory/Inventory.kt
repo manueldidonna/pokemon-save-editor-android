@@ -78,7 +78,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
                 item = selectedItem,
                 resources = resources,
                 itemIds = inventory.supportedItemIds,
-                maxAllowedQuantity = inventory.maxAllowedQuantity,
+                maxAllowedQuantity = inventory.maxQuantity,
                 onItemChange = { item ->
                     if (inventory.getItem(item.index) != item) {
                         inventory.stackItem(item)

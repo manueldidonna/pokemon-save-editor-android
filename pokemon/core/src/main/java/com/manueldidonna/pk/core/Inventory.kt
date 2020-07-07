@@ -27,7 +27,7 @@ interface Inventory {
     /**
      * It is the value to which all [Item.quantity] are coerced
      */
-    val maxAllowedQuantity: Int
+    val maxQuantity: Int
 
     /**
      * Max allowed number of items in the Inventory
@@ -125,7 +125,7 @@ inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity:
  */
 fun Inventory.stackItem(item: Inventory.Item) {
     // fast path, max quantity can't be added to an existent item, or the inventory/item is empty
-    if (item.quantity == maxAllowedQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
+    if (item.quantity == maxQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
         setItem(item)
         return
     }
@@ -139,8 +139,8 @@ fun Inventory.stackItem(item: Inventory.Item) {
                 if (i == item.index) {
                     setItem(item)
                     itemQuantity = 0
-                } else if (quantity < maxAllowedQuantity) {
-                    val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxAllowedQuantity)
+                } else if (quantity < maxQuantity) {
+                    val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxQuantity)
                     setItem(Inventory.Item.Immutable(i, id, newItemQuantity))
                     itemQuantity -= newItemQuantity - quantity
                 }
