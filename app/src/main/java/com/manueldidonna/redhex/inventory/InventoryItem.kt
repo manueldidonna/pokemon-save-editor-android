@@ -24,7 +24,7 @@ fun InventoryItemEditor(
     maxAllowedQuantity: Int,
     resources: PokemonTextResources.Items,
     itemIds: List<Int>,
-    onItemChange: (Inventory.Item?) -> Unit
+    onItemChange: (Inventory.Item) -> Unit
 ) {
     val isEditing = remember { item.id > 0 }
 
@@ -41,12 +41,14 @@ fun InventoryItemEditor(
             )
             Divider(modifier = Modifier.padding(vertical = 16.dp))
         }
-        Quantity(
-            maxAllowedQuantity = maxAllowedQuantity,
-            quantity = quantity,
-            onQuantityChange = { quantity = it }
-        )
-        Divider()
+        if (maxAllowedQuantity > 1) {
+            Quantity(
+                maxAllowedQuantity = maxAllowedQuantity,
+                quantity = quantity,
+                onQuantityChange = { quantity = it }
+            )
+            Divider()
+        }
         Box(modifier = Modifier.weight(1f)) {
             ItemsList(
                 itemIds = itemIds,
@@ -60,21 +62,17 @@ fun InventoryItemEditor(
             horizontalArrangement = Arrangement.End,
             modifier = Modifier.fillMaxWidth().padding(end = 16.dp, top = 8.dp)
         ) {
-            TextButton(onClick = { onItemChange(null) }) {
-                Text(text = "Cancel")
+            if (isEditing) {
+                TextButton(onClick = { onItemChange(Inventory.Item.empty(item.index)) }) {
+                    Text(text = "Delete")
+                }
             }
             Spacer(Modifier.width(8.dp))
             TextButton(
                 enabled = isEditing || itemId != 0,
-                onClick = {
-                    onItemChange(item.toImmutable(quantity = quantity, id = itemId))
-                }
+                onClick = { onItemChange(item.toImmutable(quantity = quantity, id = itemId)) }
             ) {
-                if (isEditing) {
-                    Text(text = if (itemId == 0) "Delete" else "Modify")
-                } else {
-                    Text(text = "Add")
-                }
+                Text(text = if (isEditing) "Modify" else "Add")
             }
         }
     }
