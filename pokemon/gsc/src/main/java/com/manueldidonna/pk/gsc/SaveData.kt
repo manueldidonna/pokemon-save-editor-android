@@ -23,8 +23,9 @@ internal class SaveData(
         CoreInventory.Type.Computer
     )
 
-    override fun getInventory(type: CoreInventory.Type): Inventory {
-        TODO("Not yet implemented")
+    override fun getInventory(type: CoreInventory.Type): CoreInventory {
+        require(type in supportedInventoryTypes) { "Type $type is not supported" }
+        return Inventory.newInstance(data, version, type)
     }
 
     override val indices: IntRange = StorageCollection.PartyIndex until 14

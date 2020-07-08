@@ -9,6 +9,7 @@ import androidx.ui.material.EmphasisAmbient
 import androidx.ui.material.MaterialTheme
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Inventory
+import com.manueldidonna.pk.core.Items
 import com.manueldidonna.redhex.R
 import dev.chrisbanes.accompanist.coil.CoilImage
 
@@ -46,7 +47,8 @@ object AssetsSpritesRetriever : SpritesRetriever {
 
     override fun getItemSprite(itemId: Int): SpriteSource {
         val asset = when {
-            itemId == Inventory.Item.BikeVoucherId -> "item_bike_voucher.png"
+            itemId == Items.BikeVoucherId -> "item_bike_voucher.png"
+            itemId in Items.FlowerMailId..Items.MirageMailId -> "item_143.png"
             Inventory.Item.isHiddenMachine(itemId) -> "item_332.png"
             Inventory.Item.isTechnicalMachine(itemId) -> "item_328.png"
             else -> "item_${itemId}.png"
