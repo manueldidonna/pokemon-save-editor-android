@@ -17,7 +17,8 @@ internal class SaveData(
         Trainer(
             name = getStringFromGameBoyData(data, TrainerNameOffset, 11, false),
             visibleId = data.readBigEndianUShort(0x2605).toInt(),
-            secretId = 0
+            secretId = 0,
+            gender = Trainer.Gender.Male
         )
     }
 

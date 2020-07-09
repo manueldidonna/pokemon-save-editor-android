@@ -79,7 +79,8 @@ internal class Pokemon(
         get() = Trainer(
             name = getStringFromGameBoyData(data, DataSizeInBox, 11, false),
             visibleId = data.readBigEndianUShort(0x0C).toInt(),
-            secretId = 0 // unused in gen 1
+            secretId = 0, // unused in gen 1
+            gender = Trainer.Gender.Male
         )
 
     override val speciesId: Int
@@ -361,7 +362,7 @@ internal class Pokemon(
                     .move(index = 2, move = CorePokemon.Move.Empty)
                     .move(index = 3, move = CorePokemon.Move.Empty)
                     .nickname("TEMPLATE")
-                    .trainer(Trainer("TRAINER", 12345, 0))
+                    .trainer(Trainer("TRAINER", 12345, 0, Trainer.Gender.Male))
                     .individualValues(all = 15)
                     .effortValues(all = 999999)
             }

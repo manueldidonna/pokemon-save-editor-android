@@ -1,6 +1,7 @@
 package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.Trainer.Gender
 import com.manueldidonna.pk.gsc.converter.getUniversalItemId
 import com.manueldidonna.pk.resources.calculateStatistics
 import com.manueldidonna.pk.resources.getBaseStatistics
@@ -30,6 +31,15 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * ------------------------
  * 0x1B 0x1 - friendship
  * 0x1C 0x1 - pokerus
+ * 0x1D 0x2 - caught data
+ * ----- CAUGHT DATA ---------
+ * Time and level
+ * - 2 bits: Time of day (1: morning, 2: day, 3: night)
+ * - 6 bits: Level
+ * OT gender and location
+ * - 1 bit: OT Gender (0: Male, 1: Female)
+ * - 7 bits: Location
+ * ------------------------
  * 0x1F 0x1 - level
  * -------- PARTY ---------
  * 0x22 0x2 - current HP
@@ -70,8 +80,16 @@ internal class Pokemon(
         get() = Trainer(
             name = getStringFromGameBoyData(data, 0x20, 0xB, false),
             visibleId = data.readBigEndianUShort(0x6).toInt(),
-            secretId = 0
+            secretId = 0,
+            gender = getTrainerGender()
         )
+
+    private fun getTrainerGender(): Trainer.Gender {
+        // Trainer gender is exclusive to Crystal
+        if (version != Version.Crystal) return Gender.Male
+        val caughtData = data.readBigEndianUShort(0x1D).toInt()
+        return if (caughtData ushr 7 and 1 == 0) Gender.Male else Gender.Female
+    }
 
     override val isShiny: Boolean
         get() {

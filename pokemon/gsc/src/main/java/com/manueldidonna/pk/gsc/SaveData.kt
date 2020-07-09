@@ -16,8 +16,15 @@ internal class SaveData(
         Trainer(
             name = getStringFromGameBoyData(data, 0x200B, 11, false),
             visibleId = data.readBigEndianUShort(0x2009).toInt(),
-            secretId = 0
+            secretId = 0,
+            gender = getTrainerGender()
         )
+    }
+
+    private fun getTrainerGender(): Trainer.Gender {
+        // Trainer gender is exclusive to Crystal
+        if (version != Version.Crystal) return Trainer.Gender.Male
+        return if (data[0x3E3D].toInt() == 0) Trainer.Gender.Male else Trainer.Gender.Female
     }
 
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }

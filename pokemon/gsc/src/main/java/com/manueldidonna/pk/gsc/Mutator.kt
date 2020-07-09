@@ -1,9 +1,7 @@
 package com.manueldidonna.pk.gsc
 
-import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.Pokerus
-import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.gsc.Pokemon.Companion.getUnownLetter
 import com.manueldidonna.pk.gsc.converter.getLocalItemId
 import com.manueldidonna.pk.resources.*
@@ -30,6 +28,13 @@ internal class Mutator(
     override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator = apply {
         data.writeBidEndianShort(0x06, value.visibleId.coerceAtMost(65535).toShort())
         getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase).copyInto(data, 0x20)
+        // set trainer gender in pokemon crystal
+        if (pokemon.version == Version.Crystal && pokemon.trainer.gender != value.gender) {
+            var caughtData = data.readBigEndianUShort(0x1D).toInt()
+            val genderValue = if (value.gender == Trainer.Gender.Male) 0 else 1
+            caughtData = (caughtData and 0xFF7F) or ((genderValue and 1) shl 7)
+            data.writeBidEndianShort(0x1D, caughtData.toShort())
+        }
     }
 
     override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
