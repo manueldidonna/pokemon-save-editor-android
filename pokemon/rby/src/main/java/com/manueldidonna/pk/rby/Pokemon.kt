@@ -76,9 +76,6 @@ internal class Pokemon(
         return this
     }
 
-    override val isEmpty: Boolean
-        get() = speciesId == 0 || nickname.isEmpty()
-
     override val position by lazy { CorePokemon.Position(index, slot) }
 
     override val trainer: Trainer

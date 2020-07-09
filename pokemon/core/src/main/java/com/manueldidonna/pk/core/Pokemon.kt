@@ -9,8 +9,6 @@ package com.manueldidonna.pk.core
  * TODO: add clone()
  */
 interface Pokemon {
-    val isEmpty: Boolean
-
     val version: Version
 
     val position: Position
@@ -87,6 +85,9 @@ interface Pokemon {
     // TODO: decide if this method should create a new instance or not
     fun asMutablePokemon(): MutablePokemon
 }
+
+inline val Pokemon.isEmpty: Boolean
+    get() = speciesId == 0 || nickname.isEmpty()
 
 /**
  * [MutablePokemon] allows to mutate the pokemon data via a [MutablePokemon.Mutator],
