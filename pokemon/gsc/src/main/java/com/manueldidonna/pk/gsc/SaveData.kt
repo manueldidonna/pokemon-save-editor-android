@@ -2,6 +2,7 @@ package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
+import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.utils.setLittleEndianShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
@@ -11,8 +12,13 @@ internal class SaveData(
     private val data: UByteArray
 ) : CoreSaveData {
 
-    override val trainer: Trainer
-        get() = TODO("Not yet implemented")
+    override val trainer: Trainer by lazy {
+        Trainer(
+            name = getStringFromGameBoyData(data, 0x200B, 11, false),
+            visibleId = data.readBigEndianUShort(0x2009).toInt(),
+            secretId = 0
+        )
+    }
 
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 

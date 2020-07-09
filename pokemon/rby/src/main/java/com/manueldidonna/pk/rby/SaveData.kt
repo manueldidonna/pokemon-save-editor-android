@@ -13,13 +13,13 @@ internal class SaveData(
     override val version: Version
 ) : CoreSaveData {
 
-    override val trainer: Trainer
-        get() = Trainer(
-            // TODO: extract NAMEmAXsIZE TO A SEPARATE COnsTANT
-            name = getStringFromGameBoyData(data, TrainerNameOffset, Pokemon.NameMaxSize, false),
+    override val trainer: Trainer by lazy {
+        Trainer(
+            name = getStringFromGameBoyData(data, TrainerNameOffset, 11, false),
             visibleId = data.readBigEndianUShort(0x2605).toInt(),
             secretId = 0
         )
+    }
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
 
