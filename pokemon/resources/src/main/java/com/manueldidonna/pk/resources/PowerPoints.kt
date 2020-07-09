@@ -10,7 +10,13 @@ fun getPowerPoints(moveId: Int, ups: Int, version: Version): Int {
         version.isSecondGeneration -> SecondGenPowerPoints[moveId].toInt()
         else -> throw IllegalStateException("Unsupproted version: $version")
     }
-    return points + (points * (ups.coerceIn(0, 3)) / 5)
+    return when {
+        // sketch
+        moveId == 166 -> points
+        // In Generations I and II, If used on a move with 40 base PP, each PP Up will only add 7 PP
+        points == 40 -> points + ups * 7
+        else -> points + points * ups.coerceIn(0, 3) / 5
+    }
 }
 
 private val FirstGenPowerPoints = byteArrayOf(
