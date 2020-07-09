@@ -6,7 +6,6 @@ package com.manueldidonna.pk.core
  * If you need to mutate the Pokemon, use [Pokemon.asMutablePokemon]
  * @see [MutablePokemon]
  *
- * TODO: add clone()
  */
 interface Pokemon {
     val version: Version
@@ -119,11 +118,6 @@ interface MutablePokemon : Pokemon {
      * An interface to apply a predefined set of values to a [MutablePokemon]
      */
     interface Template {
-        val name: String
-        val description: String
-
-        // TODO: remove speciesId or add a property like 'Type' or 'Info'
-        val speciesId: Int
         fun apply(pokemon: MutablePokemon)
     }
 
@@ -147,11 +141,11 @@ interface MutablePokemon : Pokemon {
 
         fun shiny(value: Boolean): Mutator
 
-        fun heldItemId(value: Int): Mutator = unsupportedProperty()
+        fun heldItemId(value: Int): Mutator
 
-        fun pokerus(value: Pokerus): Mutator = unsupportedProperty()
+        fun pokerus(value: Pokerus): Mutator
 
-        fun friendship(value: Int): Mutator = unsupportedProperty()
+        fun friendship(value: Int): Mutator
 
         fun individualValues(
             health: Int = -1,
@@ -173,10 +167,6 @@ interface MutablePokemon : Pokemon {
 
         fun form(value: Pokemon.Form): Mutator
     }
-}
-
-private fun unsupportedProperty(): Nothing {
-    throw IllegalAccessException("Unsupported Pokemon Property")
 }
 
 fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = apply {

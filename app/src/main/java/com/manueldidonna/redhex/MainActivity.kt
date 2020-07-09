@@ -22,6 +22,7 @@ import androidx.ui.savedinstancestate.savedInstanceState
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.SaveData
+import com.manueldidonna.pk.core.isEmpty
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
 import com.manueldidonna.redhex.common.AssetsSpritesRetriever
@@ -82,12 +83,13 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
             AppScreen.Main -> MainScreen(saveData)
             is AppScreen.PokemonDetails -> {
                 val (index, slot) = screen.position
+                val pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot)
+                if (pokemon.isEmpty) {
+                    val resources = PokemonResourcesAmbient.current.species
+                    EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)
+                }
                 Surface {
-                    PokemonDetails(
-                        pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
-                        pokedex = saveData.pokedex,
-                        listener = this
-                    )
+                    PokemonDetails(pokemon = pokemon, pokedex = saveData.pokedex, listener = this)
                 }
             }
         }

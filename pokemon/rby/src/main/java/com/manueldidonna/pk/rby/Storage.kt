@@ -41,11 +41,7 @@ internal class Storage(
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
         require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
-        val sanitizedSlot = sanitizePokemonSlot(slot)
-        val pokemon = Pokemon(version, getPokemonData(sanitizedSlot), index, sanitizedSlot)
-        // TODO: remove template
-        if (pokemon.isEmpty) Pokemon.EmptyTemplate.apply(pokemon)
-        return pokemon
+        return Pokemon(version, getPokemonData(slot), index, slot)
     }
 
     override fun insertPokemon(pokemon: CorePokemon, slot: Int): Boolean {
@@ -142,6 +138,7 @@ internal class Storage(
     }
 
     private fun getPokemonData(slot: Int): UByteArray {
+        if (slot >= size) return UByteArray(Pokemon.DataSizeInBox)
         val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(slot)
         return UByteArray(Pokemon.FullDataSizeInBox).apply {
             // Copy Pokemon Box Data

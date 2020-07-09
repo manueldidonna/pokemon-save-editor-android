@@ -117,7 +117,7 @@ internal class Pokemon(
                 if (speed != 10) return false
                 if (specialAttack != 10) return false
                 if (defense != 10) return false
-                return attack in ShinyAttackValues
+                return attack and 2 == 2
             }
         }
 
@@ -183,8 +183,6 @@ internal class Pokemon(
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 
     inner class Mutator : MutablePokemon.Mutator {
-
-        override fun form(value: CorePokemon.Form): MutablePokemon.Mutator = this
 
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
             require(value in 1..151) { "Not supported species id: $value" }
@@ -264,11 +262,10 @@ internal class Pokemon(
                     defense = 10,
                     specialAttack = 10,
                     speed = 10,
-                    attack = ShinyAttackValues.random()
+                    attack = iV.attack or 2
                 )
             } else {
-                // TODO: find a better way
-                individualValues(defense = 9)
+                individualValues(attack = NonShinyAttackValues.random())
             }
         }
 
@@ -324,6 +321,11 @@ internal class Pokemon(
             setValue(specialAttack, effortOffset = 0x19)
             setValue(specialDefense, effortOffset = 0x19)
         }
+
+        override fun form(value: CorePokemon.Form): MutablePokemon.Mutator = this
+        override fun friendship(value: Int): MutablePokemon.Mutator = this
+        override fun heldItemId(value: Int): MutablePokemon.Mutator = this
+        override fun pokerus(value: Pokerus): MutablePokemon.Mutator = this
     }
 
     companion object {
@@ -347,26 +349,7 @@ internal class Pokemon(
          */
         internal const val DataSizeInParty = 44
 
-        private val ShinyAttackValues = listOf(2, 3, 6, 7, 10, 11, 14, 15)
-
-        val EmptyTemplate = object : MutablePokemon.Template {
-            override val name = "Empty Pokemon"
-            override val description = "An empty template for R/B/Y games"
-            override val speciesId = 151
-            override fun apply(pokemon: MutablePokemon) {
-                pokemon.mutator
-                    .speciesId(151)
-                    .level(1)
-                    .move(index = 0, move = CorePokemon.Move.maxPowerPoints(1))
-                    .move(index = 1, move = CorePokemon.Move.Empty)
-                    .move(index = 2, move = CorePokemon.Move.Empty)
-                    .move(index = 3, move = CorePokemon.Move.Empty)
-                    .nickname("TEMPLATE")
-                    .trainer(Trainer("TRAINER", 12345, 0, Trainer.Gender.Male))
-                    .individualValues(all = 15)
-                    .effortValues(all = 999999)
-            }
-        }
+        private val NonShinyAttackValues = listOf(1, 4, 5, 8, 9, 12, 13)
 
         internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
             // update level

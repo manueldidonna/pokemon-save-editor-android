@@ -51,9 +51,11 @@ internal fun getIdsByType(type: Inventory.Type, isCrystal: Boolean): List<Int> {
     }
 }
 
-private val CrystalExclusiveKeys = listOf(70, 115, 116, 129)
+private val CrystalExclusiveKeys: List<Int> by lazy {
+    listOf(70, 115, 116, 129).map { getUniversalItemId(it) }
+}
 
-private val AllItems: List<Int> by lazy { LocalToUniversalItemIds.filter { it != NaN } }
+private val AllItems: List<Int> by lazy { LocalToUniversalItemIds.drop(1).filter { it != NaN } }
 
 private val Balls: List<Int> by lazy {
     listOf(1, 2, 4, 5, 157, 159, 160, 161, 164, 165, 166).map { getUniversalItemId(it) }

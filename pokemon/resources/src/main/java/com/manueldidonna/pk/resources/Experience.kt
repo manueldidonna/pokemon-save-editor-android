@@ -35,6 +35,7 @@ fun sanitizeExperiencePoints(points: Int, level: Int, experienceGroup: Experienc
     return points
 }
 
+// TODO: support gen 2
 fun getExperienceGroup(speciesId: Int): ExperienceGroup {
     return when {
         FastSpecies.find { it == speciesId } != null -> ExperienceGroup.Fast
