@@ -109,7 +109,7 @@ internal class Inventory private constructor(
         }
         val lastIndexOffset = startOffset + 1 + (capacity - 1) * 2
         //shift items left of 1 position
-        if (index < capacity - 1) {
+        if (index < size - 1) {
             val destinationOffset = startOffset + 1 + (index) * 2
             val startShiftOffset = startOffset + 1 + (index + 1) * 2
             data.copyInto(data, destinationOffset, startShiftOffset, lastIndexOffset + 2)
