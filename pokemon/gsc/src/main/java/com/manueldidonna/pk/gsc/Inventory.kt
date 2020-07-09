@@ -11,7 +11,8 @@ internal class Inventory private constructor(
     override val type: Type,
     private val data: UByteArray,
     override val capacity: Int,
-    private val startOffset: Int
+    private val startOffset: Int,
+    override val supportedItemIds: List<Int>
 ) : CoreInventory {
 
     /**
@@ -20,8 +21,6 @@ internal class Inventory private constructor(
     private val isMachinesPocket = type == Type.TechnicalMachines || type == Type.HiddenMachines
 
     override val maxQuantity = if (type == Type.HiddenMachines || type == Type.Keys) 1 else 99
-
-    override val supportedItemIds: List<Int> = getIdsByType(type)
 
     override var size: Int
         get() {
@@ -165,7 +164,8 @@ internal class Inventory private constructor(
                 }
                 else -> throw IllegalArgumentException("Type $type is not supported")
             }
-            return Inventory(type, data, capacity, startOffset)
+            val supportedIds = getIdsByType(type, isCrystal = version == Version.Crystal)
+            return Inventory(type, data, capacity, startOffset, supportedIds)
         }
     }
 }
