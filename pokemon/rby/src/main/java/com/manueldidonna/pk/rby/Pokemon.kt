@@ -71,6 +71,8 @@ internal class Pokemon(
         return this
     }
 
+    override val form: CorePokemon.Form? = null
+
     override val position by lazy { CorePokemon.Position(index, slot) }
 
     override val trainer: Trainer
@@ -180,6 +182,8 @@ internal class Pokemon(
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 
     inner class Mutator : MutablePokemon.Mutator {
+
+        override fun form(value: CorePokemon.Form): MutablePokemon.Mutator = this
 
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
             require(value in 1..151) { "Not supported species id: $value" }

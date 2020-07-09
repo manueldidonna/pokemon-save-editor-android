@@ -83,9 +83,23 @@ interface Pokemon {
         val speed: Int
     }
 
+    /**
+     * Return null if the pokemon doesn't have an alternative form
+     */
+    val form: Form?
+
+    sealed class Form {
+        /**
+         * Accepted values for [letter] are A-Z and !, ? (since Generation III)
+         * [letter] should be case-insensitive.
+         */
+        data class Unown(val letter: Char) : Form()
+    }
+
+    // TODO: rename to exportToBytes to be consistent with the SaveData
     fun asBytes(): UByteArray
 
-    // TODO: decide if this method should create a new instance or not
+    // TODO: rename to toMutablePokemon and return a new instance
     fun asMutablePokemon(): MutablePokemon
 }
 
@@ -156,6 +170,8 @@ interface MutablePokemon : Pokemon {
             specialAttack: Int = -1,
             specialDefense: Int = -1
         ): Mutator
+
+        fun form(value: Pokemon.Form): Mutator
     }
 }
 

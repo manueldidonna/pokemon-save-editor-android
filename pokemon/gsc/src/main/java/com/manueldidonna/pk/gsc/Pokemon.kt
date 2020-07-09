@@ -176,7 +176,27 @@ internal class Pokemon(
         }
     }
 
+    override val form: CorePokemon.Form?
+        get() {
+            // only Unown has multiple forms
+            if (speciesId != 201) return null
+            return CorePokemon.Form.Unown(letter = getUnownLetter(this))
+        }
+
     companion object {
+        internal fun getUnownLetter(pokemon: CorePokemon): Char {
+            val letterIndex = with(pokemon.iV) {
+                var letterIndex = 0
+                letterIndex = letterIndex or (attack and 0x6 shl 5)
+                letterIndex = letterIndex or (defense and 0x6 shl 3)
+                letterIndex = letterIndex or (speed and 0x6 shl 1)
+                letterIndex = letterIndex or (specialAttack and 0x6 shr 1)
+                letterIndex / 10
+            }
+            require(letterIndex in 0..25) { "Unexpected Unown letter index $letterIndex" }
+            return (letterIndex + 'A'.toInt()).toChar()
+        }
+
         internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
             val stats: CorePokemon.StatisticValues = with(pokemon) {
                 val base = getBaseStatistics(speciesId, version)

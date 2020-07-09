@@ -4,12 +4,14 @@ import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Pokerus
 import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.gsc.Pokemon.Companion.getUnownLetter
 import com.manueldidonna.pk.gsc.converter.getLocalItemId
 import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.utils.getGameBoyDataFromString
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.utils.writeBidEndianInt
 import com.manueldidonna.pk.utils.writeBidEndianShort
+import kotlin.random.Random
 
 internal class Mutator(
     private val pokemon: MutablePokemon,
@@ -138,6 +140,22 @@ internal class Mutator(
         setValue(speed, effortOffset = 0x11)
         setValue(specialAttack, effortOffset = 0x13)
         setValue(specialDefense, effortOffset = 0x13)
+    }
+
+    override fun form(value: Pokemon.Form): MutablePokemon.Mutator = apply {
+        require(value is Pokemon.Form.Unown) { "Unexpected form $value" }
+        require(pokemon.speciesId == 201) { "Pokemon must be an Unown" }
+        val letter = value.letter.toUpperCase()
+        while (getUnownLetter(pokemon) != letter) {
+            individualValues(
+                health = Random.nextInt(until = 16),
+                attack = Random.nextInt(until = 16),
+                defense = Random.nextInt(until = 16),
+                speed = Random.nextInt(until = 16),
+                specialAttack = Random.nextInt(until = 16),
+                specialDefense = Random.nextInt(until = 16)
+            )
+        }
     }
 
     companion object {
