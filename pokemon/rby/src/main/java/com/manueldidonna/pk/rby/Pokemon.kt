@@ -2,19 +2,14 @@ package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.Pokemon.Mutator
-import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
-import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
 import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
 import com.manueldidonna.pk.rby.info.ifNull
 import com.manueldidonna.pk.rby.info.isEvolutionOf
-import com.manueldidonna.pk.utils.readBigEndianInt
-import com.manueldidonna.pk.utils.readBigEndianUShort
-import com.manueldidonna.pk.utils.writeBidEndianInt
-import com.manueldidonna.pk.utils.writeBidEndianShort
 import com.manueldidonna.pk.resources.*
+import com.manueldidonna.pk.utils.*
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**

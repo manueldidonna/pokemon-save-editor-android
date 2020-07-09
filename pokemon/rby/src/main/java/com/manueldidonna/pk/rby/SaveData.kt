@@ -1,7 +1,7 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
+import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex

@@ -45,6 +45,9 @@ interface Pokemon {
     val pokerus: Property<Pokerus>
         get() = Property.Nothing
 
+    val friendship: Property<Int>
+        get() = Property.Nothing
+
     /**
      * Get info about a specific move.
      * Use 'selectMove(index, Pokemon::Move)' to get a [Move] instance
@@ -132,7 +135,9 @@ interface MutablePokemon : Pokemon {
 
         fun heldItemId(value: Int): Mutator = unsupportedProperty()
 
-        fun pokerus(pokerus: Pokerus): Mutator = unsupportedProperty()
+        fun pokerus(value: Pokerus): Mutator = unsupportedProperty()
+
+        fun friendship(value: Int): Mutator = unsupportedProperty()
 
         fun individualValues(
             health: Int = -1,

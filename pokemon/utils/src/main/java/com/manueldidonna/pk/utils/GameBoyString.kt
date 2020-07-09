@@ -1,8 +1,8 @@
-package com.manueldidonna.pk.rby.converter
+package com.manueldidonna.pk.utils
 
 private const val G1TradeOT = '*'
 
-internal fun getStringFromGameBoyData(
+fun getStringFromGameBoyData(
     data: UByteArray,
     startOffset: Int,
     stringLength: Int,
@@ -16,7 +16,7 @@ internal fun getStringFromGameBoyData(
     }
 }.toString()
 
-internal fun getGameBoyDataFromString(
+fun getGameBoyDataFromString(
     value: String,
     maxValueLength: Int,
     isJapanese: Boolean = false,

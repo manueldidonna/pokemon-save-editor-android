@@ -13,13 +13,18 @@ enum class ExperienceGroup(internal val value: Int) {
 }
 
 /**
+ * Return the right amount of experience points, according to [level] and [speciesId]
+ */
+fun sanitizeExperiencePoints(speciesId: Int, experience: Int, level: Int): Int {
+    return sanitizeExperiencePoints(experience, level, getExperienceGroup(speciesId))
+}
+
+/**
  * Return the right amount of experience points, according to [level] and [experienceGroup]
  */
 fun sanitizeExperiencePoints(points: Int, level: Int, experienceGroup: ExperienceGroup): Int {
     if (level == 100) {
         // coerce pokemon experience to the max allowed for his group.
-        // It's a necessary workaround when we change the speciesId with a pokemon
-        // that has a slower experience group
         return getExperiencePoints(100, experienceGroup)
     } else {
         val levelFromExperience = getLevel(points, experienceGroup)

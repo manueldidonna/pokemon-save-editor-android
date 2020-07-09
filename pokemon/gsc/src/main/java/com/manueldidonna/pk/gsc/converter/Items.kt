@@ -41,10 +41,10 @@ internal fun getUniversalItemId(valueToConvert: Int): Int {
 
 internal fun getIdsByType(type: Inventory.Type, isCrystal: Boolean): List<Int> {
     return when (type) {
-        Inventory.Type.General -> if (isCrystal) Items + CrystalExclusiveKeys else Items
-        Inventory.Type.Computer -> AllItems
+        Inventory.Type.General -> Items
+        Inventory.Type.Computer -> if (isCrystal) (AllItems + CrystalExclusiveKeys) else AllItems
         Inventory.Type.Balls -> Balls
-        Inventory.Type.Keys -> if (isCrystal) Keys + CrystalExclusiveKeys else Keys
+        Inventory.Type.Keys -> if (isCrystal) (Keys + CrystalExclusiveKeys) else Keys
         Inventory.Type.HiddenMachines -> HiddenMachines
         Inventory.Type.TechnicalMachines -> TechnicalMachines
         else -> throw IllegalArgumentException("Unsupported type $type")

@@ -1,14 +1,13 @@
 package com.manueldidonna.pk.core
 
 /**
- * Pokerus is a microscopic life-form that may attach to [Pokemon].
- * Pokerus has been introduced in Gen 2 games.
+ * Pokerus has been introduced in Generation II games.
  *
- * When a Pokemon has the Pokerus, it gains double the effort values from battling.
  * A Pokemon is or has been infected if the strain is a nonzero value.
+ * [days] should be coerced in [0 - [maxAllowedDays]]
  */
 data class Pokerus(val strain: Int, val days: Int) {
-    val isCured: Boolean = strain != 0 && days == 0
+    // TODO: val isCured: Boolean = strain != 0 && days == 0
 
     companion object {
         /**
@@ -17,7 +16,7 @@ data class Pokerus(val strain: Int, val days: Int) {
          * 0 is omitted because it represents a Pokemon that has never been infected
          * @see NeverInfected
          */
-        val StrainValues: IntRange = 1..15 // 0 means never infected
+        val StrainValues: IntRange = 1..15
 
         /**
          * The max number of days before a Pokemon will be cured depends on the strain

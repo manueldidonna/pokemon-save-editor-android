@@ -43,6 +43,7 @@ internal class Storage(
         require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
         val sanitizedSlot = sanitizePokemonSlot(slot)
         val pokemon = Pokemon(version, getPokemonData(sanitizedSlot), index, sanitizedSlot)
+        // TODO: remove template
         if (pokemon.isEmpty) Pokemon.EmptyTemplate.apply(pokemon)
         return pokemon
     }
