@@ -63,10 +63,14 @@ internal class SaveData(
     private fun getStorageOffset(index: Int): Int {
         return when (index) {
             StorageCollection.PartyIndex -> version.partyOffset
-            // current box index
-            (data[version.currentBoxIndexOffset] and 0x7Fu).toInt() -> version.currentBoxOffset
+            getCurrentBoxIndex() -> version.currentBoxOffset
             else -> BoxOffsets[index]
         }
+    }
+
+    private fun getCurrentBoxIndex(): Int {
+        val indexOffset = if (version == Version.Crystal) 0x2700 else 0x2724
+        return (data[indexOffset] and 0x7Fu).toInt()
     }
 
     private fun getStorageName(index: Int): String {
@@ -83,12 +87,19 @@ internal class SaveData(
     override fun exportToBytes(): UByteArray {
         // don't export the internal data
         val export = data.copyOf()
+
+        // copy current storage
+        val currentIndex = getCurrentBoxIndex()
+        val currentOffset = getStorageOffset(currentIndex)
+        export.copyInto(export, BoxOffsets[currentIndex], currentOffset, currentOffset + 1102)
+
         // get checksum
         val checksumEndOffset = if (version == Version.Crystal) 0x2B82 else 0x2D68
         var checksum: UShort = 0u
         for (i in 0x2009..checksumEndOffset) {
             checksum = (checksum + export[i]).toUShort()
         }
+
         when (version) {
             Version.Crystal -> {
                 // set checksum

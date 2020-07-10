@@ -138,7 +138,7 @@ internal class Storage(
     }
 
     private fun getPokemonData(slot: Int): UByteArray {
-        if (slot >= size) return UByteArray(Pokemon.DataSizeInBox)
+        if (slot >= size) return UByteArray(Pokemon.FullDataSizeInBox)
         val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(slot)
         return UByteArray(Pokemon.FullDataSizeInBox).apply {
             // Copy Pokemon Box Data

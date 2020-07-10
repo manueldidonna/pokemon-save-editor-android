@@ -32,7 +32,7 @@ internal class Storage(
     }
 
     private fun getPokemonData(slot: Int): UByteArray {
-        if (slot >= size) return UByteArray(PokemonSizeInBox)
+        if (slot >= size) return UByteArray(PokemonSizeInBox + 11 * 2)
         val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(slot)
         return UByteArray(PokemonSizeInBox + 11 * 2).apply {
             // Copy Pokemon Box Data
@@ -87,7 +87,12 @@ internal class Storage(
         val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(slot)
         with(pokemonData) {
             // set pokemon data
-            copyInto(data, dataOfs, 0, PokemonSizeInBox)
+            copyInto(
+                destination = data,
+                destinationOffset = dataOfs,
+                startIndex = 0,
+                endIndex = PokemonSizeInBox
+            )
             // set trainer name
             copyInto(data, trainerNameOfs, PokemonSizeInBox, PokemonSizeInBox + 11)
             // set nickname
