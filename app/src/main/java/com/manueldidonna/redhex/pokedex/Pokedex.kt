@@ -78,7 +78,7 @@ private fun EntriesList(entries: List<Pokedex.Entry>, onEntryClick: (Pokedex.Ent
         PokedexEntry(
             entry = entry,
             name = resources.getSpeciesById(entry.speciesId),
-            source = spritesRetriever.getPokemonSprite(entry.speciesId),
+            source = spritesRetriever.getPokemonSprite(entry.speciesId, shiny = false),
             onClick = { onEntryClick(entry) }
         )
         Divider()

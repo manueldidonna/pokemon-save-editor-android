@@ -38,7 +38,7 @@ fun PokemonSprite(source: SpriteSource) {
 }
 
 interface SpritesRetriever {
-    fun getPokemonSprite(speciesId: Int): SpriteSource
+    fun getPokemonSprite(speciesId: Int, shiny: Boolean): SpriteSource
     fun getItemSprite(itemId: Int): SpriteSource
 }
 
@@ -56,7 +56,8 @@ object AssetsSpritesRetriever : SpritesRetriever {
         return SpriteSource(Uri.parse(assetPath + asset))
     }
 
-    override fun getPokemonSprite(speciesId: Int): SpriteSource {
-        return SpriteSource(Uri.parse("${assetPath}pk_$speciesId.png"))
+    override fun getPokemonSprite(speciesId: Int, shiny: Boolean): SpriteSource {
+        val base = if (shiny) "pk_shiny" else "pk"
+        return SpriteSource(Uri.parse("${assetPath}${base}_$speciesId.png"))
     }
 }

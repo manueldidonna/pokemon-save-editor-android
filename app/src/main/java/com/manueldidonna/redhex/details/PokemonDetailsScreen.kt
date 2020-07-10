@@ -17,7 +17,6 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.ArrowBack
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
 
@@ -33,7 +32,6 @@ private enum class EditorTab {
 fun PokemonDetails(
     modifier: Modifier = Modifier,
     pokemon: MutablePokemon,
-    pokedex: Pokedex,
     listener: PokemonDetailsEvents
 ) {
     var selectedTab: EditorTab by state { EditorTab.General }
@@ -42,7 +40,7 @@ fun PokemonDetails(
             Column {
                 Spacer(Modifier.preferredHeight(ToolbarHeight + 48.dp))
                 when (selectedTab) {
-                    EditorTab.General -> PokemonGeneral(pokemon, pokedex)
+                    EditorTab.General -> PokemonGeneral(pokemon)
                     EditorTab.Moves -> PokemonMoves(pokemon)
                     EditorTab.Stats -> PokemonStats(pokemon)
                 }

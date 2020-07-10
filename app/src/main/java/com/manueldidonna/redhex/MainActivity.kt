@@ -19,10 +19,7 @@ import androidx.ui.material.icons.twotone.Inbox
 import androidx.ui.material.icons.twotone.LocalLibrary
 import androidx.ui.material.icons.twotone.Menu
 import androidx.ui.savedinstancestate.savedInstanceState
-import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.isEmpty
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
 import com.manueldidonna.redhex.common.AssetsSpritesRetriever
@@ -89,7 +86,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
                     EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)
                 }
                 Surface {
-                    PokemonDetails(pokemon = pokemon, pokedex = saveData.pokedex, listener = this)
+                    PokemonDetails(pokemon = pokemon, listener = this)
                 }
             }
         }
@@ -103,6 +100,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         AppState.saveData?.let { saveData ->
             val (index, slot) = pokemon.position
             saveData.getMutableStorage(index).insertPokemon(slot = slot, pokemon = pokemon)
+            saveData.pokedex.setEntry(Pokedex.Entry.owned(speciesId = pokemon.speciesId))
         }
         AppState.currentScreen = AppScreen.Main
     }

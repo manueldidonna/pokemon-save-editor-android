@@ -100,7 +100,7 @@ private fun Storage.getPokemonPreviews(
                     slot = position.slot,
                     nickname = nickname,
                     label = "${resources.getNatureById(natureId)} - Lv.$level",
-                    source = spritesRetriever.getPokemonSprite(speciesId)
+                    source = spritesRetriever.getPokemonSprite(speciesId, shiny = isShiny)
                 )
             }
         }
