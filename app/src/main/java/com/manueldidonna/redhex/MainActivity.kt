@@ -19,9 +19,7 @@ import androidx.ui.material.icons.twotone.Inbox
 import androidx.ui.material.icons.twotone.LocalLibrary
 import androidx.ui.material.icons.twotone.Menu
 import androidx.ui.savedinstancestate.savedInstanceState
-import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.SaveData
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
 import com.manueldidonna.redhex.common.AssetsSpritesRetriever
@@ -32,6 +30,7 @@ import com.manueldidonna.redhex.common.ui.LightColors
 import com.manueldidonna.redhex.details.PokemonDetails
 import com.manueldidonna.redhex.details.PokemonDetailsEvents
 import com.manueldidonna.redhex.inventory.Inventory
+import com.manueldidonna.redhex.loadsave.LoadSaveDataScreen
 import com.manueldidonna.redhex.pokedex.Pokedex
 import com.manueldidonna.redhex.pokemonlist.PokemonList
 
@@ -81,12 +80,13 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
             AppScreen.Main -> MainScreen(saveData)
             is AppScreen.PokemonDetails -> {
                 val (index, slot) = screen.position
+                val pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot)
+                if (pokemon.isEmpty) {
+                    val resources = PokemonResourcesAmbient.current.species
+                    EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)
+                }
                 Surface {
-                    PokemonDetails(
-                        pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot),
-                        pokedex = saveData.pokedex,
-                        listener = this
-                    )
+                    PokemonDetails(pokemon = pokemon, listener = this)
                 }
             }
         }
@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         AppState.saveData?.let { saveData ->
             val (index, slot) = pokemon.position
             saveData.getMutableStorage(index).insertPokemon(slot = slot, pokemon = pokemon)
+            saveData.pokedex.setEntry(Pokedex.Entry.owned(speciesId = pokemon.speciesId))
         }
         AppState.currentScreen = AppScreen.Main
     }

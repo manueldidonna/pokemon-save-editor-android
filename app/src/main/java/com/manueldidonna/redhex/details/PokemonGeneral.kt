@@ -15,8 +15,8 @@ import androidx.ui.text.TextRange
 import androidx.ui.text.font.FontWeight
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
-import com.manueldidonna.pk.core.Pokedex
 import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpriteSource
@@ -25,22 +25,21 @@ import com.manueldidonna.redhex.common.ui.ThemedDialog
 import kotlin.math.roundToInt
 
 @Composable
-fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
+fun PokemonGeneral(pokemon: MutablePokemon) {
     val resources = PokemonResourcesAmbient.current
     var speciesId: Int by state { pokemon.speciesId }
     val speciesName: String = remember(speciesId) {
         resources.species.getSpeciesById(speciesId)
     }
-    Species(speciesId, speciesName) {
+    var isShiny by state { pokemon.isShiny }
+    Species(pokemon.version, speciesId, speciesName, isShiny) {
         pokemon.mutator
             .speciesId(it)
             .level(pokemon.level)
             .nickname(resources.species.getSpeciesById(it), ignoreCase = true)
-        pokedex.setEntry(Pokedex.Entry.owned(it))
         speciesId = pokemon.speciesId
     }
     Divider()
-    var isShiny by state { pokemon.isShiny }
     Shiny(
         isShiny = isShiny,
         onChange = {
@@ -60,15 +59,17 @@ fun PokemonGeneral(pokemon: MutablePokemon, pokedex: Pokedex) {
 
 @Composable
 private fun Species(
+    version: Version,
     speciesId: Int,
     speciesName: String,
+    isShiny: Boolean,
     onSpeciesChange: (Int) -> Unit
 ) {
     val resources = PokemonResourcesAmbient.current.species
     val spritesRetriever = SpritesRetrieverAmbient.current
 
     val spriteSource: SpriteSource = remember(speciesId) {
-        spritesRetriever.getPokemonSprite(speciesId)
+        spritesRetriever.getPokemonSprite(speciesId, shiny = isShiny)
     }
 
     var showSpeciesDialog by state { false }
@@ -86,7 +87,7 @@ private fun Species(
     if (showSpeciesDialog) {
         val onCloseRequest = { showSpeciesDialog = false }
         ThemedDialog(onCloseRequest = onCloseRequest) {
-            LazyColumnItems(items = resources.getAllSpecies()
+            LazyColumnItems(items = resources.getAllSpecies(version)
                 .drop(1) // TODO: manage empty species id
                 .mapIndexed { index, s -> Pair(index, s) }
             ) {

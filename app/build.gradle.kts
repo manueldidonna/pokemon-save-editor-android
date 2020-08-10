@@ -43,6 +43,7 @@ android {
 dependencies {
     implementation(project(Modules.Pokemon.core))
     implementation(project(Modules.Pokemon.rby))
+    implementation(project(Modules.Pokemon.gsc))
     implementation(project(Modules.Pokemon.resources))
     implementation(Libs.Kotlin.stdlib)
     implementation(Libs.AndroidX.core)

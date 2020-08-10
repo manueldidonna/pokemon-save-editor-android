@@ -14,7 +14,9 @@ interface Inventory {
         General,
         Computer,
         Balls,
-        Keys
+        Keys,
+        HiddenMachines,
+        TechnicalMachines
     }
 
     /**
@@ -25,7 +27,7 @@ interface Inventory {
     /**
      * It is the value to which all [Item.quantity] are coerced
      */
-    val maxAllowedQuantity: Int
+    val maxQuantity: Int
 
     /**
      * Max allowed number of items in the Inventory
@@ -53,8 +55,8 @@ interface Inventory {
      * An [Item] is an object deposited in the Inventory. It may be carried by a Pokemon.
      *
      * Some items are specific to a game or should be treated specially.
-     * These 'special items' are represented by unused ids:
-     * - [BikeVoucherId]
+     * These 'special items' are listed in [Items]
+     * @see Items
      */
     interface Item {
         val index: Int
@@ -91,12 +93,6 @@ interface Inventory {
             fun isTechnicalMachine(itemId: Int): Boolean {
                 return itemId == 1230 || itemId in 328..419 || itemId in 618..620 || itemId in 690..694
             }
-
-            /**
-             * A voucher for obtaining a bicycle from the Bike Shop.
-             * Available in R/B/Y & FR/LG
-             */
-            const val BikeVoucherId = 129
         }
     }
 }
@@ -123,7 +119,7 @@ inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity:
  */
 fun Inventory.stackItem(item: Inventory.Item) {
     // fast path, max quantity can't be added to an existent item, or the inventory/item is empty
-    if (item.quantity == maxAllowedQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
+    if (item.quantity == maxQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
         setItem(item)
         return
     }
@@ -137,14 +133,22 @@ fun Inventory.stackItem(item: Inventory.Item) {
                 if (i == item.index) {
                     setItem(item)
                     itemQuantity = 0
-                } else if (quantity < maxAllowedQuantity) {
-                    val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxAllowedQuantity)
+                } else if (quantity < maxQuantity) {
+                    val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxQuantity)
                     setItem(Inventory.Item.Immutable(i, id, newItemQuantity))
                     itemQuantity -= newItemQuantity - quantity
                 }
             }
         }
-        if (itemQuantity <= 0) return
+        if (itemQuantity <= 0) {
+            // if the passed item is stacked in a different index than item.index
+            // delete the item at item.index
+            val isItemEdited = selectItem(item.index) { _, id, _ -> id == item.id }
+            if (!isItemEdited) {
+                setItem(Inventory.Item.empty(item.index))
+            }
+            return
+        }
     }
     // insert the item in a new slot of the inventory
     setItem(item.toImmutable(quantity = itemQuantity))

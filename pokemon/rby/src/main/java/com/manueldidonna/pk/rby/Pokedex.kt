@@ -1,5 +1,6 @@
 package com.manueldidonna.pk.rby
 
+import com.manueldidonna.pk.utils.getBitAt
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 
 /**
@@ -15,23 +16,31 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
         speciesId: Int,
         mapTo: (speciesId: Int, isSeen: Boolean, isOwned: Boolean) -> E
     ): E {
-        require(speciesId in 1..151) { "Species Id not supported: $speciesId" }
-        val bitIndex = (speciesId - 1) and 7
-        val offset = (speciesId - 1) ushr 3
+        require(speciesId in 1..pokemonCount) {
+            "SpeciesId $speciesId is out of bounds [1 - $pokemonCount]"
+        }
+        val bitIndex = getEntryBitIndex(speciesId)
+        val offset = getEntryOffset(speciesId)
         return mapTo(
             speciesId,
-            (data[SeenOffset + offset].toInt() ushr bitIndex and 1) != 0,
-            (data[OwnedOffset + offset].toInt() ushr bitIndex and 1) != 0
+            data[SeenOffset + offset].toInt().getBitAt(bitIndex),
+            data[OwnedOffset + offset].toInt().getBitAt(bitIndex)
         )
     }
 
     override fun setEntry(entry: CorePokedex.Entry) {
-        require(entry.speciesId in 1..151) { "Species Id not supported: ${entry.speciesId}" }
-        val bitIndex = (entry.speciesId - 1) and 7
-        val offset = (entry.speciesId - 1) ushr 3
+        require(entry.speciesId in 1..pokemonCount) {
+            "SpeciesId ${entry.speciesId} is out of bounds [1 - $pokemonCount]"
+        }
+        val bitIndex = getEntryBitIndex(entry.speciesId)
+        val offset = getEntryOffset(entry.speciesId)
         setFlag(SeenOffset + offset, bitIndex, entry.isSeen)
         setFlag(OwnedOffset + offset, bitIndex, entry.isOwned)
     }
+
+    private fun getEntryOffset(speciesId: Int): Int = (speciesId - 1) ushr 3
+
+    private fun getEntryBitIndex(speciesId: Int): Int = (speciesId - 1) and 7
 
     private fun setFlag(offset: Int, bitIndex: Int, value: Boolean) {
         data[offset] = data[offset] and (1 shl bitIndex).inv().toUByte()

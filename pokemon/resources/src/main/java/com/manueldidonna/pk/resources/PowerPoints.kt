@@ -1,11 +1,26 @@
 package com.manueldidonna.pk.resources
 
-fun getPowerPoints(moveId: Int, ups: Int): Int {
-    val points = MovePowerPoints[moveId].toInt()
-    return points + (points * (ups.coerceIn(0, 3)) / 5)
+import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.core.isFirstGeneration
+import com.manueldidonna.pk.core.isSecondGeneration
+
+fun getPowerPoints(moveId: Int, ups: Int, version: Version): Int {
+    if (moveId == 0) return 0
+    val points = when {
+        version.isFirstGeneration -> FirstGenPowerPoints[moveId].toInt()
+        version.isSecondGeneration -> SecondGenPowerPoints[moveId].toInt()
+        else -> throw IllegalStateException("Unsupported version: $version")
+    }
+    return when {
+        // sketch
+        moveId == 166 -> points
+        // In Generations I and II, If used on a move with 40 base PP, each PP Up will only add 7 PP
+        points == 40 -> points + ups * 7
+        else -> points + points * ups.coerceIn(0, 3) / 5
+    }
 }
 
-private val MovePowerPoints = byteArrayOf(
+private val FirstGenPowerPoints = byteArrayOf(
     0, 35, 25, 10, 15, 20, 20, 15, 15, 15, 35, 30, 5, 10, 30, 30, 35, 35, 20, 15, 20, 20, 10, 20,
     30, 5, 25, 15, 15, 15, 25, 20, 5, 35, 15, 20, 20, 20, 15, 30, 35, 20, 20, 30, 25, 40, 20, 15,
     20, 20, 20, 30, 25, 15, 30, 25, 5, 15, 10, 5, 20, 20, 20, 5, 35, 20, 25, 20, 20, 20, 15, 20,
@@ -16,4 +31,19 @@ private val MovePowerPoints = byteArrayOf(
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+private val SecondGenPowerPoints = byteArrayOf(
+    0,
+    35, 25, 10, 15, 20, 20, 15, 15, 15, 35, 30, 5, 10, 30, 30, 35, 35, 20, 15, 20, 20, 10, 20, 30,
+    5, 25, 15, 15, 15, 25, 20, 5, 35, 15, 20, 20, 20, 15, 30, 35, 20, 20, 30, 25, 40, 20, 15, 20,
+    20, 20, 30, 25, 15, 30, 25, 5, 15, 10, 5, 20, 20, 20, 5, 35, 20, 25, 20, 20, 20, 15, 20, 10,
+    10, 40, 25, 10, 35, 30, 15, 20, 40, 10, 15, 30, 15, 20, 10, 15, 10, 5, 10, 10, 25, 10, 20, 40,
+    30, 30, 20, 20, 15, 10, 40, 15, 20, 30, 20, 20, 10, 40, 40, 30, 30, 30, 20, 30, 10, 10, 20, 5,
+    10, 30, 20, 20, 20, 5, 15, 10, 20, 15, 15, 35, 20, 15, 10, 20, 30, 15, 40, 20, 15, 10, 5, 10,
+    30, 10, 15, 20, 15, 40, 40, 10, 5, 15, 10, 10, 10, 15, 30, 30, 10, 10, 20, 10, 1, 1, 10, 10,
+    10, 5, 15, 25, 15, 10, 15, 30, 5, 40, 15, 10, 25, 10, 30, 10, 20, 10, 10, 10, 10, 10, 20, 5,
+    40, 5, 5, 15, 5, 10, 5, 15, 10, 5, 10, 20, 20, 40, 15, 10, 20, 20, 25, 5, 15, 10, 5, 20, 15,
+    20, 25, 20, 5, 30, 5, 10, 20, 40, 5, 20, 40, 20, 15, 35, 10, 5, 5, 5, 15, 5, 20, 5, 5, 15, 20,
+    10, 5, 5, 15, 15, 15, 15, 10, 0, 0, 0, 0
 )

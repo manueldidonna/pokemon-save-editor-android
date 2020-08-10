@@ -18,10 +18,7 @@ import androidx.ui.material.icons.twotone.ChevronLeft
 import androidx.ui.material.icons.twotone.ChevronRight
 import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.MutableStorage
-import com.manueldidonna.pk.core.Pokemon
-import com.manueldidonna.pk.core.Storage
-import com.manueldidonna.pk.core.StorageCollection
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
@@ -103,7 +100,7 @@ private fun Storage.getPokemonPreviews(
                     slot = position.slot,
                     nickname = nickname,
                     label = "${resources.getNatureById(natureId)} - Lv.$level",
-                    source = spritesRetriever.getPokemonSprite(speciesId)
+                    source = spritesRetriever.getPokemonSprite(speciesId, shiny = isShiny)
                 )
             }
         }

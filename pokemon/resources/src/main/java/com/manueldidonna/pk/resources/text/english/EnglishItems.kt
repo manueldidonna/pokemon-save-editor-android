@@ -15,6 +15,8 @@ internal class EnglishItems : PokemonTextResources.Items {
             Inventory.Type.Computer -> "PC"
             Inventory.Type.Balls -> "Balls"
             Inventory.Type.Keys -> "Keys"
+            Inventory.Type.HiddenMachines -> "HM"
+            Inventory.Type.TechnicalMachines -> "TM"
         }
     }
 
@@ -445,8 +447,8 @@ internal class EnglishItems : PokemonTextResources.Items {
         "HM04",
         "HM05",
         "HM06",
-        "???",
-        "???",
+        "HM07",
+        "HM08",
         "Explorer Kit",
         "Loot Sack",
         "Rule Book",
@@ -1608,6 +1610,26 @@ internal class EnglishItems : PokemonTextResources.Items {
         "Rotom Bike",
         "Exp. Charm",
         "Armorite Ore",
-        "Mark Charm"
+        "Mark Charm",
+        /** SPECIAL ITEMS */
+        "Bike Voucher",
+        "Pink Bow",
+        "GS Ball",
+        "Egg Ticket",
+        "Berserk Gene",
+        "Polkadot Bow",
+        "Brick Piece",
+        "Normal Box",
+        "Gorgeous Box",
+        "Flower Mail",
+        "Surf Mail",
+        "Lite Blue Mail",
+        "Portrait Mail",
+        "Lovely Mail",
+        "Eon Mail",
+        "Morph Mail",
+        "Blue Sky Mail",
+        "Music Mail",
+        "Mirage Mail"
     )
 }

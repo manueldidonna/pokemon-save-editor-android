@@ -3,7 +3,7 @@ package com.manueldidonna.pk.core
 interface SaveData : StorageCollection {
     val version: Version
 
-    var trainer: Trainer
+    val trainer: Trainer
 
     val pokedex: Pokedex
 

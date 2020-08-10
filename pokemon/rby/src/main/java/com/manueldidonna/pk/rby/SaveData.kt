@@ -1,10 +1,8 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.converter.getGameBoyDataFromString
-import com.manueldidonna.pk.rby.converter.getStringFromGameBoyData
-import com.manueldidonna.pk.rby.utils.readBigEndianUShort
-import com.manueldidonna.pk.rby.utils.writeBidEndianShort
+import com.manueldidonna.pk.utils.getStringFromGameBoyData
+import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
@@ -15,17 +13,14 @@ internal class SaveData(
     override val version: Version
 ) : CoreSaveData {
 
-    override var trainer: Trainer
-        get() = Trainer(
-            // TODO: extract NAMEmAXsIZE TO A SEPARATE COnsTANT
-            name = getStringFromGameBoyData(data, 0x2598, Pokemon.NameMaxSize, false),
+    override val trainer: Trainer by lazy {
+        Trainer(
+            name = getStringFromGameBoyData(data, TrainerNameOffset, 11, false),
             visibleId = data.readBigEndianUShort(0x2605).toInt(),
-            secretId = 0
+            secretId = 0,
+            gender = Trainer.Gender.Male
         )
-        set(value) {
-            getGameBoyDataFromString(value.name, 7, false, 11, false).copyInto(data, 0x2598)
-            data.writeBidEndianShort(0x2605, value.visibleId.coerceAtMost(65535).toShort())
-        }
+    }
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
 
@@ -33,9 +28,7 @@ internal class SaveData(
         listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
 
     override fun getInventory(type: CoreInventory.Type): CoreInventory {
-        require(type in supportedInventoryTypes) {
-            "Type $type is not supported by this Inventory instance"
-        }
+        require(type in supportedInventoryTypes) { "Type $type is not supported" }
         return Inventory(type, data)
     }
 
@@ -77,7 +70,6 @@ internal class SaveData(
      * Export data and fix the checksum
      *
      * The checksum in Generation I is only 8 bits and has a single copy of it.
-     * Checksum offset is 0x3523
      *
      * 1. Initialize the checksum to 0
      * 2. For every byte from 0x2598 to 0x3522, inclusive, add its value to the checksum
@@ -88,9 +80,9 @@ internal class SaveData(
         val export = data.copyOf()
         // Fix checksum
         var checksum: Int = 0
-        for (i in 0x2598 until 0x3523)
+        for (i in TrainerNameOffset until ChecksumOffset)
             checksum += export[i].toInt()
-        export[0x3523] = checksum.toUByte() xor 0xFFu
+        export[ChecksumOffset] = checksum.toUByte() xor 0xFFu
         return export
     }
 
@@ -98,5 +90,7 @@ internal class SaveData(
         private const val PartyOffset = 0x2F2C
         private const val CurrentBoxOffset = 0x30C0
         private const val CurrentIndexOffset = 0x284C
+        private const val ChecksumOffset = 0x3523
+        private const val TrainerNameOffset = 0x2598
     }
 }

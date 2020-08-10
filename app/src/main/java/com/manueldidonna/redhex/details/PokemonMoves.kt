@@ -39,7 +39,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
             ups = move.ups,
             onClick = { selectedMoveIndex = i },
             maximizeUps = {
-                pokemon.mutator.move(i, Pokemon.Move.maxPowerPoints(move.id))
+                pokemon.mutator.move(i, Pokemon.Move(id = move.id, powerPoints = 999, ups = 3))
                 moves[i] = pokemon.selectMove(i, Pokemon::Move)
             }
         )
@@ -47,7 +47,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
 
     if (selectedMoveIndex >= 0) {
         MoveChooser(
-            moves = resources.getAllMoves(),
+            moves = resources.getAllMoves(pokemon.version),
             onMoveSelected = { move ->
                 if (move != null) {
                     val availableIndex = pokemon.getEmptyMoveIndexOrElse(selectedMoveIndex)
@@ -120,7 +120,7 @@ private fun MoveChooser(
                     val move = when (id) {
                         -1 -> null
                         0 -> Pokemon.Move.Empty
-                        else -> Pokemon.Move.maxPowerPoints(id, ups = 0)
+                        else -> Pokemon.Move(id = id, powerPoints = 999, ups = 0)
                     }
                     onMoveSelected(move)
                 }

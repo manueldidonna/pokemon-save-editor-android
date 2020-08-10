@@ -6,11 +6,8 @@ package com.manueldidonna.pk.core
  * If you need to mutate the Pokemon, use [Pokemon.asMutablePokemon]
  * @see [MutablePokemon]
  *
- * TODO: add clone()
  */
 interface Pokemon {
-    val isEmpty: Boolean
-
     val version: Version
 
     val position: Position
@@ -29,6 +26,8 @@ interface Pokemon {
 
     val trainer: Trainer
 
+    val isShiny: Boolean
+
     val speciesId: Int
 
     val nickname: String
@@ -39,7 +38,11 @@ interface Pokemon {
 
     val natureId: Int
 
-    val isShiny: Boolean
+    val heldItemId: Property<Int>
+
+    val pokerus: Property<Pokerus>
+
+    val friendship: Property<Int>
 
     /**
      * Get info about a specific move.
@@ -56,10 +59,6 @@ interface Pokemon {
     ) {
         companion object {
             val Empty: Move = Move(id = 0, powerPoints = 0, ups = 0)
-
-            fun maxPowerPoints(id: Int, ups: Int = 3): Move {
-                return Move(id = id, powerPoints = 999, ups = ups)
-            }
         }
     }
 
@@ -67,6 +66,7 @@ interface Pokemon {
 
     val eV: StatisticValues
 
+    // TODO: rename to Statistics
     interface StatisticValues {
         val health: Int
         val attack: Int
@@ -76,11 +76,30 @@ interface Pokemon {
         val speed: Int
     }
 
+    /**
+     * Return null if the pokemon doesn't have an alternative form
+     */
+    val form: Form?
+
+    sealed class Form {
+        /**
+         * Accepted values for [letter] are A-Z and !, ? (since Generation III)
+         * [letter] should be case-insensitive.
+         */
+        data class Unown(val letter: Char) : Form()
+    }
+
+    val metInfo: Property<MetInfo>
+
+    // TODO: rename to exportToBytes to be consistent with the SaveData
     fun asBytes(): UByteArray
 
-    // TODO: decide if this method should create a new instance or not
+    // TODO: rename to toMutablePokemon and return a new instance
     fun asMutablePokemon(): MutablePokemon
 }
+
+inline val Pokemon.isEmpty: Boolean
+    get() = speciesId == 0 || nickname.isEmpty()
 
 /**
  * [MutablePokemon] allows to mutate the pokemon data via a [MutablePokemon.Mutator],
@@ -88,18 +107,16 @@ interface Pokemon {
  *
  * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
  * it will continue to reflects any data changes.
+ * TODO: add toPokemon()
  */
 interface MutablePokemon : Pokemon {
 
     /**
      * An interface to apply a predefined set of values to a [MutablePokemon]
+     *
+     * TODO: with kotlin 1.4 -> fun interface Template
      */
     interface Template {
-        val name: String
-        val description: String
-
-        // TODO: remove speciesId or add a property like 'Type' or 'Info'
-        val speciesId: Int
         fun apply(pokemon: MutablePokemon)
     }
 
@@ -123,6 +140,12 @@ interface MutablePokemon : Pokemon {
 
         fun shiny(value: Boolean): Mutator
 
+        fun heldItemId(value: Int): Mutator
+
+        fun pokerus(value: Pokerus): Mutator
+
+        fun friendship(value: Int): Mutator
+
         fun individualValues(
             health: Int = -1,
             attack: Int = -1,
@@ -140,6 +163,10 @@ interface MutablePokemon : Pokemon {
             specialAttack: Int = -1,
             specialDefense: Int = -1
         ): Mutator
+
+        fun form(value: Pokemon.Form): Mutator
+
+        fun metInfo(value: MetInfo): Mutator
     }
 }
 

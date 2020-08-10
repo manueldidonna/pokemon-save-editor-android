@@ -13,7 +13,6 @@ import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.twotone.Add
-import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.*
@@ -21,7 +20,6 @@ import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.*
 import dev.chrisbanes.accompanist.coil.CoilImage
-import kotlin.math.roundToInt
 
 private val NullItem = Inventory.Item.empty(index = -1)
 
@@ -80,9 +78,9 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
                 item = selectedItem,
                 resources = resources,
                 itemIds = inventory.supportedItemIds,
-                maxAllowedQuantity = inventory.maxAllowedQuantity,
+                maxAllowedQuantity = inventory.maxQuantity,
                 onItemChange = { item ->
-                    if (item != null && inventory.getItem(item.index) != item) {
+                    if (inventory.getItem(item.index) != item) {
                         inventory.stackItem(item)
                         items = inventory.getAllItems(spritesRetriever, resources)
                     }
@@ -130,7 +128,7 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
         items = types,
         modifier = Modifier.zIndex(8f).fillMaxWidth(),
         selectedIndex = selectedIndex,
-        scrollable = false // TODO: this should be scrollable
+        scrollable = true // TODO: this should be scrollable
     ) { index, type ->
         Tab(
             modifier = Modifier.preferredHeight(48.dp),
