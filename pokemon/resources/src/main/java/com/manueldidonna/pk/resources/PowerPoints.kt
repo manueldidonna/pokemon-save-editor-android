@@ -5,6 +5,7 @@ import com.manueldidonna.pk.core.isFirstGeneration
 import com.manueldidonna.pk.core.isSecondGeneration
 
 fun getPowerPoints(moveId: Int, ups: Int, version: Version): Int {
+    if (moveId == 0) return 0
     val points = when {
         version.isFirstGeneration -> FirstGenPowerPoints[moveId].toInt()
         version.isSecondGeneration -> SecondGenPowerPoints[moveId].toInt()

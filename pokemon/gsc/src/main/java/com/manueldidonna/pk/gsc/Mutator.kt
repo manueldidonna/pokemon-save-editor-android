@@ -48,7 +48,7 @@ internal class Mutator(
     }
 
     override fun level(value: Int): MutablePokemon.Mutator = apply {
-        require(value in 1..100) { "Level $value is out of bounds [1 - 100" }
+        require(value in 1..100) { "Level $value is out of bounds [1 - 100]" }
         data[0x1F] = value.toUByte()
         val sanitizedExperience = sanitizeExperiencePoints(
             speciesId = pokemon.speciesId,
@@ -151,6 +151,7 @@ internal class Mutator(
         require(value is Pokemon.Form.Unown) { "Unexpected form $value" }
         require(pokemon.speciesId == 201) { "Pokemon must be an Unown" }
         val letter = value.letter.toUpperCase()
+        require(isValidUnownLetter(letter, pokemon.version))
         while (getUnownLetter(pokemon) != letter) {
             individualValues(
                 health = Random.nextInt(until = 16),
@@ -164,8 +165,6 @@ internal class Mutator(
     }
 
     override fun metInfo(value: MetInfo): MutablePokemon.Mutator = apply {
-        if (pokemon.version != Version.Crystal) return@apply
-
         val (metLevel, time, locationId, gender) = value
         require(time is MetInfo.Time.TimesOfDay && time.value in 1..3) {
             "Invalid time format or value for $time"

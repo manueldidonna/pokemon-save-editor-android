@@ -84,7 +84,7 @@ internal class Pokemon(
             gender = getTrainerGender()
         )
 
-    private fun getTrainerGender(): Trainer.Gender {
+    private fun getTrainerGender(): Gender {
         // Trainer gender is exclusive to Crystal
         if (version != Version.Crystal) return Gender.Male
         val caughtData = data.readBigEndianUShort(0x1D).toInt()
@@ -218,8 +218,7 @@ internal class Pokemon(
     companion object {
         internal fun getUnownLetter(pokemon: CorePokemon): Char {
             val letterIndex = with(pokemon.iV) {
-                var letterIndex = 0
-                letterIndex = letterIndex or (attack and 0x6 shl 5)
+                var letterIndex = attack and 0x6 shl 5
                 letterIndex = letterIndex or (defense and 0x6 shl 3)
                 letterIndex = letterIndex or (speed and 0x6 shl 1)
                 letterIndex = letterIndex or (specialAttack and 0x6 shr 1)

@@ -66,6 +66,7 @@ interface Pokemon {
 
     val eV: StatisticValues
 
+    // TODO: rename to Statistics
     interface StatisticValues {
         val health: Int
         val attack: Int
