@@ -2,11 +2,20 @@ package com.manueldidonna.pk.resources
 
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Version
-import com.manueldidonna.pk.core.isFirstGeneration
+import com.manueldidonna.pk.core.generation
 import kotlin.math.min
 import kotlin.math.sqrt
 
 private typealias Stats = Pokemon.StatisticValues
+
+private data class StatsImpl(
+    override val health: Int,
+    override val attack: Int,
+    override val defense: Int,
+    override val speed: Int,
+    override val specialAttack: Int,
+    override val specialDefense: Int
+) : Stats
 
 private typealias StatisticsFormula = (level: Int, base: Int, iv: Int, ev: Int) -> Int
 
@@ -19,49 +28,39 @@ private val GameBoyHealthFormula: StatisticsFormula = { level, base, iv, ev ->
     GameBoyDefaultFormula(level, base, iv, ev) + 5 + level
 }
 
-
 fun calculateStatistics(level: Int, base: Stats, ivs: Stats, evs: Stats, version: Version): Stats {
-    require(version.isFirstGeneration) {
-        "Only first generation games are supported"
-    }
-    val stat: StatisticsFormula = GameBoyDefaultFormula
+    require(version.generation <= 2) { "Unsupported version: $version" }
+    val default = GameBoyDefaultFormula
     val health: StatisticsFormula = GameBoyHealthFormula
-    return object : Stats {
-        override val health = health(level, base.health, ivs.health, evs.health)
-        override val attack = stat(level, base.attack, ivs.attack, evs.attack)
-        override val defense = stat(level, base.defense, ivs.defense, evs.defense)
-        override val speed = stat(level, base.speed, ivs.speed, evs.speed)
-        override val specialAttack =
-            stat(level, base.specialAttack, ivs.specialAttack, evs.specialAttack)
-        override val specialDefense =
-            stat(level, base.specialDefense, ivs.specialDefense, evs.specialDefense)
-    }
+    return StatsImpl(
+        health = health(level, base.health, ivs.health, evs.health),
+        attack = default(level, base.attack, ivs.attack, evs.attack),
+        defense = default(level, base.defense, ivs.defense, evs.defense),
+        speed = default(level, base.speed, ivs.speed, evs.speed),
+        specialAttack = default(level, base.specialAttack, ivs.specialAttack, evs.specialAttack),
+        specialDefense = default(level, base.specialDefense, ivs.specialDefense, evs.specialDefense)
+    )
 }
 
 fun getBaseStatistics(speciesId: Int, version: Version): Stats {
-    require(version.isFirstGeneration) {
-        "Only first generation games are supported"
+    val statistics = when (version.generation) {
+        1 -> FirstGenBaseStatistics
+        2 -> SecondGenBaseStatistics
+        else -> throw IllegalStateException("Unsupported version: $version")
     }
-    require(speciesId in 1..151) {
-        "Species ID not supported: $speciesId"
-    }
-
     val index = (speciesId - 1) * 5
-    return object : Stats {
-        override val health = FirstGenBaseStatistics[index]
-        override val attack = FirstGenBaseStatistics[index + 1]
-        override val defense = FirstGenBaseStatistics[index + 2]
-        override val speed = FirstGenBaseStatistics[index + 3]
-        override val specialAttack = FirstGenBaseStatistics[index + 4]
-        override val specialDefense = specialAttack
-    }
+    return StatsImpl(
+        health = statistics[index],
+        attack = statistics[index + 1],
+        defense = statistics[index + 2],
+        speed = statistics[index + 3],
+        specialAttack = statistics[index + 4],
+        specialDefense = statistics[index + 4]
+    )
 }
 
 /**
  * HP - ATK - DEF - SPD - SPC
- *
- * TODO: move SPC values to a separate array and rename this to BaseStatistics
- *   adding sp_attack and sp_defense
  */
 private val FirstGenBaseStatistics = intArrayOf(
     45, 49, 49, 45, 65, // 1 Bulbasaur
@@ -216,3 +215,9 @@ private val FirstGenBaseStatistics = intArrayOf(
     106, 110, 90, 130, 154, // !50 Mewtwo
     100, 100, 100, 100, 100 // 151 Mew
 )
+
+private val SecondGenBaseStatistics by lazy {
+    intArrayOf(
+
+    )
+}

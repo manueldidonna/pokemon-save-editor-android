@@ -8,7 +8,7 @@ fun getPowerPoints(moveId: Int, ups: Int, version: Version): Int {
     val points = when {
         version.isFirstGeneration -> FirstGenPowerPoints[moveId].toInt()
         version.isSecondGeneration -> SecondGenPowerPoints[moveId].toInt()
-        else -> throw IllegalStateException("Unsupproted version: $version")
+        else -> throw IllegalStateException("Unsupported version: $version")
     }
     return when {
         // sketch

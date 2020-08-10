@@ -18,3 +18,10 @@ inline val Version.isFirstGeneration: Boolean
 
 inline val Version.isSecondGeneration: Boolean
     get() = this.value in 39..41
+
+inline val Version.generation: Int
+    get() = when {
+        isFirstGeneration -> 1
+        isSecondGeneration -> 2
+        else -> throw IllegalStateException()
+    }

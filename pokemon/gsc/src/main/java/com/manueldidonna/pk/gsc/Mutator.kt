@@ -163,6 +163,29 @@ internal class Mutator(
         }
     }
 
+    override fun metInfo(value: MetInfo): MutablePokemon.Mutator = apply {
+        if (pokemon.version != Version.Crystal) return@apply
+
+        val (metLevel, time, locationId, gender) = value
+        require(time is MetInfo.Time.TimesOfDay && time.value in 1..3) {
+            "Invalid time format or value for $time"
+        }
+        require(metLevel in 0..100) {
+            "Met level is out of bounds [0-100]"
+        }
+        require(isLocationIdValid(locationId, pokemon.version)) {
+            "Invalid met location. Id is : $locationId"
+        }
+
+        var caught = data.readBigEndianUShort(0x1D).toInt()
+        caught = (caught and 0xC0FF) or (metLevel and 0x3F shl 8)
+        caught = (caught and 0xFF80) or (locationId and 0x7F)
+        caught = (caught and 0x3FFF) or (time.value and 0x3 shl 14)
+        val genderValue = if (gender == Trainer.Gender.Male) 0 else 1
+        caught = (caught and 0xFF7F) or ((genderValue and 1) shl 7)
+        data.writeBidEndianShort(0x1D, caught.toShort())
+    }
+
     companion object {
         private val NonShinyAttackValues = listOf(1, 4, 5, 8, 9, 12, 13)
     }

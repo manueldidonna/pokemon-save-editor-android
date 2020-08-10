@@ -180,6 +180,11 @@ internal class Pokemon(
         }
     }
 
+    override val heldItemId: Property<Int> = Property.Nothing
+    override val friendship: Property<Int> = Property.Nothing
+    override val pokerus: Property<Pokerus> = Property.Nothing
+    override val metInfo: Property<MetInfo> = Property.Nothing
+
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 
     inner class Mutator : MutablePokemon.Mutator {
@@ -326,6 +331,7 @@ internal class Pokemon(
         override fun friendship(value: Int): MutablePokemon.Mutator = this
         override fun heldItemId(value: Int): MutablePokemon.Mutator = this
         override fun pokerus(value: Pokerus): MutablePokemon.Mutator = this
+        override fun metInfo(value: MetInfo): MutablePokemon.Mutator = this
     }
 
     companion object {

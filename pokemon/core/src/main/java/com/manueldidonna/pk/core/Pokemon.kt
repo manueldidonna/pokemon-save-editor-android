@@ -39,13 +39,10 @@ interface Pokemon {
     val natureId: Int
 
     val heldItemId: Property<Int>
-        get() = Property.Nothing
 
     val pokerus: Property<Pokerus>
-        get() = Property.Nothing
 
     val friendship: Property<Int>
-        get() = Property.Nothing
 
     /**
      * Get info about a specific move.
@@ -62,10 +59,6 @@ interface Pokemon {
     ) {
         companion object {
             val Empty: Move = Move(id = 0, powerPoints = 0, ups = 0)
-
-            fun maxPowerPoints(id: Int, ups: Int = 3): Move {
-                return Move(id = id, powerPoints = 999, ups = ups)
-            }
         }
     }
 
@@ -95,6 +88,8 @@ interface Pokemon {
         data class Unown(val letter: Char) : Form()
     }
 
+    val metInfo: Property<MetInfo>
+
     // TODO: rename to exportToBytes to be consistent with the SaveData
     fun asBytes(): UByteArray
 
@@ -111,11 +106,14 @@ inline val Pokemon.isEmpty: Boolean
  *
  * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
  * it will continue to reflects any data changes.
+ * TODO: add toPokemon()
  */
 interface MutablePokemon : Pokemon {
 
     /**
      * An interface to apply a predefined set of values to a [MutablePokemon]
+     *
+     * TODO: with kotlin 1.4 -> fun interface Template
      */
     interface Template {
         fun apply(pokemon: MutablePokemon)
@@ -166,6 +164,8 @@ interface MutablePokemon : Pokemon {
         ): Mutator
 
         fun form(value: Pokemon.Form): Mutator
+
+        fun metInfo(value: MetInfo): Mutator
     }
 }
 

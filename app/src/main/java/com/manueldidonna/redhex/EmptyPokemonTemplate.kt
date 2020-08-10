@@ -11,7 +11,7 @@ class EmptyPokemonTemplate(
         pokemon.mutator
             .speciesId(getSpeciesId(pokemon.version))
             .level(1)
-            .move(index = 0, move = Pokemon.Move.maxPowerPoints(1))
+            .move(index = 0, move = Pokemon.Move(id = 1, powerPoints = 999, ups = 3))
             .move(index = 1, move = Pokemon.Move.Empty)
             .move(index = 2, move = Pokemon.Move.Empty)
             .move(index = 3, move = Pokemon.Move.Empty)

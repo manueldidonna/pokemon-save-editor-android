@@ -153,7 +153,10 @@ internal class Pokemon(
                 get() = data.readBigEndianUShort(0x15).toInt()
 
             override val health: Int
-                get() = (attack and 1 shl 3) or (defense and 1 shl 2) or (speed and 1 shl 1) or (specialAttack and 1 shl 0)
+                get() = (attack and 1 shl 3) or
+                        (defense and 1 shl 2) or
+                        (speed and 1 shl 1) or
+                        (specialAttack and 1 shl 0)
 
             override val attack: Int
                 get() = DV16 shr 12 and 0xF
@@ -199,6 +202,17 @@ internal class Pokemon(
             // only Unown has multiple forms
             if (speciesId != 201) return null
             return CorePokemon.Form.Unown(letter = getUnownLetter(this))
+        }
+
+    override val metInfo: Property<MetInfo>
+        get() {
+            val caught = data.readBigEndianUShort(0x1D).toInt()
+            return MetInfo(
+                level = caught ushr 8 and 0x3F,
+                locationId = caught and 0x7F,
+                time = MetInfo.Time.TimesOfDay((caught ushr 14) and 0x3),
+                trainerGender = if (caught ushr 7 and 1 == 0) Gender.Male else Gender.Female
+            ).asProperty()
         }
 
     companion object {
