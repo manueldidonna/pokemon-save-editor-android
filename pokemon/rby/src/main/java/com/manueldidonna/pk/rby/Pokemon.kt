@@ -54,7 +54,7 @@ internal class Pokemon(
     override val version: Version,
     private val data: UByteArray,
     private val index: Int,
-    slot: Int
+    slot: Int,
 ) : MutablePokemon {
 
     init {
@@ -63,12 +63,12 @@ internal class Pokemon(
         }
     }
 
-    override fun asBytes(): UByteArray {
+    override fun exportToBytes(): UByteArray {
         return data.copyOf()
     }
 
-    override fun asMutablePokemon(): MutablePokemon {
-        return this
+    override fun toMutablePokemon(): MutablePokemon {
+        return Pokemon(version, data, position.index, position.slot)
     }
 
     override val form: CorePokemon.Form? = null
@@ -284,7 +284,7 @@ internal class Pokemon(
             defense: Int,
             speed: Int,
             specialAttack: Int,
-            specialDefense: Int
+            specialDefense: Int,
         ): MutablePokemon.Mutator = apply {
             // health is ignored, in gen 1 it's determined by the other ivs
             var totalIVs = data.readBigEndianUShort(0x1b).toInt()
@@ -312,7 +312,7 @@ internal class Pokemon(
             defense: Int,
             speed: Int,
             specialAttack: Int,
-            specialDefense: Int
+            specialDefense: Int,
         ): MutablePokemon.Mutator = apply {
             fun setValue(value: Int, effortOffset: Int) {
                 if (value >= 0) {

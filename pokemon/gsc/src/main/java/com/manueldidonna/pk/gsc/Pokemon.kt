@@ -61,15 +61,15 @@ internal class Pokemon(
     private val data: UByteArray,
     override val version: Version,
     index: Int,
-    slot: Int
+    slot: Int,
 ) : MutablePokemon {
 
-    override fun asBytes(): UByteArray {
+    override fun exportToBytes(): UByteArray {
         return data.copyOf()
     }
 
-    override fun asMutablePokemon(): MutablePokemon {
-        return this
+    override fun toMutablePokemon(): MutablePokemon {
+        return Pokemon(data, version, position.index, position.slot)
     }
 
     override val mutator: MutablePokemon.Mutator by lazy { Mutator(this, data) }

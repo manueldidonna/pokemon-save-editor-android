@@ -7,7 +7,7 @@ import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetriever
 
 @Immutable
-class PokedexEntry private constructor(
+data class PokedexEntry(
     override val speciesId: Int,
     override val isSeen: Boolean,
     override val isOwned: Boolean,
@@ -28,7 +28,7 @@ class PokedexEntry private constructor(
         fun getAllFromPokedex(
             pokedex: Pokedex,
             spritesRetriever: SpritesRetriever,
-            resources: PokemonTextResources.Species
+            resources: PokemonTextResources.Species,
         ): List<PokedexEntry> {
             return List(pokedex.pokemonCount) {
                 pokedex

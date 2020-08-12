@@ -4,9 +4,12 @@ import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.gsc.GSCSaveDataFactory
 import com.manueldidonna.pk.rby.RBYSaveDataFactory
 
-class ComposingSaveDataFactory : SaveData.Factory {
+object SaveDataFactory : SaveData.Factory {
 
-    private val factories = sequenceOf(RBYSaveDataFactory, GSCSaveDataFactory)
+    private val factories = sequenceOf(
+        RBYSaveDataFactory,
+        GSCSaveDataFactory
+    )
 
     override fun createSaveData(data: UByteArray): SaveData? {
         for (factory in factories) {

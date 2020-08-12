@@ -3,7 +3,7 @@ package com.manueldidonna.pk.core
 /**
  * [Pokemon] represents a read-only entity. Its data will never change.
  *
- * If you need to mutate the Pokemon, use [Pokemon.asMutablePokemon]
+ * If you need to mutate the Pokemon, use [Pokemon.toMutablePokemon]
  * @see [MutablePokemon]
  *
  */
@@ -66,7 +66,6 @@ interface Pokemon {
 
     val eV: StatisticValues
 
-    // TODO: rename to Statistics
     interface StatisticValues {
         val health: Int
         val attack: Int
@@ -91,11 +90,12 @@ interface Pokemon {
 
     val metInfo: Property<MetInfo>
 
-    // TODO: rename to exportToBytes to be consistent with the SaveData
-    fun asBytes(): UByteArray
+    /**
+     * Return a new [MutablePokemon] instance
+     */
+    fun toMutablePokemon(): MutablePokemon
 
-    // TODO: rename to toMutablePokemon and return a new instance
-    fun asMutablePokemon(): MutablePokemon
+    fun exportToBytes(): UByteArray
 }
 
 inline val Pokemon.isEmpty: Boolean
@@ -107,7 +107,6 @@ inline val Pokemon.isEmpty: Boolean
  *
  * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
  * it will continue to reflects any data changes.
- * TODO: add toPokemon()
  */
 interface MutablePokemon : Pokemon {
 
@@ -152,7 +151,7 @@ interface MutablePokemon : Pokemon {
             defense: Int = -1,
             speed: Int = -1,
             specialAttack: Int = -1,
-            specialDefense: Int = -1
+            specialDefense: Int = -1,
         ): Mutator
 
         fun effortValues(
@@ -161,7 +160,7 @@ interface MutablePokemon : Pokemon {
             defense: Int = -1,
             speed: Int = -1,
             specialAttack: Int = -1,
-            specialDefense: Int = -1
+            specialDefense: Int = -1,
         ): Mutator
 
         fun form(value: Pokemon.Form): Mutator

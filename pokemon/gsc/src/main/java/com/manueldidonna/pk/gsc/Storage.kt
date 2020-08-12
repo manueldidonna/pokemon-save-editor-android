@@ -73,7 +73,7 @@ internal class Storage(
         @Suppress("NAME_SHADOWING")
         val slot = slot.coerceAtMost(size - 1)
 
-        setPokemonData(pokemonData = pokemon.asBytes(), slot = slot)
+        setPokemonData(pokemonData = pokemon.exportToBytes(), slot = slot)
 
         // calculate stats if pokemon is moved from box to party
         if (index.isPartyIndex) {

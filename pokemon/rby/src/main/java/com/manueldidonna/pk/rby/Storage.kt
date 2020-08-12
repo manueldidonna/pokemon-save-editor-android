@@ -51,12 +51,14 @@ internal class Storage(
 
         if (pokemon.isEmpty) return false
 
+        @Suppress("NAME_SHADOWING")
+        val pokemon = pokemon.toMutablePokemon()
+
         // update level if pokemon is moved from party to box
         if (pokemon.position.index.isPartyIndex && !index.isPartyIndex) {
-            val mutablePokemon = pokemon.asMutablePokemon()
-            mutablePokemon.mutator
-                .experiencePoints(mutablePokemon.experiencePoints)
-                .level(mutablePokemon.level)
+            pokemon.mutator
+                .experiencePoints(pokemon.experiencePoints)
+                .level(pokemon.level)
         }
 
         @Suppress("NAME_SHADOWING")
@@ -65,7 +67,7 @@ internal class Storage(
         // set species id
         data[startOffset + 0x1 + slot] = pokemon.speciesId.toUByte()
 
-        setPokemonData(pokemonData = pokemon.asBytes(), slot = slot)
+        setPokemonData(pokemonData = pokemon.exportToBytes(), slot = slot)
 
         // recalculate level from exp & stats if pokemon is moved from box to party
         if (index.isPartyIndex) {
