@@ -1,14 +1,16 @@
 package com.manueldidonna.redhex.details
 
-import androidx.compose.*
-import androidx.compose.frames.modelListOf
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.lazy.LazyColumnItems
-import androidx.ui.layout.Column
-import androidx.ui.material.EmphasisAmbient
-import androidx.ui.material.ListItem
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.TextButton
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.material.EmphasisAmbient
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.ui.tooling.preview.Preview
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
@@ -21,7 +23,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
     val resources = PokemonResourcesAmbient.current.moves
 
     val moves = remember {
-        modelListOf(
+        mutableStateListOf(
             pokemon.selectMove(0, Pokemon::Move),
             pokemon.selectMove(1, Pokemon::Move),
             pokemon.selectMove(2, Pokemon::Move),
@@ -29,7 +31,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
         )
     }
 
-    var selectedMoveIndex by state { -1 }
+    val selectedMoveIndex = remember { mutableStateOf(-1) }
 
     for (i in 0 until 4) {
         val move = moves[i]
@@ -37,7 +39,7 @@ fun PokemonMoves(pokemon: MutablePokemon) {
             name = resources.getMoveById(move.id),
             powerPoints = move.powerPoints,
             ups = move.ups,
-            onClick = { selectedMoveIndex = i },
+            onClick = { selectedMoveIndex.value = i },
             maximizeUps = {
                 pokemon.mutator.move(i, Pokemon.Move(id = move.id, powerPoints = 999, ups = 3))
                 moves[i] = pokemon.selectMove(i, Pokemon::Move)
@@ -45,16 +47,16 @@ fun PokemonMoves(pokemon: MutablePokemon) {
         )
     }
 
-    if (selectedMoveIndex >= 0) {
+    if (selectedMoveIndex.value >= 0) {
         MoveChooser(
             moves = resources.getAllMoves(pokemon.version),
             onMoveSelected = { move ->
                 if (move != null) {
-                    val availableIndex = pokemon.getEmptyMoveIndexOrElse(selectedMoveIndex)
+                    val availableIndex = pokemon.getEmptyMoveIndexOrElse(selectedMoveIndex.value)
                     pokemon.mutator.move(availableIndex, move)
                     moves[availableIndex] = pokemon.selectMove(availableIndex, Pokemon::Move)
                 }
-                selectedMoveIndex = -1
+                selectedMoveIndex.value = -1
             }
         )
     }
@@ -112,7 +114,7 @@ private fun MoveChooser(
     onMoveSelected: (Pokemon.Move?) -> Unit
 ) {
     ThemedDialog(onCloseRequest = { onMoveSelected(null) }) {
-        LazyColumnItems(items = moves.sorted()) {
+        LazyColumnFor(items = moves.sorted()) {
             ListItem(
                 text = it,
                 onClick = {

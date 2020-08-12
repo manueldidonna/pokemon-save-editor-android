@@ -13,8 +13,8 @@ object Modules {
 object Libs {
 
     object Versions {
-        const val kotlin = "1.3.70"
-        const val compose = "0.1.0-dev14"
+        const val kotlin = "1.4.0-rc"
+        const val compose = "0.1.0-dev16"
     }
 
     object Kotlin {
@@ -28,10 +28,10 @@ object Libs {
     }
 
     object Android {
-        const val materialComponents = "com.google.android.material:material:1.2.0-alpha05"
+        const val materialComponents = "com.google.android.material:material:1.2.0"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
         const val coil = "io.coil-kt:coil:0.10.1"
-        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.6"
+        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.8"
     }
 
     object AndroidX {
@@ -40,12 +40,25 @@ object Libs {
         const val appcompat = "androidx.appcompat:appcompat:1.1.0"
 
         object Compose {
-            const val foundation = "androidx.ui:ui-foundation:${Versions.compose}"
+            const val foundation = "${Foundation.artifact}:foundation:${Versions.compose}"
+            const val material = "${Material.artifact}:material:${Versions.compose}"
             const val tooling = "androidx.ui:ui-tooling:${Versions.compose}"
-            const val layout = "androidx.ui:ui-layout:${Versions.compose}"
-            const val material = "androidx.ui:ui-material:${Versions.compose}"
-            const val savedInstanceState = "androidx.ui:ui-saved-instance-state:${Versions.compose}"
-            const val materialIcons = "androidx.ui:ui-material-icons-extended:${Versions.compose}"
+
+            object Foundation {
+                internal const val artifact = "androidx.compose.foundation"
+                const val layout = "$artifact:foundation-layout:${Versions.compose}"
+
+            }
+
+            object Runtime {
+                private const val artifact = "androidx.compose.runtime"
+                const val savedState = "$artifact:runtime-saved-instance-state:${Versions.compose}"
+            }
+
+            object Material {
+                internal const val artifact = "androidx.compose.material"
+                const val icons = "$artifact:material-icons-extended:${Versions.compose}"
+            }
         }
     }
 }

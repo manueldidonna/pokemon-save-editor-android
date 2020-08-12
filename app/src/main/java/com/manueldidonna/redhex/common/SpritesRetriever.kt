@@ -1,13 +1,14 @@
 package com.manueldidonna.redhex.common
 
 import android.net.Uri
-import androidx.compose.Composable
-import androidx.ui.core.Modifier
-import androidx.ui.graphics.ColorFilter
-import androidx.ui.layout.preferredSize
-import androidx.ui.material.EmphasisAmbient
-import androidx.ui.material.MaterialTheme
-import androidx.ui.unit.dp
+import androidx.compose.foundation.layout.preferredSize
+import androidx.compose.material.EmphasisAmbient
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.Inventory
 import com.manueldidonna.pk.core.Items
 import com.manueldidonna.redhex.R
@@ -17,16 +18,17 @@ val PokemonSpriteSize: Modifier = Modifier.preferredSize(40.dp, 32.dp)
 
 val ItemSpriteSize: Modifier = Modifier.preferredSize(32.dp)
 
+@Immutable
 inline class SpriteSource(val value: Any) {
     companion object {
-        val Pokeball = SpriteSource(R.drawable.pokeball_s)
+        val PokeBall = SpriteSource(R.drawable.pokeball_s)
     }
 }
 
 @Composable
 fun PokemonSprite(source: SpriteSource) {
     var colorFilter: ColorFilter? = null
-    if (source.value == SpriteSource.Pokeball.value) {
+    if (source.value == SpriteSource.PokeBall.value) {
         val emphasis = EmphasisAmbient.current.disabled
         colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface))
     }

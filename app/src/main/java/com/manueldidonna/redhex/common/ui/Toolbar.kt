@@ -1,16 +1,15 @@
 package com.manueldidonna.redhex.common.ui
 
-import androidx.compose.Composable
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.ProvideTextStyle
-import androidx.ui.foundation.drawBackground
-import androidx.ui.layout.*
-import androidx.ui.material.Divider
-import androidx.ui.material.MaterialTheme
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
-import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
+import androidx.compose.foundation.ProvideTextStyle
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 val ToolbarHeight: Dp = 56.dp
 
@@ -22,7 +21,7 @@ fun TranslucentToolbar(
 ) {
     ProvideTextStyle(MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.onSurface)) {
         Column(
-            modifier = modifier.drawBackground(color = translucentSurfaceColor()),
+            modifier = modifier.background(color = translucentSurfaceColor()),
             verticalArrangement = Arrangement.Center,
             horizontalGravity = Alignment.CenterHorizontally
         ) {

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -24,17 +26,15 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion = "1.3.70-dev-withExperimentalGoogleExtensions-20200424"
+        kotlinCompilerVersion = "1.4.0-rc"
         kotlinCompilerExtensionVersion = Libs.Versions.compose
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        apiVersion = "1.3"
-        jvmTarget = "1.8"
-    }
+
     buildFeatures {
         compose = true
     }
@@ -52,9 +52,9 @@ dependencies {
     implementation(Libs.AndroidX.Compose.foundation)
     implementation(Libs.AndroidX.Compose.tooling)
     implementation(Libs.AndroidX.Compose.material)
-    implementation(Libs.AndroidX.Compose.layout)
-    implementation(Libs.AndroidX.Compose.savedInstanceState)
-    implementation(Libs.AndroidX.Compose.materialIcons)
+    implementation(Libs.AndroidX.Compose.Foundation.layout)
+    implementation(Libs.AndroidX.Compose.Runtime.savedState)
+    implementation(Libs.AndroidX.Compose.Material.icons)
     implementation(Libs.Android.materialComponents)
     implementation(Libs.KotlinX.coroutinesAndroid)
     implementation(Libs.Android.coil)

@@ -1,16 +1,20 @@
 package com.manueldidonna.redhex.inventory
 
-import androidx.compose.*
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Box
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.lazy.LazyColumnItems
-import androidx.ui.layout.*
-import androidx.ui.material.*
-import androidx.ui.text.font.FontWeight
+import androidx.compose.foundation.Box
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.structuralEqualityPolicy
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.dp
 import com.manueldidonna.pk.core.Inventory
 import com.manueldidonna.pk.core.toImmutable
 import com.manueldidonna.pk.resources.text.PokemonTextResources
@@ -28,14 +32,19 @@ fun InventoryItemEditor(
 ) {
     val isEditing = remember { item.id > 0 }
 
-    var quantity by state { item.quantity.coerceIn(1, maxAllowedQuantity) }
-    var itemId by state { item.id.coerceAtLeast(0) }
+    val quantity = remember {
+        mutableStateOf(item.quantity.coerceIn(1, maxAllowedQuantity), structuralEqualityPolicy())
+    }
+
+    val itemId = remember {
+        mutableStateOf(item.id.coerceAtLeast(0), structuralEqualityPolicy())
+    }
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         // show current item name
-        if (itemId > 0) {
+        if (itemId.value > 0) {
             Text(
-                text = resources.getAllItems()[itemId],
+                text = resources.getAllItems()[itemId.value],
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
             )
@@ -44,8 +53,8 @@ fun InventoryItemEditor(
         if (maxAllowedQuantity > 1) {
             Quantity(
                 maxAllowedQuantity = maxAllowedQuantity,
-                quantity = quantity,
-                onQuantityChange = { quantity = it }
+                quantity = quantity.value,
+                onQuantityChange = { quantity.value = it }
             )
             Divider()
         }
@@ -53,8 +62,8 @@ fun InventoryItemEditor(
             ItemsList(
                 itemIds = itemIds,
                 itemNames = resources.getAllItems(),
-                selectedItemId = itemId,
-                onSelectionChange = { itemId = it }
+                selectedItemId = itemId.value,
+                onSelectionChange = { itemId.value = it }
             )
         }
         Divider()
@@ -69,11 +78,12 @@ fun InventoryItemEditor(
             }
             Spacer(Modifier.width(8.dp))
             TextButton(
-                enabled = isEditing || itemId != 0,
-                onClick = { onItemChange(item.toImmutable(quantity = quantity, id = itemId)) }
-            ) {
-                Text(text = if (isEditing) "Modify" else "Add")
-            }
+                enabled = isEditing || itemId.value != 0,
+                onClick = {
+                    onItemChange(item.toImmutable(quantity = quantity.value, id = itemId.value))
+                },
+                content = { Text(text = if (isEditing) "Modify" else "Add") }
+            )
         }
     }
 }
@@ -116,16 +126,20 @@ private fun ItemsList(
         itemIds.map { Pair(it, itemNames[it]) }.sortedBy { it.second }
     }
 
-    RadioGroup {
-        LazyColumnItems(items = items, itemContent = { itemWithName ->
-            val selected = selectedItemId == itemWithName.first
-            RadioGroupTextItem(
-                selected = selected,
-                onSelect = { onSelectionChange(itemWithName.first) },
-                text = itemWithName.second
-            )
-        })
-    }
+    LazyColumnFor(items = items, itemContent = { itemWithName ->
+        val selected = selectedItemId == itemWithName.first
+        val onSelect = { onSelectionChange(itemWithName.first) }
+        Box(modifier = Modifier.selectable(selected = selected, onClick = onSelect)) {
+            Row(Modifier.fillParentMaxWidth().padding(16.dp)) {
+                RadioButton(selected = selected, onClick = onSelect)
+                Text(
+                    text = itemWithName.second,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+        }
+    })
 }
 
 @Preview

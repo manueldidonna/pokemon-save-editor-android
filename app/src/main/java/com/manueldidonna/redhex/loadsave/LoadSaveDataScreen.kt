@@ -6,19 +6,17 @@ import android.util.Log
 import androidx.activity.invoke
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Text
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.layout.wrapContentSize
-import androidx.ui.material.Button
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Surface
-import androidx.ui.savedinstancestate.savedInstanceState
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ContextAmbient
 import androidx.ui.tooling.preview.Preview
 import com.manueldidonna.redhex.AppState
 import com.manueldidonna.redhex.common.PrepareActivityContract
@@ -26,7 +24,7 @@ import com.manueldidonna.redhex.common.PrepareActivityContract
 @Composable
 fun LoadSaveDataScreen() {
     val context = ContextAmbient.current
-    var launchIntent by savedInstanceState { false }
+    val launchIntent = savedInstanceState { false }
     val launcher = PrepareActivityContract(
         contractKey = "OPEN_SAVE_DATA",
         contract = ActivityResultContracts.OpenDocument(),
@@ -37,13 +35,13 @@ fun LoadSaveDataScreen() {
     Surface(color = MaterialTheme.colors.background, modifier = Modifier.fillMaxSize()) {
         Button(
             modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center),
-            onClick = { launchIntent = true }
+            onClick = { launchIntent.value = true }
         ) {
             Text(text = "LOAD SAVEDATA")
         }
     }
-    if (launchIntent) {
-        launchIntent = false
+    if (launchIntent.value) {
+        launchIntent.value = false
         launcher(arrayOf("*/*"))
     }
 }
@@ -54,7 +52,7 @@ private fun createSaveData(uri: Uri?, context: Context) {
         if (input == null) return
         AppState.saveData = ComposingSaveDataFactory()
             .createSaveData(input.readBytes().toUByteArray())
-        Log.d("savedata", AppState.saveData?.toString() ?: "")
+        Log.d("savedata", AppState.saveData.toString())
     }
 }
 

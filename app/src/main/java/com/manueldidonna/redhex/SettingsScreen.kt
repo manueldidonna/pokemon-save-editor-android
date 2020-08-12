@@ -4,26 +4,24 @@ import android.net.Uri
 import androidx.activity.invoke
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Text
-import androidx.ui.layout.Arrangement
-import androidx.ui.layout.Column
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.layout.padding
-import androidx.ui.material.Button
-import androidx.ui.savedinstancestate.savedInstanceState
-import androidx.ui.unit.dp
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ContextAmbient
+import androidx.compose.ui.unit.dp
 import com.manueldidonna.redhex.common.PrepareActivityContract
 
 @Composable
 fun SettingsScreen() {
     val context = ContextAmbient.current
-    var launchIntent by savedInstanceState { false }
+    val launchIntent = savedInstanceState { false }
     val launcher = PrepareActivityContract(
         contractKey = "OPEN_SAVE_DATA",
         contract = ActivityResultContracts.CreateDocument(),
@@ -47,13 +45,13 @@ fun SettingsScreen() {
         Button(modifier = padding, onClick = { AppState.saveData = null }) {
             Text(text = "CHOOSE ANOTHER SAVEDATA")
         }
-        Button(modifier = padding, onClick = { launchIntent = true }) {
+        Button(modifier = padding, onClick = { launchIntent.value = true }) {
             Text(text = "EXPORT SAVEDATA")
         }
     }
 
-    if (launchIntent) {
-        launchIntent = false
+    if (launchIntent.value) {
+        launchIntent.value = false
         launcher("")
     }
 

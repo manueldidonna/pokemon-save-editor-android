@@ -1,21 +1,23 @@
 package com.manueldidonna.redhex.details
 
-import androidx.compose.*
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
-import androidx.ui.foundation.drawBackground
-import androidx.ui.graphics.Color
-import androidx.ui.layout.*
-import androidx.ui.material.IconButton
-import androidx.ui.material.Tab
-import androidx.ui.material.TabRow
-import androidx.ui.material.TopAppBar
-import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.ArrowBack
-import androidx.ui.unit.dp
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.ScrollableColumn
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.IconButton
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.translucentSurfaceColor
@@ -34,21 +36,19 @@ fun PokemonDetails(
     pokemon: MutablePokemon,
     listener: PokemonDetailsEvents
 ) {
-    var selectedTab: EditorTab by state { EditorTab.General }
+    val selectedTab = remember { mutableStateOf(EditorTab.General) }
     Stack(modifier.fillMaxSize()) {
-        VerticalScroller {
-            Column {
-                Spacer(Modifier.preferredHeight(ToolbarHeight + 48.dp))
-                when (selectedTab) {
-                    EditorTab.General -> PokemonGeneral(pokemon)
-                    EditorTab.Moves -> PokemonMoves(pokemon)
-                    EditorTab.Stats -> PokemonStats(pokemon)
-                }
+        ScrollableColumn {
+            Spacer(Modifier.preferredHeight(ToolbarHeight + 48.dp))
+            when (selectedTab.value) {
+                EditorTab.General -> PokemonGeneral(pokemon)
+                EditorTab.Moves -> PokemonMoves(pokemon)
+                EditorTab.Stats -> TODO()
             }
         }
         EditorToolbar(
             onNavigationClick = { listener.goBackToPokemonList(pokemon) },
-            onTabChange = { tab -> selectedTab = tab }
+            onTabChange = { tab -> selectedTab.value = tab }
         )
     }
 }
@@ -59,10 +59,10 @@ private fun EditorToolbar(
     onTabChange: (tab: EditorTab) -> Unit
 ) {
     val tabs = remember { EditorTab.values().toList() }
-    var selectedIndex: Int by state { 0 }
+    val selectedIndex = remember { mutableStateOf(0) }
     Column(
         horizontalGravity = Alignment.CenterHorizontally,
-        modifier = Modifier.drawBackground(color = translucentSurfaceColor())
+        modifier = Modifier.background(color = translucentSurfaceColor())
     ) {
         TopAppBar(
             navigationIcon = {
@@ -77,19 +77,17 @@ private fun EditorToolbar(
         TabRow(
             backgroundColor = Color.Transparent,
             items = tabs,
-            selectedIndex = selectedIndex
+            selectedIndex = selectedIndex.value
         ) { index, tab ->
             Tab(
                 modifier = Modifier.preferredHeight(48.dp),
                 text = { Text(text = tab.name) },
-                selected = index == selectedIndex,
+                selected = index == selectedIndex.value,
                 onSelected = {
                     onTabChange(tab)
-                    selectedIndex = tabs.indexOf(tab)
+                    selectedIndex.value = tabs.indexOf(tab)
                 }
             )
         }
     }
 }
-
-

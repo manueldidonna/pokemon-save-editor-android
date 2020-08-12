@@ -2,23 +2,23 @@ package com.manueldidonna.redhex
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.*
-import androidx.ui.core.Modifier
-import androidx.ui.core.setContent
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.contentColor
-import androidx.ui.foundation.isSystemInDarkTheme
-import androidx.ui.graphics.toArgb
-import androidx.ui.graphics.vector.VectorAsset
-import androidx.ui.layout.padding
-import androidx.ui.material.*
-import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.Category
-import androidx.ui.material.icons.twotone.Inbox
-import androidx.ui.material.icons.twotone.LocalLibrary
-import androidx.ui.material.icons.twotone.Menu
-import androidx.ui.savedinstancestate.savedInstanceState
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.contentColor
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.Category
+import androidx.compose.material.icons.twotone.Inbox
+import androidx.compose.material.icons.twotone.LocalLibrary
+import androidx.compose.material.icons.twotone.Menu
+import androidx.compose.runtime.*
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.VectorAsset
+import androidx.compose.ui.platform.setContent
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
@@ -100,9 +100,13 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         AppState.saveData?.let { saveData ->
             val (index, slot) = pokemon.position
             saveData.getMutableStorage(index).insertPokemon(slot = slot, pokemon = pokemon)
-            saveData.pokedex.setEntry(Pokedex.Entry.owned(speciesId = pokemon.speciesId))
+            saveData.pokedex.catchPokemonById(pokemon.speciesId)
         }
         AppState.currentScreen = AppScreen.Main
+    }
+
+    private fun Pokedex.catchPokemonById(speciesId: Int) {
+        setEntry(Pokedex.Entry.Immutable(speciesId, isSeen = true, isOwned = true))
     }
 
     private enum class BottomDestination(val icon: VectorAsset) {
@@ -119,15 +123,16 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         Scaffold(
             bottomBar = {
                 BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
-                    val inactiveColor = EmphasisAmbient.current.medium.applyEmphasis(contentColor())
+                    val unselectedContentColor =
+                        EmphasisAmbient.current.medium.applyEmphasis(contentColor())
                     for (value in BottomDestination.values()) {
                         BottomNavigationItem(
                             icon = { Icon(asset = value.icon) },
-                            text = { Text(text = value.name) },
+                            label = { Text(text = value.name) },
                             selected = destination == value,
-                            activeColor = MaterialTheme.colors.primary,
-                            inactiveColor = inactiveColor,
-                            onSelected = {
+                            selectedContentColor = MaterialTheme.colors.primary,
+                            unselectedContentColor = unselectedContentColor,
+                            onSelect = {
                                 selectedDestinationName.value = value.name
                             }
                         )

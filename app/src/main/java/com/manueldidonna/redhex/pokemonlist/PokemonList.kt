@@ -1,29 +1,30 @@
 package com.manueldidonna.redhex.pokemonlist
 
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.stateFor
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Box
-import androidx.ui.foundation.ContentGravity
-import androidx.ui.foundation.Icon
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.lazy.LazyColumnItems
-import androidx.ui.layout.*
-import androidx.ui.material.*
-import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.twotone.ChevronLeft
-import androidx.ui.material.icons.twotone.ChevronRight
-import androidx.ui.savedinstancestate.savedInstanceState
-import androidx.ui.unit.dp
-import com.manueldidonna.pk.core.*
+import androidx.compose.foundation.Box
+import androidx.compose.foundation.ContentGravity
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.ChevronLeft
+import androidx.compose.material.icons.twotone.ChevronRight
+import androidx.compose.runtime.*
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.pk.core.Storage
+import com.manueldidonna.pk.core.StorageCollection
+import com.manueldidonna.pk.core.isEmpty
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.ToolbarHeight
 import com.manueldidonna.redhex.common.ui.TranslucentToolbar
 
+@Immutable
 private data class PokemonPreview(
     val isEmpty: Boolean,
     val slot: Int,
@@ -42,24 +43,26 @@ fun PokemonList(
     val spritesRetriever = SpritesRetrieverAmbient.current
 
     // TODO: persist across navigation events
-    var currentIndex: Int by savedInstanceState {
-        collection.indices.first
-    }
+    var currentIndex by savedInstanceState { collection.indices.first }
 
-    val storage: MutableStorage by stateFor(currentIndex) {
+    val storage = remember(currentIndex) {
         collection.getMutableStorage(currentIndex)
     }
 
-    val pokemonPreviews: List<PokemonPreview> by stateFor(storage.index) {
-        storage.getPokemonPreviews(resources, spritesRetriever)
+    val pokemonPreviews = remember(storage.index) {
+        storage.getPokemonPreviews(resources, spritesRetriever).toMutableStateList()
     }
 
     Column(modifier = modifier) {
         Toolbar(
             modifier = Modifier.height(ToolbarHeight),
             title = storage.name,
-            onBack = { currentIndex = decreaseIndex(currentIndex, collection.indices) },
-            onForward = { currentIndex = increaseIndex(currentIndex, collection.indices) }
+            onBack = {
+                currentIndex = decreaseIndex(currentIndex, collection.indices)
+            },
+            onForward = {
+                currentIndex = increaseIndex(currentIndex, collection.indices)
+            }
         )
         ShowPokemonPreviews(
             previews = pokemonPreviews,
@@ -90,7 +93,7 @@ private fun Storage.getPokemonPreviews(
                 PokemonPreview(
                     nickname = "Empty Slot",
                     label = "",
-                    source = SpriteSource.Pokeball,
+                    source = SpriteSource.PokeBall,
                     slot = position.slot,
                     isEmpty = true
                 )
@@ -137,7 +140,7 @@ private fun ShowPokemonPreviews(
 ) {
     val activeTextColor = MaterialTheme.colors.onSurface
     val disabledTextColor = EmphasisAmbient.current.disabled.applyEmphasis(activeTextColor)
-    LazyColumnItems(items = previews) { pk ->
+    LazyColumnFor(items = previews) { pk ->
         ListItem(
             text = {
                 Text(

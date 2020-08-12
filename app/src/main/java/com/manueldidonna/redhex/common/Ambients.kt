@@ -1,7 +1,7 @@
 package com.manueldidonna.redhex.common
 
 import androidx.activity.result.ActivityResultRegistry
-import androidx.compose.staticAmbientOf
+import androidx.compose.runtime.staticAmbientOf
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 val ActivityResultRegistryAmbient = staticAmbientOf<ActivityResultRegistry>()

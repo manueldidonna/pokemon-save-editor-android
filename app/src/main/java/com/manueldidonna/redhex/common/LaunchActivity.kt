@@ -3,10 +3,10 @@ package com.manueldidonna.redhex.common
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.compose.Composable
-import androidx.compose.onDispose
-import androidx.compose.remember
-import androidx.ui.core.LifecycleOwnerAmbient
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.onDispose
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LifecycleOwnerAmbient
 
 @Suppress("NOTHING_TO_INLINE")
 @Composable

@@ -1,18 +1,19 @@
 package com.manueldidonna.redhex.common.ui
 
-import androidx.compose.Composable
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.drawBackground
-import androidx.ui.material.*
-import com.manueldidonna.redhex.common.ui.LightColors
+import androidx.compose.foundation.background
+import androidx.compose.material.Colors
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 @Composable
 fun PreviewScreen(
-    colors: ColorPalette = LightColors,
-    screen: @Composable() () -> Unit
+    colors: Colors = LightColors,
+    screen: @Composable () -> Unit
 ) {
     MaterialTheme(colors) {
-        Surface(modifier = Modifier.drawBackground(color = MaterialTheme.colors.surface)) {
+        Surface(modifier = Modifier.background(color = MaterialTheme.colors.surface)) {
             screen()
         }
     }

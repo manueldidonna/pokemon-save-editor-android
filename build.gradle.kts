@@ -4,10 +4,11 @@ buildscript {
     repositories {
         google()
         jcenter()
+        maven(url = "https://dl.bintray.com/kotlin/kotlin-eap/")
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:4.2.0-alpha02")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Libs.Versions.kotlin}")
+        classpath("com.android.tools.build:gradle:4.2.0-alpha07")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.0-rc")
     }
 }
 
@@ -15,6 +16,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven(url = "https://dl.bintray.com/kotlin/kotlin-eap/")
     }
 }
 
@@ -25,9 +27,11 @@ subprojects {
                 "-Xuse-experimental=kotlin.Experimental",
                 "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-Xuse-experimental=kotlinx.coroutines.FlowPreview",
-                "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes"
+                "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes",
+                "-Xallow-jvm-ir-dependencies",
+                "-Xskip-prerelease-check",
+                "-Xskip-metadata-version-check"
             )
-            apiVersion = "1.3"
             jvmTarget = "1.8"
         }
     }
