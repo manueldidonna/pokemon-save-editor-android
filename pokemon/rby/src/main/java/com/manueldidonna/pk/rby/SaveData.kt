@@ -13,6 +13,23 @@ internal class SaveData(
     override val version: Version
 ) : CoreSaveData {
 
+    override fun hashCode(): Int {
+        return data.contentHashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is SaveData) return false
+        return this.exportToBytes().contentEquals(other.exportToBytes())
+    }
+
+    override fun toString(): String {
+        return """
+            GSC SaveData:
+            - version: $version
+            - data: ${data.contentToString()}
+        """.trimIndent()
+    }
+
     override val trainer: Trainer by lazy {
         Trainer(
             name = getStringFromGameBoyData(data, TrainerNameOffset, 11, false),
