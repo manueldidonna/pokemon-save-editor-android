@@ -10,7 +10,7 @@ import com.manueldidonna.pk.core.Storage as CoreStorage
 
 internal class SaveData(
     private val data: UByteArray,
-    override val version: Version
+    override val version: Version,
 ) : CoreSaveData {
 
     override fun hashCode(): Int {
@@ -18,13 +18,15 @@ internal class SaveData(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is SaveData) return false
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+        if(this.version != (other as SaveData).version) return false
         return this.exportToBytes().contentEquals(other.exportToBytes())
     }
 
     override fun toString(): String {
         return """
-            GSC SaveData:
+            RBY SaveData:
             - version: $version
             - data: ${data.contentToString()}
         """.trimIndent()

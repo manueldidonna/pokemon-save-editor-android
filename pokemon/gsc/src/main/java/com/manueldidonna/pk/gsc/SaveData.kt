@@ -17,7 +17,9 @@ internal class SaveData(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is SaveData) return false
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+        if (this.version != (other as SaveData).version) return false
         return this.exportToBytes().contentEquals(other.exportToBytes())
     }
 
