@@ -2,6 +2,8 @@ package com.manueldidonna.redhex
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Icon
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.contentColor
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
             MaterialTheme(
                 colors = if (isSystemInDarkTheme()) DarkColors else LightColors
             ) {
-                window.statusBarColor = MaterialTheme.colors.surface.toArgb()
+                window.statusBarColor = MaterialTheme.colors.primarySurface.toArgb()
                 Providers(
                     ActivityResultRegistryAmbient provides activityResultRegistry,
                     PokemonResourcesAmbient provides PokemonTextResources.English,
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         if (saveData == null) {
             LoadSaveDataScreen()
         } else {
-            ShowScreen(screen = AppState.currentScreen, saveData = saveData)
+            ShowScreen(AppState.currentScreen, saveData)
         }
     }
 
@@ -122,37 +124,48 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
         Scaffold(
             bottomBar = {
-                BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
-                    val unselectedContentColor =
-                        EmphasisAmbient.current.medium.applyEmphasis(contentColor())
-                    for (value in BottomDestination.values()) {
-                        BottomNavigationItem(
-                            icon = { Icon(asset = value.icon) },
-                            label = { Text(text = value.name) },
-                            selected = destination == value,
-                            selectedContentColor = MaterialTheme.colors.primary,
-                            unselectedContentColor = unselectedContentColor,
-                            onSelect = {
-                                selectedDestinationName.value = value.name
-                            }
-                        )
-                    }
+                BottomNavigation(selected = destination) { selection ->
+                    selectedDestinationName.value = selection.name
                 }
             },
             bodyContent = { padding ->
                 // TODO: find a better solution
                 val modifier = Modifier.padding(padding)
-                when (destination) {
-                    BottomDestination.Storage -> PokemonList(
-                        modifier,
-                        saveData,
-                        ::showPokemonDetails
-                    )
-                    BottomDestination.More -> SettingsScreen()
-                    BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
-                    BottomDestination.Inventory -> Inventory(modifier, saveData)
+                Crossfade(
+                    current = destination,
+                    animation = remember { tween(durationMillis = 225) }
+                ) { destination ->
+                    when (destination) {
+                        BottomDestination.Storage -> {
+                            PokemonList(modifier, saveData, ::showPokemonDetails)
+                        }
+                        BottomDestination.More -> SettingsScreen()
+                        BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
+                        BottomDestination.Inventory -> Inventory(modifier, saveData)
+                    }
                 }
             }
         )
+    }
+
+    @Composable
+    private fun BottomNavigation(
+        selected: BottomDestination,
+        onSelect: (BottomDestination) -> Unit,
+    ) {
+        BottomNavigation(backgroundColor = MaterialTheme.colors.surface) {
+            val unselectedContentColor =
+                EmphasisAmbient.current.medium.applyEmphasis(contentColor())
+            for (destination in BottomDestination.values()) {
+                BottomNavigationItem(
+                    icon = { Icon(asset = destination.icon) },
+                    label = { Text(text = destination.name) },
+                    selected = selected == destination,
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    unselectedContentColor = unselectedContentColor,
+                    onSelect = { onSelect(destination) }
+                )
+            }
+        }
     }
 }

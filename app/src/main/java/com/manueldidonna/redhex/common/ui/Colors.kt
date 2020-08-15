@@ -10,14 +10,26 @@ import androidx.compose.ui.graphics.Color
 fun translucentSurfaceColor() = MaterialTheme.colors.surface.copy(alpha = 0.85f)
 
 val LightColors = lightColors(
-    primary = Color(0xFFf54149),
-    primaryVariant = Color(0xFFff7775),
-    secondary = Color(0xFF00c5ad),
-    secondaryVariant = Color(0xFF5ff9e0)
+    primary = Color(0xFF3d946a),
+    primaryVariant = Color(0xFF6fc598),
+    onPrimary = Color.White,
+    secondary = Color(0xFFe94e49),
+    secondaryVariant = Color(0xFFff8175),
+    onSecondary = Color.Black,
+    surface = Color(0xFFf5f5f5),
+    onSurface = Color.Black,
+    background = Color(0xFFf5f5f5),
+    onBackground = Color.Black
 )
 
 val DarkColors = darkColors(
-    primary = Color(0xFFea696e),
-    primaryVariant = Color(0xFFf39497),
-    secondary = Color(0xFF5ff9e0)
+    primary = Color(0xFF81cca8),
+    primaryVariant = Color(0xFFb3ffda),
+    onPrimary = Color.Black,
+    secondary = Color(0xFFe06f6d),
+    onSecondary = Color.Black,
+    surface = Color(0xFF121212),
+    onSurface = Color.White,
+    background = Color(0xFF121212),
+    onBackground = Color.White
 )

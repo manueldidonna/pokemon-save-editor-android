@@ -58,7 +58,7 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
 @Composable
 private fun pokedexCompletionStatus(pokedexCount: Int, entries: List<PokedexEntry>): String {
     val seenCount = entries.count { it.isSeen }
-    return if (seenCount == pokedexCount) {
+    return if (seenCount != pokedexCount) {
         "${(seenCount.toDouble() / pokedexCount * 100).toInt()}% Pokemon Seen"
     } else {
         val ownedCount = entries.count { it.isOwned }
