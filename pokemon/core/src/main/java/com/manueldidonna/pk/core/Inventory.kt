@@ -98,6 +98,12 @@ interface Inventory {
 }
 
 /**
+ * Returns true if the [Inventory] is full
+ */
+inline val Inventory.isFull: Boolean
+    get() = size == capacity
+
+/**
  * Get an instance of [Inventory.Item] from the Inventory at [index]
  */
 fun Inventory.getItem(index: Int): Inventory.Item {
@@ -160,7 +166,7 @@ fun Inventory.stackItem(item: Inventory.Item) {
 fun Inventory.Item.toImmutable(
     index: Int = this.index,
     id: Int = this.id,
-    quantity: Int = this.quantity
+    quantity: Int = this.quantity,
 ): Inventory.Item.Immutable {
     return Inventory.Item.Immutable(index = index, id = id, quantity = quantity)
 }

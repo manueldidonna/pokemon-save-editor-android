@@ -15,10 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawShadow
 import androidx.compose.ui.unit.dp
-import com.manueldidonna.pk.core.Inventory
-import com.manueldidonna.pk.core.SaveData
-import com.manueldidonna.pk.core.getItem
-import com.manueldidonna.pk.core.stackItem
+import com.manueldidonna.pk.core.*
 import com.manueldidonna.redhex.common.*
 import com.manueldidonna.redhex.common.ui.ThemedDialog
 import dev.chrisbanes.accompanist.coil.CoilImage
@@ -51,7 +48,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
                 Divider()
             }
         }
-        if (inventory.value.size < inventory.value.capacity)
+        if (!inventory.value.isFull)
             InsertItemButton {
                 selectItem(InventoryItem.empty(index = inventory.value.size))
             }
