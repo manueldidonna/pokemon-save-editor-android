@@ -6,7 +6,6 @@ import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.info.getFirstType
 import com.manueldidonna.pk.rby.info.getSecondType
-import com.manueldidonna.pk.rby.info.ifNull
 import com.manueldidonna.pk.rby.info.isEvolutionOf
 import com.manueldidonna.pk.resources.*
 import com.manueldidonna.pk.utils.*
@@ -201,9 +200,8 @@ internal class Pokemon(
                 data[0x7] = getCatchRate(value, version).toUByte()
             }
             // set types
-            val firstType = getFirstType(value)
-            data[0x5] = firstType.value.toUByte()
-            data[0x6] = getSecondType(value).ifNull(firstType).value.toUByte()
+            data[0x5] = getFirstType(value).toUByte()
+            data[0x6] = getSecondType(value).toUByte()
             // set max health
             val base = getBaseStatistics(speciesId, version)
             val health = calculateStatistics(level, base, iV, eV, version).health
