@@ -52,10 +52,6 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * ------------------------
  * 0x20 0xb - trainer name
  * 0x2B 0xb - pokemon name
- *
- * Gen1 games store the names in a different location of the pokemon box
- * For a mutable instance the real offsets are [trainerNameOffset] & [pokemonNameOffset]
- *
  */
 internal class Pokemon(
     private val data: UByteArray,
@@ -111,7 +107,7 @@ internal class Pokemon(
         get() = data[0x1F].toInt()
 
     override val experiencePoints: Int
-        get() = data.readBigEndianInt(0xE) ushr 8
+        get() = data.readBigEndianInt(0x08) ushr 8
 
     /**
      * This value doesn't exist in gen1 but the pokemon bank derives it from the exp. points

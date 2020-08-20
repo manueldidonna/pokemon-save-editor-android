@@ -9,7 +9,7 @@ internal class EnglishSpecies : PokemonTextResources.Species {
 
     override fun getAllSpecies(version: Version): List<String> {
         return when {
-            version.isFirstGeneration -> species.subList(0, 152)
+            version.isFirstGeneration -> species.subList(0, 151)
             version.isSecondGeneration -> species
             else -> throw IllegalStateException("Unsupported version: $version")
         }
@@ -17,11 +17,10 @@ internal class EnglishSpecies : PokemonTextResources.Species {
 
     override fun getSpeciesById(id: Int): String {
         require(id in 1..251) { "Id not supported: $id" }
-        return species[id]
+        return species[id - 1]
     }
 
     private val species = listOf(
-        "------",
         "Bulbasaur",
         "Ivysaur",
         "Venusaur",

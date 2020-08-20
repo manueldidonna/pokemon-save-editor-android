@@ -154,8 +154,8 @@ private fun Item(
     val callback = { onSelectionChange(entry.itemId) }
     Row(modifier = Modifier
         .fillMaxWidth()
-        .padding(16.dp)
         .selectable(selected = selected, onClick = callback)
+        .padding(16.dp)
     ) {
         RadioButton(selected = selected, onClick = callback)
         Text(

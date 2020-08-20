@@ -5,13 +5,14 @@ import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 class EmptyPokemonTemplate(
     private val trainer: Trainer,
-    private val resources: PokemonTextResources.Species
+    private val resources: PokemonTextResources.Species,
 ) : MutablePokemon.Template {
     override fun apply(pokemon: MutablePokemon) {
         pokemon.mutator
             .speciesId(getSpeciesId(pokemon.version))
             .level(1)
-            .move(index = 0, move = Pokemon.Move(id = 1, powerPoints = 999, ups = 3))
+            .experiencePoints(0)
+            .move(index = 0, move = Pokemon.Move.Immutable(id = 1, powerPoints = 999, ups = 3))
             .move(index = 1, move = Pokemon.Move.Empty)
             .move(index = 2, move = Pokemon.Move.Empty)
             .move(index = 3, move = Pokemon.Move.Empty)

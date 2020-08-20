@@ -7,8 +7,6 @@ package com.manueldidonna.pk.core
  * [days] should be coerced in [0 - [maxAllowedDays]]
  */
 data class Pokerus(val strain: Int, val days: Int) {
-    // TODO: val isCured: Boolean = strain != 0 && days == 0
-
     companion object {
         /**
          * Allowed strain values for a Pokerus instance.

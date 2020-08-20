@@ -8,12 +8,11 @@ import androidx.compose.runtime.onDispose
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LifecycleOwnerAmbient
 
-@Suppress("NOTHING_TO_INLINE")
 @Composable
-inline fun <I, O> PrepareActivityContract(
+fun <I, O> PrepareActivityContract(
     contractKey: String,
     contract: ActivityResultContract<I, O>,
-    activityResultCallback: ActivityResultCallback<O>
+    activityResultCallback: ActivityResultCallback<O>,
 ): ActivityResultLauncher<I> {
     val lifecycleOwner = LifecycleOwnerAmbient.current
     val registry = ActivityResultRegistryAmbient.current

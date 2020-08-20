@@ -44,10 +44,6 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * ------------------------
  * 0x21 0xb - trainer name
  * 0x2C 0xb - pokemon name
- *
- * Gen1 games store the names in a different location of the pokemon box
- * For a mutable instance the real offsets are [trainerNameOffset] & [pokemonNameOffset]
- *
  */
 internal class Pokemon(
     override val version: Version,
@@ -55,12 +51,6 @@ internal class Pokemon(
     private val index: Int,
     slot: Int,
 ) : MutablePokemon {
-
-    init {
-        require(data.size == FullDataSizeInBox) {
-            "This instance is neither mutable or immutable"
-        }
-    }
 
     override fun exportToBytes(): UByteArray {
         return data.copyOf()
@@ -189,7 +179,7 @@ internal class Pokemon(
     inner class Mutator : MutablePokemon.Mutator {
 
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
-            require(value in 1..151) { "Not supported species id: $value" }
+            require(value in 1..151) { "Unsupported species id: $value" }
             // set species id
             data[0] = getGameBoySpecies(value).toUByte()
             // set sane status
@@ -231,11 +221,11 @@ internal class Pokemon(
         }
 
         override fun level(value: Int): MutablePokemon.Mutator = apply {
-            val coercedLevel = value.coerceIn(1, 100)
-            data[0x3] = coercedLevel.toUByte()
+            require(value in 1..100) { "Level $value is out of bounds [1 - 100]" }
+            data[0x3] = value.toUByte()
             val sanitizedExperience = sanitizeExperiencePoints(
                 points = experiencePoints,
-                level = coercedLevel,
+                level = value,
                 experienceGroup = getExperienceGroup(speciesId)
             )
             if (sanitizedExperience != experiencePoints) {
@@ -370,6 +360,9 @@ internal class Pokemon(
             into[pokemonOffset + 0x21] = pokemon.run {
                 getLevel(experiencePoints, getExperienceGroup(speciesId)).toUByte()
             }
+
+            // update current HP
+            setStat(0x1, stats.health)
 
             // update current stats
             setStat(offset = 0x22, value = stats.health)

@@ -6,6 +6,7 @@ import com.manueldidonna.pk.core.isFirstGeneration
 fun getCatchRate(speciesId: Int, version: Version): Int {
     require(version.isFirstGeneration) { "Only first generation games are supported" }
     require(speciesId in 1..151) { "Species ID not supported: $speciesId" }
+    if(speciesId == 25) return 0xA3 // Light Ball Pikachu
     return CatchRates[speciesId - 1]
 }
 

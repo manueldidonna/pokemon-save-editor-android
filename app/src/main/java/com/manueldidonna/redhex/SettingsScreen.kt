@@ -43,10 +43,10 @@ fun SettingsScreen() {
     ) {
         val padding = Modifier.padding(8.dp)
         Button(modifier = padding, onClick = { AppState.saveData = null }) {
-            Text(text = "CHOOSE ANOTHER SAVEDATA")
+            Text(text = "CHOOSE ANOTHER SAVE DATA")
         }
         Button(modifier = padding, onClick = { launchIntent.value = true }) {
-            Text(text = "EXPORT SAVEDATA")
+            Text(text = "EXPORT SAVE DATA")
         }
     }
 

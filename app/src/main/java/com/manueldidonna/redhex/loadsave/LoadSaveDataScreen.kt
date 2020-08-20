@@ -37,7 +37,7 @@ fun LoadSaveDataScreen() {
             modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center),
             onClick = { launchIntent.value = true }
         ) {
-            Text(text = "LOAD SAVEDATA")
+            Text(text = "IMPORT SAVE DATA")
         }
     }
     if (launchIntent.value) {

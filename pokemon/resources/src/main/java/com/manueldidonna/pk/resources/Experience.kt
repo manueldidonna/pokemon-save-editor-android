@@ -56,16 +56,16 @@ fun getLevel(experience: Int, group: ExperienceGroup): Int {
         return 100
 
     // Iterate upwards to find the level
-    var level = 0
-    while (experience >= ExperiencePointsPerGrowth[level * 6 + group.value])
-        ++level
-    return level
+    for (level in 1..100) {
+        if (experience <= getExperiencePoints(level, group)) {
+            return level
+        }
+    }
+    throw IllegalStateException()
 }
 
 fun getExperiencePoints(level: Int, group: ExperienceGroup): Int {
-    if (level <= 1)
-        return 0
-
+    if (level <= 1) return 0
     return ExperiencePointsPerGrowth[(level.coerceAtMost(100) - 1) * 6 + group.value]
 }
 

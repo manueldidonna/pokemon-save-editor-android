@@ -4,7 +4,10 @@ data class Trainer(
     val name: String,
     val visibleId: Int,
     val secretId: Int,
-    val gender: Gender
+    val gender: Gender,
 ) {
-    enum class Gender { Male, Female }
+    enum class Gender {
+        Male,
+        Female
+    }
 }

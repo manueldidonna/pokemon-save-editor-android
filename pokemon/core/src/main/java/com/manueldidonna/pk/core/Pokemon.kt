@@ -21,7 +21,7 @@ interface Pokemon {
         /**
          * The position in the [Storage], in according to [Storage.capacity]
          */
-        val slot: Int
+        val slot: Int,
     )
 
     val trainer: Trainer
@@ -46,19 +46,25 @@ interface Pokemon {
 
     /**
      * Get info about a specific move.
-     * Use 'selectMove(index, Pokemon::Move)' to get a [Move] instance
+     * Use 'selectMove(index, Pokemon.Move::Immutable)' to get a [Move] instance
      *
      * Should throw an [IllegalStateException] if [index] is out of bounds [0 - 3]
      */
     fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T
 
-    data class Move(
-        val id: Int,
-        val powerPoints: Int,
+    interface Move {
+        val id: Int
+        val powerPoints: Int
         val ups: Int
-    ) {
+
+        data class Immutable(
+            override val id: Int,
+            override val powerPoints: Int,
+            override val ups: Int,
+        ) : Move
+
         companion object {
-            val Empty: Move = Move(id = 0, powerPoints = 0, ups = 0)
+            val Empty: Move = Immutable(id = 0, powerPoints = 0, ups = 0)
         }
     }
 
