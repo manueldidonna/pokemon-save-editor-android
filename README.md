@@ -1,11 +1,10 @@
 # :dna: Pokemon Editor :rocket:
-A Pokémon core series save editor for Android. 
 
-- :art: It aims to have an attractive look that follows the most recent material design guidelines
-- :construction: The app is in the early stages of development and depends on some libraries that are not suitable for production use
-- :a: Still unnamed and needs an icon
+A :construction: **work-in-progress** :construction: Pokémon core series save editor for Android. 
 
-### Supported games:
+:art: It aims to have an attractive look that follows the most recent material design guidelines
+
+### Supported games
 - [x] Red/Blue/Yellow
 - [x] Gold/Silver/Crystal
 - [ ] Ruby/Sapphire/Emerald **(planned)**
