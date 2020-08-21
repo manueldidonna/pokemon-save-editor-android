@@ -2,8 +2,6 @@
 
 A :construction: **work-in-progress** :construction: Pokémon core series save editor for Android. 
 
-It aims to have an attractive look that follows the most recent material design guidelines
-
 ### :joystick: Supported games
 - [x] Red/Blue/Yellow
 - [x] Gold/Silver/Crystal
@@ -19,5 +17,8 @@ It aims to have an attractive look that follows the most recent material design 
  - Asynchronous  streams with [Flow & Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
  - Image loading with [Coil](https://github.com/coil-kt/coil), backed by Coroutines
  
+ ## :art: Design
+ This application aims to have an attractive look that follows the most recent [material design guidelines](https://material.io/design).
+
  ## :rescue_worker_helmet: Contributions
 Patches/new features are encouraged, and may be submitted by forking this project and submitting a pull request. If your change is substantial, please raise an issue first to discuss it.
