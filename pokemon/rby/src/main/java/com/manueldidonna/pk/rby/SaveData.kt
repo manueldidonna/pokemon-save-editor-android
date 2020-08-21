@@ -1,17 +1,19 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.Pokedex as CorePokedex
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
-import com.manueldidonna.pk.core.Storage as CoreStorage
+import com.manueldidonna.pk.core.StorageSystem as CoreStorageSystem
 
 internal class SaveData(
     private val data: UByteArray,
     override val version: Version,
-) : CoreSaveData {
+) : CoreSaveData,
+    CoreStorageSystem by StorageSystem(data, version) {
 
     override fun hashCode(): Int {
         return data.contentHashCode()
@@ -51,47 +53,6 @@ internal class SaveData(
         return Inventory(type, data)
     }
 
-    override val indices: IntRange = StorageCollection.PartyIndex until 12
-
-    override fun getStorage(index: Int): CoreStorage {
-        require(index in indices) { "Index $index is out of bounds [$indices]" }
-        val dataOffset = getStorageOffset(index)
-        val size = if (index.isPartyIndex) Storage.PartySize else Storage.BoxSize
-        return Storage(
-            data = data.copyOfRange(dataOffset, dataOffset + size),
-            startOffset = 0,
-            storageIndex = index,
-            capacity = if (index.isPartyIndex) 6 else 20,
-            version = version,
-            name = if (index.isPartyIndex) "Party" else "Box ${index + 1}"
-        )
-    }
-
-    override fun getMutableStorage(index: Int): MutableStorage {
-        require(index in indices) { "Index $index is out of bounds [$indices]" }
-        val dataOffset = getStorageOffset(index)
-        return Storage(
-            data = data,
-            startOffset = dataOffset,
-            storageIndex = index,
-            capacity = if (index.isPartyIndex) 6 else 20,
-            version = version,
-            name = if (index.isPartyIndex) "Party" else "Box ${index + 1}"
-        )
-    }
-
-    private fun getStorageOffset(index: Int): Int {
-        return when (index) {
-            StorageCollection.PartyIndex -> PartyOffset
-            // current box index
-            (data[CurrentIndexOffset] and 0x7Fu).toInt() -> CurrentBoxOffset
-            else -> getBoxDataOffset(index)
-        }
-    }
-
-    private fun getBoxDataOffset(index: Int): Int {
-        return if (index < 6) 0x4000 + (index * 0x462) else 0x6000 + ((index - (12 / 2)) * 0x462)
-    }
 
     /**
      * Export data and fix the checksum
@@ -114,9 +75,6 @@ internal class SaveData(
     }
 
     companion object {
-        private const val PartyOffset = 0x2F2C
-        private const val CurrentBoxOffset = 0x30C0
-        private const val CurrentIndexOffset = 0x284C
         private const val ChecksumOffset = 0x3523
         private const val TrainerNameOffset = 0x2598
     }

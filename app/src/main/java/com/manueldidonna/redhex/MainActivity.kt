@@ -81,8 +81,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         when (screen) {
             AppScreen.Main -> MainScreen(saveData)
             is AppScreen.PokemonDetails -> {
-                val (storageIndex, pokemonIndex) = screen.position
-                val pokemon = saveData.getStorage(storageIndex)[pokemonIndex].toMutablePokemon()
+                val pokemon = saveData[screen.position].toMutablePokemon()
                 if (pokemon.isEmpty) {
                     val resources = PokemonResourcesAmbient.current.species
                     EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)
@@ -100,8 +99,7 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
 
     override fun goBackToPokemonList(pokemon: MutablePokemon) {
         AppState.saveData?.let { saveData ->
-            val (storageIndex, pokemonIndex) = pokemon.position
-            saveData.getMutableStorage(storageIndex)[pokemonIndex] = pokemon
+            saveData[pokemon.position] = pokemon
             saveData.pokedex.catchPokemonById(pokemon.speciesId)
         }
         AppState.currentScreen = AppScreen.Main

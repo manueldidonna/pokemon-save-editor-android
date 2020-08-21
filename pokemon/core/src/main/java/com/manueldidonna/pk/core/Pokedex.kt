@@ -24,9 +24,6 @@ interface Pokedex {
         val isSeen: Boolean
         val isOwned: Boolean
 
-        /**
-         * Used to represent an immutable [Entry]
-         */
         data class Immutable(
             override val speciesId: Int,
             override val isSeen: Boolean,

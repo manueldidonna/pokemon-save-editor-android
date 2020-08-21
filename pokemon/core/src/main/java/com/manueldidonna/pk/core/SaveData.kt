@@ -1,6 +1,6 @@
 package com.manueldidonna.pk.core
 
-interface SaveData : StorageCollection {
+interface SaveData : StorageSystem {
     val version: Version
 
     val trainer: Trainer

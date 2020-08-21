@@ -17,19 +17,18 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  */
 internal class Storage(
     private val data: UByteArray,
-    private val startOffset: Int,
     private val storageIndex: Int,
     override val capacity: Int,
     private val version: Version,
-    override val name: String
+    override val name: String,
 ) : MutableStorage {
 
     override var size: Int
-        get() = data[startOffset].toInt()
+        get() = data[0].toInt()
         private set(value) {
             val coercedValue = value.coerceIn(0, capacity)
-            data[startOffset] = (coercedValue).toUByte()
-            data[startOffset + coercedValue + 1] = 0xFF.toUByte()
+            data[0] = (coercedValue).toUByte()
+            data[coercedValue + 1] = 0xFF.toUByte()
         }
 
     override fun get(index: Int): com.manueldidonna.pk.core.Pokemon {
@@ -45,7 +44,7 @@ internal class Storage(
             "Unsupported pokemon version: ${pokemon.version}"
         }
 
-        if (pokemon.isEmpty){
+        if (pokemon.isEmpty) {
             removeAt(index)
             return
         }
@@ -58,11 +57,14 @@ internal class Storage(
             pokemon.mutator.experiencePoints(pokemon.experiencePoints).level(pokemon.level)
         }
 
+        // increase size if needed
+        if (index >= size) size++
+
         @Suppress("NAME_SHADOWING")
-        val index = sanitizePokemonIndex(index)
+        val index = index.coerceAtMost(size - 1)
 
         // set species id
-        data[startOffset + 0x1 + index] = pokemon.speciesId.toUByte()
+        data[1 + index] = pokemon.speciesId.toUByte()
 
         setPokemonData(pokemon.exportToBytes(), index)
 
@@ -74,17 +76,6 @@ internal class Storage(
 
     override fun removeAt(index: Int): com.manueldidonna.pk.core.Pokemon {
         TODO("Not yet implemented")
-    }
-
-
-    private fun sanitizePokemonIndex(index: Int): Int {
-        @Suppress("NAME_SHADOWING")
-        var index = index
-        if (size < capacity) {
-            index = index.coerceAtMost(size)
-            if (index == size) size++
-        }
-        return index.coerceIn(0, capacity - 1)
     }
 
     /**
@@ -101,14 +92,14 @@ internal class Storage(
 
         if (storageIndex.isPartyIndex) {
             size = Pokemon.DataSizeInParty
-            dataOffset = startOffset + PokemonDataPartyOffset
-            nicknameOffset = startOffset + NicknamePartyOffset
-            trainerNameOffset = startOffset + TrainerNamePartyOffset
+            dataOffset = PokemonDataPartyOffset
+            nicknameOffset = NicknamePartyOffset
+            trainerNameOffset = TrainerNamePartyOffset
         } else {
             size = DataSizeInBox
-            dataOffset = startOffset + PokemonDataBoxOffset
-            nicknameOffset = startOffset + NicknameBoxOffset
-            trainerNameOffset = startOffset + TrainerNameBoxOffset
+            dataOffset = PokemonDataBoxOffset
+            nicknameOffset = NicknameBoxOffset
+            trainerNameOffset = TrainerNameBoxOffset
         }
 
         return Triple(
@@ -142,18 +133,28 @@ internal class Storage(
         }
     }
 
+    override fun toMutableStorage(): MutableStorage {
+        return Storage(
+            data = data,
+            storageIndex = storageIndex,
+            capacity = capacity,
+            version = version,
+            name = name
+        )
+    }
+
+    override fun exportToBytes(): UByteArray {
+        return data.copyOf()
+    }
 
     companion object {
-        internal const val BoxSize = 0x462
-        internal const val PartySize = 0x194
+        private const val PokemonDataBoxOffset = 0x16
+        private const val PokemonDataPartyOffset = 0x8
 
-        internal const val PokemonDataBoxOffset = 0x16
-        internal const val PokemonDataPartyOffset = 0x8
+        private const val TrainerNameBoxOffset = 0x2AA
+        private const val TrainerNamePartyOffset = 0x110
 
-        internal const val TrainerNameBoxOffset = 0x2AA
-        internal const val TrainerNamePartyOffset = 0x110
-
-        internal const val NicknameBoxOffset = 0x386
-        internal const val NicknamePartyOffset = 0x152
+        private const val NicknameBoxOffset = 0x386
+        private const val NicknamePartyOffset = 0x152
     }
 }

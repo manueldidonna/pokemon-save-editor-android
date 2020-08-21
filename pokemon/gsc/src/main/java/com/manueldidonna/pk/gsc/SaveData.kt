@@ -1,6 +1,8 @@
 package com.manueldidonna.pk.gsc
 
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.Storage
+import com.manueldidonna.pk.core.Trainer
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.utils.setLittleEndianShort
@@ -11,6 +13,8 @@ internal class SaveData(
     override val version: Version,
     private val data: UByteArray,
 ) : CoreSaveData {
+
+    private val storageSystem = StorageSystem(data, version)
 
     override fun hashCode(): Int {
         return data.contentHashCode()
@@ -62,41 +66,11 @@ internal class SaveData(
         return Inventory.newInstance(data, version, type)
     }
 
-    override val indices: IntRange = StorageCollection.PartyIndex until 14
+    override val storageIndices: IntRange = storageSystem.storageIndices
 
-    override fun getStorage(index: Int): Storage {
-        require(index in indices) { "Index $index is out of bounds [$indices]" }
-        val dataOffset = getStorageOffset(index)
-        val data = data.copyOfRange(dataOffset, dataOffset + if (index.isPartyIndex) 428 else 1102)
-        val name = getStorageName(index)
-        return Storage(data, 0, version, index, if (index.isPartyIndex) 6 else 20, name)
-    }
+    override fun get(index: Int): Storage = storageSystem[index]
 
-    override fun getMutableStorage(index: Int): MutableStorage {
-        require(index in indices) { "Index $index is out of bounds [$indices]" }
-        val dataOffset = getStorageOffset(index)
-        val name = getStorageName(index)
-        return Storage(data, dataOffset, version, index, if (index.isPartyIndex) 6 else 20, name)
-    }
-
-    private fun getStorageOffset(index: Int): Int {
-        return when (index) {
-            StorageCollection.PartyIndex -> version.partyOffset
-            getCurrentBoxIndex() -> version.currentBoxOffset
-            else -> BoxOffsets[index]
-        }
-    }
-
-    private fun getCurrentBoxIndex(): Int {
-        val indexOffset = if (version == Version.Crystal) 0x2700 else 0x2724
-        return (data[indexOffset] and 0x7Fu).toInt()
-    }
-
-    private fun getStorageName(index: Int): String {
-        if (index.isPartyIndex) return "Party"
-        val offset = version.boxNamesOffset + (9 * index)
-        return getStringFromGameBoyData(data, offset, 9, false)
-    }
+    override fun set(index: Int, storage: Storage) = storageSystem.set(index, storage)
 
     /**
      * Data in Generation II is stored in the save file twice.
@@ -108,9 +82,7 @@ internal class SaveData(
         val export = data.copyOf()
 
         // copy current storage
-        val currentIndex = getCurrentBoxIndex()
-        val currentOffset = getStorageOffset(currentIndex)
-        export.copyInto(export, BoxOffsets[currentIndex], currentOffset, currentOffset + 1102)
+        storageSystem.exportCurrentStorage(export)
 
         // get checksum
         val checksumEndOffset = if (version == Version.Crystal) 0x2B82 else 0x2D68
@@ -140,24 +112,5 @@ internal class SaveData(
             }
         }
         return export
-    }
-
-    companion object {
-        private val BoxOffsets = listOf(
-            0x4000, 0x4450, 0x48a0, 0x4cf0, 0x5140, 0x5590, 0x59e0,
-            0x6000, 0x6450, 0x68a0, 0x6cf0, 0x7140, 0x7590, 0x79e0
-        )
-
-        private inline val Version.currentBoxIndexOffset: Int
-            get() = if (this == Version.Crystal) 0x2700 else 0x2724
-
-        private inline val Version.currentBoxOffset: Int
-            get() = if (this == Version.Crystal) 0x2D10 else 0x2D6C
-
-        private inline val Version.partyOffset: Int
-            get() = if (this == Version.Crystal) 0x2865 else 0x288A
-
-        private inline val Version.boxNamesOffset: Int
-            get() = if (this == Version.Crystal) 0x2703 else 0x2727
     }
 }

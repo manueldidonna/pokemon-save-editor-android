@@ -4,24 +4,21 @@ import androidx.compose.foundation.Box
 import androidx.compose.foundation.ContentGravity
 import androidx.compose.foundation.Icon
 import androidx.compose.foundation.Text
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumnForIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowCircleDown
 import androidx.compose.material.icons.twotone.ArrowCircleUp
 import androidx.compose.runtime.*
-import androidx.compose.runtime.State
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Storage
-import com.manueldidonna.pk.core.StorageCollection
+import com.manueldidonna.pk.core.StorageSystem
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
@@ -32,19 +29,23 @@ import kotlinx.coroutines.withContext
 @Composable
 fun PokemonList(
     modifier: Modifier = Modifier,
-    collection: StorageCollection,
+    storageSystem: StorageSystem,
     showPokemonDetails: (Pokemon.Position) -> Unit,
 ) {
     // TODO: persist across navigation events
-    var currentIndex by savedInstanceState { collection.indices.first }
+    var currentIndex by savedInstanceState { storageSystem.storageIndices.first }
 
-    val pokemonPreviews by getPokemonPreviews(collection, currentIndex)
+    val pokemonPreviews by getPokemonPreviews(storageSystem, currentIndex)
 
     Column(modifier = modifier) {
         AppBarWithStorageInfo(
-            storageName = getStorage(collection, currentIndex).name,
-            onBack = { currentIndex = currentIndex.decreaseInIndices(collection.indices) },
-            onForward = { currentIndex = currentIndex.increaseInIndices(collection.indices) }
+            storageName = getStorage(storageSystem, currentIndex).name,
+            onBack = {
+                currentIndex = currentIndex.decreaseInIndices(storageSystem.storageIndices)
+            },
+            onForward = {
+                currentIndex = currentIndex.increaseInIndices(storageSystem.storageIndices)
+            }
         )
         LazyColumnForIndexed(items = pokemonPreviews) { slot, preview ->
             PokemonPreview(preview) {
@@ -57,14 +58,14 @@ fun PokemonList(
 
 @Stable
 @Composable
-private fun getStorage(collection: StorageCollection, storageIndex: Int): Storage {
-    return remember(storageIndex) { collection.getStorage(storageIndex) }
+private fun getStorage(storageSystem: StorageSystem, storageIndex: Int): Storage {
+    return remember(storageIndex) { storageSystem[storageIndex] }
 }
 
 @Stable
 @Composable
 private fun getPokemonPreviews(
-    collection: StorageCollection,
+    storageSystem: StorageSystem,
     storageIndex: Int,
 ): State<List<PokemonPreview>> {
     val previews = rememberMutableState(referentialEqualityPolicy()) { listOf<PokemonPreview>() }
@@ -74,7 +75,7 @@ private fun getPokemonPreviews(
 
     launchInComposition(key = storageIndex) {
         withContext(Dispatchers.IO) {
-            val storage = collection.getStorage(storageIndex)
+            val storage = storageSystem[storageIndex]
             previews.value = PokemonPreview.fromStorage(storage, resources, spritesRetriever)
         }
     }

@@ -1,11 +1,7 @@
 package com.manueldidonna.pk.core
 
 /**
- * [Pokemon] represents a read-only entity. Its data will never change.
- *
- * If you need to mutate the Pokemon, use [Pokemon.toMutablePokemon]
- * @see [MutablePokemon]
- *
+ * A read-only entity that holds some properties.
  */
 interface Pokemon {
     val version: Version
@@ -14,8 +10,8 @@ interface Pokemon {
 
     data class Position(
         /**
-         * The index of the [Storage] in the [StorageCollection].
-         * @see StorageCollection.getStorage
+         * The index of the [Storage] in the [StorageSystem].
+         * @see StorageSystem.get
          */
         val storageIndex: Int,
 
@@ -23,7 +19,7 @@ interface Pokemon {
          * The index of the [Pokemon] in the [Storage].
          * @see Storage.get
          */
-        val pokemonIndex: Int
+        val pokemonIndex: Int,
     )
 
     val trainer: Trainer
@@ -99,22 +95,22 @@ interface Pokemon {
     val metInfo: Property<MetInfo>
 
     /**
-     * Return a new [MutablePokemon] instance
+     * Return a new [MutablePokemon] instance.
      */
     fun toMutablePokemon(): MutablePokemon
 
+    /**
+     * Return a bytes representation of this pokemon.
+     */
     fun exportToBytes(): UByteArray
 }
 
-inline val Pokemon.isEmpty: Boolean
-    get() = speciesId == 0 || nickname.isEmpty()
+// TODO: remove nickname check
+inline val Pokemon.isEmpty: Boolean get() = speciesId == 0 || nickname.isEmpty()
 
 /**
- * [MutablePokemon] allows to mutate the pokemon data via a [MutablePokemon.Mutator],
- * it makes explicit the desire to modify the pokemon's data.
- *
- * A [MutablePokemon] can be under casted to [Pokemon] but it won't became immutable,
- * it will continue to reflects any data changes.
+ * A mutable variant of [Pokemon].
+ * @see Mutator
  */
 interface MutablePokemon : Pokemon {
 
@@ -132,6 +128,9 @@ interface MutablePokemon : Pokemon {
      */
     val mutator: Mutator
 
+    /**
+     * Allows to modify the pokemon data with a fluent interface.
+     */
     interface Mutator {
         fun speciesId(value: Int): Mutator
 

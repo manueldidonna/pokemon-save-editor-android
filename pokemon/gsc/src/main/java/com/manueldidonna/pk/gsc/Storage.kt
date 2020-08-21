@@ -5,7 +5,6 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 internal class Storage(
     private val data: UByteArray,
-    private val startOffset: Int,
     private val version: Version,
     private val storageIndex: Int,
     override val capacity: Int,
@@ -13,11 +12,11 @@ internal class Storage(
 ) : MutableStorage {
 
     override var size: Int
-        get() = data[startOffset].toInt()
+        get() = data[0].toInt()
         private set(value) {
             val coercedValue = value.coerceIn(0, capacity)
-            data[startOffset] = coercedValue.toUByte()
-            data[startOffset + coercedValue + 1] = 0xFF.toUByte()
+            data[0] = coercedValue.toUByte()
+            data[coercedValue + 1] = 0xFF.toUByte()
         }
 
     override fun get(index: Int): CorePokemon {
@@ -27,9 +26,9 @@ internal class Storage(
         return Pokemon(getPokemonData(index), version, storageIndex, index)
     }
 
-    private fun getPokemonData(slot: Int): UByteArray {
-        if (slot >= size) return UByteArray(PokemonSizeInBox + 11 * 2)
-        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(slot)
+    private fun getPokemonData(index: Int): UByteArray {
+        if (index >= size) return UByteArray(PokemonSizeInBox + 11 * 2)
+        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(index)
         return UByteArray(PokemonSizeInBox + 11 * 2).apply {
             // Copy Pokemon Box Data
             data.copyInto(this, 0, dataOfs, dataOfs + PokemonSizeInBox)
@@ -48,9 +47,9 @@ internal class Storage(
      */
     private fun getPokemonOffsets(index: Int): Triple<Int, Int, Int> {
         val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
-        val dataOffset = startOffset + (capacity + 2) + (index * size)
-        val trainerNameOffset = startOffset + (capacity + 2) + (size * capacity) + (index * 11)
-        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + (index * 11)
+        val dataOffset = capacity + 2 + index * size
+        val trainerNameOffset = capacity + 2 + size * capacity + index * 11
+        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + index * 11
         return Triple(dataOffset, trainerNameOffset, nicknameOffset)
     }
 
@@ -66,18 +65,18 @@ internal class Storage(
             return
         }
 
-        // set species id
-        data[startOffset + 1 + index] = pokemon.speciesId.toUByte()
-
         // increase size if needed
         if (index >= size) size++
 
         @Suppress("NAME_SHADOWING")
         val index = index.coerceAtMost(size - 1)
 
+        // set species id
+        data[1 + index] = pokemon.speciesId.toUByte()
+
         setPokemonData(pokemon.exportToBytes(), index)
 
-        // calculate stats if pokemon is moved from box to party
+        // calculate stats if pokemon is moved to party
         if (storageIndex.isPartyIndex) {
             Pokemon.moveToParty(pokemon, data, getPokemonOffsets(index).first)
         }
@@ -103,6 +102,20 @@ internal class Storage(
 
     override fun removeAt(index: Int): CorePokemon {
         TODO("Not yet implemented")
+    }
+
+    override fun toMutableStorage(): MutableStorage {
+        return Storage(
+            data = exportToBytes(),
+            version = version,
+            storageIndex = storageIndex,
+            capacity = capacity,
+            name = name
+        )
+    }
+
+    override fun exportToBytes(): UByteArray {
+        return data.copyOf()
     }
 
     companion object {
