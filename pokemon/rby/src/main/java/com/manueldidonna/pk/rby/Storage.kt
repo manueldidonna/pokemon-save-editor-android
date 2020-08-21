@@ -20,7 +20,7 @@ internal class Storage(
     private val startOffset: Int,
     override val index: Int,
     override val capacity: Int,
-    override val version: Version
+    override val version: Version,
 ) : MutableStorage {
 
     override val name = if (index.isPartyIndex) "PARTY" else "Box ${index + 1}"
@@ -55,7 +55,7 @@ internal class Storage(
         val pokemon = pokemon.toMutablePokemon()
 
         // update level if pokemon is moved from party to box
-        if (pokemon.position.index.isPartyIndex && !index.isPartyIndex) {
+        if (pokemon.position.storageIndex.isPartyIndex && !index.isPartyIndex) {
             pokemon.mutator
                 .experiencePoints(pokemon.experiencePoints)
                 .level(pokemon.level)

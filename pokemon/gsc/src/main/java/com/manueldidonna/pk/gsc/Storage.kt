@@ -9,7 +9,7 @@ internal class Storage(
     override val version: Version,
     override val index: Int,
     override val capacity: Int,
-    override val name: String
+    override val name: String,
 ) : MutableStorage {
 
     override var size: Int
@@ -22,13 +22,13 @@ internal class Storage(
 
     override fun getPokemon(slot: Int): CorePokemon {
         require(slot in 0 until capacity) { "Slot $slot is out of bounds [0 - $capacity]" }
-        return Pokemon(getPokemonData(slot), index = index, slot = slot, version = version)
+        return Pokemon(getPokemonData(slot), version, index, slot)
     }
 
     override fun getMutablePokemon(slot: Int): MutablePokemon {
         require(startOffset != 0) { "This box instance is read-only" }
         require(slot in 0 until capacity) { "Slot $slot is out of bounds [0 - $capacity]" }
-        return Pokemon(getPokemonData(slot), index = index, slot = slot, version = version)
+        return Pokemon(getPokemonData(slot), version, index, slot)
     }
 
     private fun getPokemonData(slot: Int): UByteArray {

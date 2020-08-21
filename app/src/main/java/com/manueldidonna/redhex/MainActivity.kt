@@ -81,8 +81,10 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
         when (screen) {
             AppScreen.Main -> MainScreen(saveData)
             is AppScreen.PokemonDetails -> {
-                val (index, slot) = screen.position
-                val pokemon = saveData.getMutableStorage(index).getMutablePokemon(slot)
+                val (storageIndex, pokemonIndex) = screen.position
+                val pokemon = saveData
+                    .getMutableStorage(storageIndex)
+                    .getMutablePokemon(pokemonIndex)
                 if (pokemon.isEmpty) {
                     val resources = PokemonResourcesAmbient.current.species
                     EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)

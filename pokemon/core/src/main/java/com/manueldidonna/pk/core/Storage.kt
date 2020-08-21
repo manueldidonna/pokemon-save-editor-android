@@ -42,7 +42,7 @@ interface MutableStorage : Storage {
     /**
      * Returns true if the pokemon has been inserted.
      */
-    fun insertPokemon(pokemon: Pokemon, slot: Int = pokemon.position.slot): Boolean
+    fun insertPokemon(pokemon: Pokemon, slot: Int = pokemon.position.pokemonIndex): Boolean
 
     fun deletePokemon(slot: Int)
 }
@@ -86,11 +86,11 @@ inline val Int.isPartyIndex: Boolean
 fun StorageCollection.swapPokemon(first: Pokemon.Position, second: Pokemon.Position) {
     if (first == second) return // do nothing
 
-    val firstStorage = getMutableStorage(first.index)
-    val firstPokemon = firstStorage.getPokemon(first.slot)
-    val secondStorage = getMutableStorage(second.index)
-    val secondPokemon = secondStorage.getPokemon(second.slot)
+    val firstStorage = getMutableStorage(first.storageIndex)
+    val firstPokemon = firstStorage.getPokemon(first.pokemonIndex)
+    val secondStorage = getMutableStorage(second.storageIndex)
+    val secondPokemon = secondStorage.getPokemon(second.pokemonIndex)
 
-    firstStorage.insertOrDelete(secondPokemon, first.slot)
-    secondStorage.insertOrDelete(firstPokemon, second.slot)
+    firstStorage.insertOrDelete(secondPokemon, first.pokemonIndex)
+    secondStorage.insertOrDelete(firstPokemon, second.pokemonIndex)
 }

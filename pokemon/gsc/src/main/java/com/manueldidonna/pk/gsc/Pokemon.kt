@@ -56,8 +56,8 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
 internal class Pokemon(
     private val data: UByteArray,
     override val version: Version,
-    index: Int,
-    slot: Int,
+    storageIndex: Int,
+    pokemonIndex: Int,
 ) : MutablePokemon {
 
     override fun exportToBytes(): UByteArray {
@@ -65,12 +65,12 @@ internal class Pokemon(
     }
 
     override fun toMutablePokemon(): MutablePokemon {
-        return Pokemon(data, version, position.index, position.slot)
+        return Pokemon(exportToBytes(), version, position.storageIndex, position.pokemonIndex)
     }
 
     override val mutator: MutablePokemon.Mutator by lazy { Mutator(this, data) }
 
-    override val position by lazy { CorePokemon.Position(index, slot) }
+    override val position by lazy { CorePokemon.Position(storageIndex, pokemonIndex) }
 
     override val trainer: Trainer
         get() = Trainer(

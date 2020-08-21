@@ -14,14 +14,16 @@ interface Pokemon {
 
     data class Position(
         /**
-         * @see [Storage.index]
+         * The index of the [Storage] in the [StorageCollection].
+         * @see StorageCollection.getStorage
          */
-        val index: Int,
+        val storageIndex: Int,
 
         /**
-         * The position in the [Storage], in according to [Storage.capacity]
+         * The index of the [Pokemon] in the [Storage].
+         * @see Storage.getPokemon
          */
-        val slot: Int,
+        val pokemonIndex: Int
     )
 
     val trainer: Trainer

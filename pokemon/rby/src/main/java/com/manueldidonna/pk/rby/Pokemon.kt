@@ -48,8 +48,8 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
 internal class Pokemon(
     override val version: Version,
     private val data: UByteArray,
-    private val index: Int,
-    slot: Int,
+    private val storageIndex: Int,
+    pokemonIndex: Int,
 ) : MutablePokemon {
 
     override fun exportToBytes(): UByteArray {
@@ -57,12 +57,12 @@ internal class Pokemon(
     }
 
     override fun toMutablePokemon(): MutablePokemon {
-        return Pokemon(version, data, position.index, position.slot)
+        return Pokemon(version, exportToBytes(), position.storageIndex, position.pokemonIndex)
     }
 
     override val form: CorePokemon.Form? = null
 
-    override val position by lazy { CorePokemon.Position(index, slot) }
+    override val position by lazy { CorePokemon.Position(storageIndex, pokemonIndex) }
 
     override val trainer: Trainer
         get() = Trainer(
@@ -82,7 +82,7 @@ internal class Pokemon(
         get() {
             return when {
                 // fast path, box pokemon. Read from the level offset
-                !index.isPartyIndex -> data[0x3].toInt()
+                !storageIndex.isPartyIndex -> data[0x3].toInt()
                 // party offsets aren't available. Calculate the level from the exp
                 else -> getLevel(experiencePoints, getExperienceGroup(speciesId))
             }
