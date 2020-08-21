@@ -1,64 +1,52 @@
 package com.manueldidonna.pk.core
 
 /**
- * A generic interface to store and retrieve pokemon. It's immutable
+ * A read-only collection of [Pokemon] with a fixed capacity.
  */
 interface Storage {
-    val version: Version // TODO: remove
-
-    val index: Int
-
     val name: String // TODO: remove
 
     /**
-     * The max amount of [Pokemon] that can be stored in the Inventory
+     * The maximum number of [Pokemon] that can fit in this storage.
      */
     val capacity: Int
 
     /**
-     * Current number of [Pokemon] stored in the Inventory
+     * Current number of [Pokemon] in this storage.
      */
     val size: Int
 
     /**
-     * Return an immutable [Pokemon] instance.
-     * Should throw an [IllegalStateException] if [slot] isn't lower than [capacity]
+     * Return a [Pokemon] instance.
+     * @see Pokemon.toMutablePokemon
+     *
+     * Should throw an [IllegalStateException] if [index] isn't lower than [capacity]
      */
-    fun getPokemon(slot: Int): Pokemon
+    operator fun get(index: Int): Pokemon
 }
 
 /**
- * A mutable variant of [Storage]. It will reflects every changes at [Storage.index]
+ * A mutable variant of [Storage].
  */
 interface MutableStorage : Storage {
     /**
-     * Use [MutableStorage.insertPokemon] to notify the Storage about any change
-     * in the returned [MutablePokemon]. These changes won't automatically update the Storage.
+     * Replaces the pokemon at the specified [index] in this storage with the specified [pokemon].
      *
-     * This behavior encourages a strong immutability of the data.
+     * Should throw an [IllegalStateException] if [index] isn't lower than [capacity]
      */
-    fun getMutablePokemon(slot: Int): MutablePokemon
+    operator fun set(index: Int, pokemon: Pokemon)
 
     /**
-     * Returns true if the pokemon has been inserted.
+     * Removes a pokemon at the specified [index] from the storage.
+     * Return the pokemon that has been removed.
+     *
+     * Should throw an [IllegalStateException] if [index] isn't lower than [capacity]
      */
-    fun insertPokemon(pokemon: Pokemon, slot: Int = pokemon.position.pokemonIndex): Boolean
-
-    fun deletePokemon(slot: Int)
+    fun removeAt(index: Int): Pokemon
 }
 
 /**
- * Insert [pokemon] into the storage.
- * If [MutableStorage.insertPokemon] returns false, delete data from [slot]
- */
-fun MutableStorage.insertOrDelete(pokemon: Pokemon, slot: Int) {
-    if (!insertPokemon(pokemon, slot)) {
-        deletePokemon(slot)
-    }
-}
-
-/**
- * A read-only collection of [Storage]s
+ * A read-only collection of [Storage]
  */
 interface StorageCollection {
     /**
@@ -87,10 +75,10 @@ fun StorageCollection.swapPokemon(first: Pokemon.Position, second: Pokemon.Posit
     if (first == second) return // do nothing
 
     val firstStorage = getMutableStorage(first.storageIndex)
-    val firstPokemon = firstStorage.getPokemon(first.pokemonIndex)
+    val firstPokemon = firstStorage[first.pokemonIndex]
     val secondStorage = getMutableStorage(second.storageIndex)
-    val secondPokemon = secondStorage.getPokemon(second.pokemonIndex)
+    val secondPokemon = secondStorage[second.pokemonIndex]
 
-    firstStorage.insertOrDelete(secondPokemon, first.pokemonIndex)
-    secondStorage.insertOrDelete(firstPokemon, second.pokemonIndex)
+    firstStorage[first.pokemonIndex] = secondPokemon
+    secondStorage[second.pokemonIndex] = firstPokemon
 }

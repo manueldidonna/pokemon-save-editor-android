@@ -21,7 +21,7 @@ interface Pokemon {
 
         /**
          * The index of the [Pokemon] in the [Storage].
-         * @see Storage.getPokemon
+         * @see Storage.get
          */
         val pokemonIndex: Int
     )

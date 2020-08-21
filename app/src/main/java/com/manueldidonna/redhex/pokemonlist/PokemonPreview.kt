@@ -23,7 +23,7 @@ data class PokemonPreview(
             spritesRetriever: SpritesRetriever,
         ): List<PokemonPreview> {
             return List(storage.capacity) { i ->
-                val pokemon = storage.getPokemon(i)
+                val pokemon = storage[i]
                 if (pokemon.isEmpty) return@List Empty
                 return@List PokemonPreview(
                     isEmpty = false,

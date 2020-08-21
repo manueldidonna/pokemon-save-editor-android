@@ -60,16 +60,24 @@ internal class SaveData(
         return Storage(
             data = data.copyOfRange(dataOffset, dataOffset + size),
             startOffset = 0,
-            index = index,
+            storageIndex = index,
             capacity = if (index.isPartyIndex) 6 else 20,
-            version = version
+            version = version,
+            name = if (index.isPartyIndex) "Party" else "Box ${index + 1}"
         )
     }
 
     override fun getMutableStorage(index: Int): MutableStorage {
         require(index in indices) { "Index $index is out of bounds [$indices]" }
         val dataOffset = getStorageOffset(index)
-        return Storage(data, dataOffset, index, if (index.isPartyIndex) 6 else 20, version)
+        return Storage(
+            data = data,
+            startOffset = dataOffset,
+            storageIndex = index,
+            capacity = if (index.isPartyIndex) 6 else 20,
+            version = version,
+            name = if (index.isPartyIndex) "Party" else "Box ${index + 1}"
+        )
     }
 
     private fun getStorageOffset(index: Int): Int {

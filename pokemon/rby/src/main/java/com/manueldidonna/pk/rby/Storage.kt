@@ -18,12 +18,11 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
 internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
-    override val index: Int,
+    private val storageIndex: Int,
     override val capacity: Int,
-    override val version: Version,
+    private val version: Version,
+    override val name: String
 ) : MutableStorage {
-
-    override val name = if (index.isPartyIndex) "PARTY" else "Box ${index + 1}"
 
     override var size: Int
         get() = data[startOffset].toInt()
@@ -33,79 +32,59 @@ internal class Storage(
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
 
-    override fun getPokemon(slot: Int): CorePokemon {
-        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds [0 - $capacity]" }
-        return Pokemon(version, getPokemonData(slot), index, slot)
+    override fun get(index: Int): com.manueldidonna.pk.core.Pokemon {
+        require(index in 0 until capacity) { "Index $index is out of bounds [0 - $capacity]" }
+        return Pokemon(version, getPokemonData(index), storageIndex, index)
     }
 
-    override fun getMutablePokemon(slot: Int): MutablePokemon {
-        require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
-        return Pokemon(version, getPokemonData(slot), index, slot)
-    }
-
-    override fun insertPokemon(pokemon: CorePokemon, slot: Int): Boolean {
+    override fun set(index: Int, pokemon: CorePokemon) {
+        require(index in 0 until capacity) {
+            "Index $index is out of bounds [0 - ${capacity - 1}]"
+        }
         require(pokemon.version.isFirstGeneration) {
-            "Incompatible Pokemon version ${pokemon.version}"
+            "Unsupported pokemon version: ${pokemon.version}"
         }
 
-        if (pokemon.isEmpty) return false
+        if (pokemon.isEmpty){
+            removeAt(index)
+            return
+        }
 
         @Suppress("NAME_SHADOWING")
         val pokemon = pokemon.toMutablePokemon()
 
         // update level if pokemon is moved from party to box
-        if (pokemon.position.storageIndex.isPartyIndex && !index.isPartyIndex) {
-            pokemon.mutator
-                .experiencePoints(pokemon.experiencePoints)
-                .level(pokemon.level)
+        if (pokemon.position.storageIndex.isPartyIndex && !storageIndex.isPartyIndex) {
+            pokemon.mutator.experiencePoints(pokemon.experiencePoints).level(pokemon.level)
         }
 
         @Suppress("NAME_SHADOWING")
-        val slot = sanitizePokemonSlot(slot)
+        val index = sanitizePokemonIndex(index)
 
         // set species id
-        data[startOffset + 0x1 + slot] = pokemon.speciesId.toUByte()
+        data[startOffset + 0x1 + index] = pokemon.speciesId.toUByte()
 
-        setPokemonData(pokemonData = pokemon.exportToBytes(), slot = slot)
+        setPokemonData(pokemon.exportToBytes(), index)
 
         // recalculate level from exp & stats if pokemon is moved from box to party
-        if (index.isPartyIndex) {
-            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(slot).first)
+        if (storageIndex.isPartyIndex) {
+            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(index).first)
         }
-
-        return true
     }
 
-    override fun deletePokemon(slot: Int) {
-        require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until capacity) { "Pokemon slot $slot is out of bounds" }
-
-        if (slot >= size) return // empty slot
-
-        val endSlot = size - 1
-
-        // In gen 1 there couldn't be empty slots between the pokemon in the storage
-        // Move back the pokemon from 1 position if the passed slot isn't the last one
-        if (slot < endSlot) {
-            TODO("Shift pokemon")
-        }
-
-        // erase data
-        setPokemonData(pokemonData = UByteArray(Pokemon.FullDataSizeInBox), slot = endSlot)
-
-        // decrease the number of pokemon in the storage
-        size--
+    override fun removeAt(index: Int): com.manueldidonna.pk.core.Pokemon {
+        TODO("Not yet implemented")
     }
 
-    private fun sanitizePokemonSlot(slot: Int): Int {
+
+    private fun sanitizePokemonIndex(index: Int): Int {
         @Suppress("NAME_SHADOWING")
-        var slot = slot
+        var index = index
         if (size < capacity) {
-            slot = slot.coerceAtMost(size)
-            if (slot == size) size++
+            index = index.coerceAtMost(size)
+            if (index == size) size++
         }
-        return slot.coerceIn(0, capacity - 1)
+        return index.coerceIn(0, capacity - 1)
     }
 
     /**
@@ -120,7 +99,7 @@ internal class Storage(
         val nicknameOffset: Int
         val size: Int
 
-        if (index.isPartyIndex) {
+        if (storageIndex.isPartyIndex) {
             size = Pokemon.DataSizeInParty
             dataOffset = startOffset + PokemonDataPartyOffset
             nicknameOffset = startOffset + NicknamePartyOffset
@@ -139,9 +118,9 @@ internal class Storage(
         )
     }
 
-    private fun getPokemonData(slot: Int): UByteArray {
-        if (slot >= size) return UByteArray(Pokemon.FullDataSizeInBox)
-        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(slot)
+    private fun getPokemonData(index: Int): UByteArray {
+        if (index >= size) return UByteArray(Pokemon.FullDataSizeInBox)
+        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(index)
         return UByteArray(Pokemon.FullDataSizeInBox).apply {
             // Copy Pokemon Box Data
             data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)

@@ -6,8 +6,8 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
 internal class Storage(
     private val data: UByteArray,
     private val startOffset: Int,
-    override val version: Version,
-    override val index: Int,
+    private val version: Version,
+    private val storageIndex: Int,
     override val capacity: Int,
     override val name: String,
 ) : MutableStorage {
@@ -20,15 +20,11 @@ internal class Storage(
             data[startOffset + coercedValue + 1] = 0xFF.toUByte()
         }
 
-    override fun getPokemon(slot: Int): CorePokemon {
-        require(slot in 0 until capacity) { "Slot $slot is out of bounds [0 - $capacity]" }
-        return Pokemon(getPokemonData(slot), version, index, slot)
-    }
-
-    override fun getMutablePokemon(slot: Int): MutablePokemon {
-        require(startOffset != 0) { "This box instance is read-only" }
-        require(slot in 0 until capacity) { "Slot $slot is out of bounds [0 - $capacity]" }
-        return Pokemon(getPokemonData(slot), version, index, slot)
+    override fun get(index: Int): CorePokemon {
+        require(index in 0 until capacity) {
+            "Index $index is out of bounds [0 - ${capacity - 1}]"
+        }
+        return Pokemon(getPokemonData(index), version, storageIndex, index)
     }
 
     private fun getPokemonData(slot: Int): UByteArray {
@@ -50,41 +46,46 @@ internal class Storage(
      * Use destructuring declarations with the returned Triple instance:
      * - val (data, trainerName, nickname) = getPokemonOffsets(index, startOffset, slot)
      */
-    private fun getPokemonOffsets(slot: Int): Triple<Int, Int, Int> {
-        val size: Int = if (index.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
-        val dataOffset = startOffset + (capacity + 2) + (slot * size)
-        val trainerNameOffset = startOffset + (capacity + 2) + (size * capacity) + (slot * 11)
-        val nicknameOffset = trainerNameOffset + (capacity - slot) * 11 + (slot * 11)
+    private fun getPokemonOffsets(index: Int): Triple<Int, Int, Int> {
+        val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
+        val dataOffset = startOffset + (capacity + 2) + (index * size)
+        val trainerNameOffset = startOffset + (capacity + 2) + (size * capacity) + (index * 11)
+        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + (index * 11)
         return Triple(dataOffset, trainerNameOffset, nicknameOffset)
     }
 
-    override fun insertPokemon(pokemon: CorePokemon, slot: Int): Boolean {
-        require(slot in 0 until capacity) { "Slot $slot is out of bounds [0 - ${capacity - 1}" }
-        require(pokemon.version.isSecondGeneration) { "Unsupported version: ${pokemon.version}" }
-
-        if (pokemon.isEmpty) return false
-
-        // set species id
-        data[startOffset + 1 + slot] = pokemon.speciesId.toUByte()
-
-        // increase size if needed
-        if (slot >= size) size++
-
-        @Suppress("NAME_SHADOWING")
-        val slot = slot.coerceAtMost(size - 1)
-
-        setPokemonData(pokemonData = pokemon.exportToBytes(), slot = slot)
-
-        // calculate stats if pokemon is moved from box to party
-        if (index.isPartyIndex) {
-            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(slot).first)
+    override fun set(index: Int, pokemon: CorePokemon) {
+        require(index in 0 until capacity) {
+            "Index $index is out of bounds [0 - ${capacity - 1}]"
+        }
+        require(pokemon.version.isSecondGeneration) {
+            "Unsupported pokemon version: ${pokemon.version}"
+        }
+        if (pokemon.isEmpty) {
+            removeAt(index)
+            return
         }
 
-        return true
+        // set species id
+        data[startOffset + 1 + index] = pokemon.speciesId.toUByte()
+
+        // increase size if needed
+        if (index >= size) size++
+
+        @Suppress("NAME_SHADOWING")
+        val index = index.coerceAtMost(size - 1)
+
+        setPokemonData(pokemon.exportToBytes(), index)
+
+        // calculate stats if pokemon is moved from box to party
+        if (storageIndex.isPartyIndex) {
+            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(index).first)
+        }
     }
 
-    private fun setPokemonData(pokemonData: UByteArray, slot: Int) {
-        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(slot)
+
+    private fun setPokemonData(pokemonData: UByteArray, index: Int) {
+        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(index)
         with(pokemonData) {
             // set pokemon data
             copyInto(
@@ -100,7 +101,7 @@ internal class Storage(
         }
     }
 
-    override fun deletePokemon(slot: Int) {
+    override fun removeAt(index: Int): CorePokemon {
         TODO("Not yet implemented")
     }
 
