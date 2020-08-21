@@ -2,7 +2,7 @@
 
 A :construction: **work-in-progress** :construction: Pokémon core series save editor for Android. 
 
-It aims to have an attractive look that follows the most recent material design guidelines :art: 
+It aims to have an attractive look that follows the most recent material design guidelines
 
 ### :joystick: Supported games
 - [x] Red/Blue/Yellow
