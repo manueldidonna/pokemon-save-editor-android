@@ -29,11 +29,12 @@ import kotlinx.coroutines.withContext
 @Composable
 fun PokemonList(
     modifier: Modifier = Modifier,
+    // TODO: this is a workaround until I can't save this value across navigation events
+    initialStorageIndex: Int,
     storageSystem: StorageSystem,
     showPokemonDetails: (Pokemon.Position) -> Unit,
 ) {
-    // TODO: persist across navigation events
-    var currentIndex by savedInstanceState { storageSystem.storageIndices.first }
+    var currentIndex by savedInstanceState { initialStorageIndex }
 
     val pokemonPreviews by getPokemonPreviews(storageSystem, currentIndex)
 

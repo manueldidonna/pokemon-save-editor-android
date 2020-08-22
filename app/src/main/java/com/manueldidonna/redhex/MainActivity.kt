@@ -39,11 +39,11 @@ import com.manueldidonna.redhex.pokemonlist.PokemonList
 // TODO: find a better solution
 object AppState {
     var saveData by mutableStateOf<SaveData?>(null)
-    var currentScreen by mutableStateOf<AppScreen>(AppScreen.Main)
+    var currentScreen by mutableStateOf<AppScreen>(AppScreen.Main())
 }
 
 sealed class AppScreen {
-    object Main : AppScreen()
+    data class Main(val initialStorageIndex: Int? = null) : AppScreen()
     data class PokemonEditor(val position: Pokemon.Position) : AppScreen()
 }
 
@@ -79,7 +79,10 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
     @Composable
     private fun ShowScreen(screen: AppScreen, saveData: SaveData) {
         when (screen) {
-            AppScreen.Main -> MainScreen(saveData)
+            is AppScreen.Main -> MainScreen(
+                saveData = saveData,
+                initialStorageIndex = screen.initialStorageIndex ?: saveData.storageIndices.first
+            )
             is AppScreen.PokemonEditor -> {
                 val pokemon = saveData[screen.position].toMutablePokemon()
                 if (pokemon.isEmpty) {
@@ -98,7 +101,8 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
     }
 
     override fun goBackToPokemonList() {
-        AppState.currentScreen = AppScreen.Main
+        val index = (AppState.currentScreen as? AppScreen.PokemonEditor)?.position?.storageIndex
+        AppState.currentScreen = AppScreen.Main(index)
     }
 
     override fun savePokemon(pokemon: Pokemon) {
@@ -121,7 +125,7 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
     }
 
     @Composable
-    private fun MainScreen(saveData: SaveData) {
+    private fun MainScreen(saveData: SaveData, initialStorageIndex: Int) {
         val selectedDestinationName = savedInstanceState { BottomDestination.Storage.name }
         val destination = BottomDestination.valueOf(selectedDestinationName.value)
         Scaffold(
@@ -139,7 +143,12 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
                 ) { destination ->
                     when (destination) {
                         BottomDestination.Storage -> {
-                            PokemonList(modifier, saveData, ::showPokemonDetails)
+                            PokemonList(
+                                modifier = modifier,
+                                storageSystem = saveData,
+                                showPokemonDetails = ::showPokemonDetails,
+                                initialStorageIndex = initialStorageIndex
+                            )
                         }
                         BottomDestination.More -> SettingsScreen()
                         BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
