@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.details
+package com.manueldidonna.redhex.editor
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList

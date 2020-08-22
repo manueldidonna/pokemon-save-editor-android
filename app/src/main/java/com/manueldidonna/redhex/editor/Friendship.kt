@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.details
+package com.manueldidonna.redhex.editor
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

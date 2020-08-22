@@ -29,8 +29,8 @@ import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.ui.DarkColors
 import com.manueldidonna.redhex.common.ui.LightColors
-import com.manueldidonna.redhex.details.PokemonDetails
-import com.manueldidonna.redhex.details.PokemonDetailsEvents
+import com.manueldidonna.redhex.editor.PokemonEditor
+import com.manueldidonna.redhex.editor.PokemonEditorEvents
 import com.manueldidonna.redhex.inventory.Inventory
 import com.manueldidonna.redhex.loadsave.LoadSaveDataScreen
 import com.manueldidonna.redhex.pokedex.Pokedex
@@ -44,10 +44,10 @@ object AppState {
 
 sealed class AppScreen {
     object Main : AppScreen()
-    data class PokemonDetails(val position: Pokemon.Position) : AppScreen()
+    data class PokemonEditor(val position: Pokemon.Position) : AppScreen()
 }
 
-class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
+class MainActivity : AppCompatActivity(), PokemonEditorEvents {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,29 +80,33 @@ class MainActivity : AppCompatActivity(), PokemonDetailsEvents {
     private fun ShowScreen(screen: AppScreen, saveData: SaveData) {
         when (screen) {
             AppScreen.Main -> MainScreen(saveData)
-            is AppScreen.PokemonDetails -> {
+            is AppScreen.PokemonEditor -> {
                 val pokemon = saveData[screen.position].toMutablePokemon()
                 if (pokemon.isEmpty) {
                     val resources = PokemonResourcesAmbient.current.species
                     EmptyPokemonTemplate(saveData.trainer, resources).apply(pokemon)
                 }
                 Surface {
-                    PokemonDetails(pokemon = pokemon, listener = this)
+                    PokemonEditor(pokemon = pokemon, listener = this)
                 }
             }
         }
     }
 
     private fun showPokemonDetails(position: Pokemon.Position) {
-        AppState.currentScreen = AppScreen.PokemonDetails(position)
+        AppState.currentScreen = AppScreen.PokemonEditor(position)
     }
 
-    override fun goBackToPokemonList(pokemon: MutablePokemon) {
+    override fun goBackToPokemonList() {
+        AppState.currentScreen = AppScreen.Main
+    }
+
+    override fun savePokemon(pokemon: Pokemon) {
         AppState.saveData?.let { saveData ->
             saveData[pokemon.position] = pokemon
             saveData.pokedex.catchPokemonById(pokemon.speciesId)
         }
-        AppState.currentScreen = AppScreen.Main
+        goBackToPokemonList()
     }
 
     private fun Pokedex.catchPokemonById(speciesId: Int) {
