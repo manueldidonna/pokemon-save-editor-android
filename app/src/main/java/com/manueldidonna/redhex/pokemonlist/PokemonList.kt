@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumnForIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.ArrowCircleDown
-import androidx.compose.material.icons.twotone.ArrowCircleUp
+import androidx.compose.material.icons.twotone.ChevronLeft
+import androidx.compose.material.icons.twotone.ChevronRight
 import androidx.compose.runtime.*
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.ui.Modifier
@@ -99,10 +99,10 @@ private fun AppBarWithStorageInfo(storageName: String, onBack: () -> Unit, onFor
         title = { Text(text = storageName) },
         actions = {
             IconButton(onClick = onBack) {
-                Icon(Icons.TwoTone.ArrowCircleUp)
+                Icon(Icons.TwoTone.ChevronLeft)
             }
             IconButton(onClick = onForward) {
-                Icon(Icons.TwoTone.ArrowCircleDown)
+                Icon(Icons.TwoTone.ChevronRight)
             }
         }
     )

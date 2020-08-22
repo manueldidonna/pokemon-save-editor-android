@@ -1,7 +1,6 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.Pokemon.Mutator
 import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.rby.info.getFirstType
@@ -15,7 +14,7 @@ import com.manueldidonna.pk.core.Pokemon as CorePokemon
  * 0x00 0x1 - species ID
  * 0x01 0x2 - current HP
  * 0x03 0x1 - level
- * 0x04 0x1 - status condition (@see [Mutator.status] & [Pokemon.StatusToValue])
+ * 0x04 0x1 - status condition
  * 0x05 0x1 - type 1
  * 0x06 0x1 - type 2
  * 0x07 0x1 - catch rate/held item (for gen 2 compatibility)
@@ -360,6 +359,9 @@ internal class Pokemon(
             into[pokemonOffset + 0x21] = pokemon.run {
                 getLevel(experiencePoints, getExperienceGroup(speciesId)).toUByte()
             }
+
+            // remove any status
+            into[0x04] = 0u
 
             // update current HP
             setStat(0x1, stats.health)

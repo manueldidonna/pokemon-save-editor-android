@@ -4,12 +4,12 @@ package com.manueldidonna.pk.core
  * The Inventory holds all of the trainer's items
  */
 interface Inventory {
-    /**
-     * Every game supports a limited set of [Type]s
-     * @see [SaveData.supportedInventoryTypes]
-     */
     val type: Type
 
+    /**
+     * Every game supports a limited set of types.
+     * @see SaveData.supportedInventoryTypes
+     */
     enum class Type {
         General,
         Computer,
@@ -20,7 +20,7 @@ interface Inventory {
     }
 
     /**
-     * List of ids that an Inventory instance recognizes
+     * List of ids that this inventory recognizes
      */
     val supportedItemIds: List<Int>
 
@@ -30,12 +30,12 @@ interface Inventory {
     val maxQuantity: Int
 
     /**
-     * Max allowed number of items in the Inventory
+     * The maximum number of [Item] that can fit in this inventory.
      */
     val capacity: Int
 
     /**
-     * The total number of items available in the Inventory.
+     * Current number of [Item] in this inventory.
      */
     val size: Int
 
@@ -52,7 +52,7 @@ interface Inventory {
     fun setItem(item: Item, index: Int = item.index)
 
     /**
-     * An [Item] is an object deposited in the Inventory. It may be carried by a Pokemon.
+     * An object stored in the Inventory.
      *
      * Some items are specific to a game or should be treated specially.
      * These 'special items' are listed in [Items]
@@ -65,12 +65,12 @@ interface Inventory {
 
         /**
          * Used to represent an immutable [Item].
-         * Use [Item.toImmutable] to get an instance of [Immutable] from every [Item] instance
+         * Use [Item.toImmutable] to get an instance of [Immutable] from every [Item] instance.
          */
         data class Immutable(
             override val index: Int,
             override val id: Int,
-            override val quantity: Int
+            override val quantity: Int,
         ) : Item
 
         companion object {
@@ -100,8 +100,7 @@ interface Inventory {
 /**
  * Returns true if the [Inventory] is full
  */
-inline val Inventory.isFull: Boolean
-    get() = size == capacity
+inline val Inventory.isFull: Boolean get() = size == capacity
 
 /**
  * Get an instance of [Inventory.Item] from the Inventory at [index]
@@ -111,7 +110,7 @@ fun Inventory.getItem(index: Int): Inventory.Item {
 }
 
 /**
- * Execute an action with the id and the quantity of an item at [index]
+ * Execute an action with the id and the quantity of an item at [index].
  *
  * The same limitations of [Inventory.selectItem] are applied to this function as well
  */
@@ -121,7 +120,7 @@ inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity:
 
 /**
  * Insert the [item] into the Inventory, allowing to stack its quantity
- * if it already exists at a different index [Inventory.Item.index]
+ * if it already exists at a different index
  */
 fun Inventory.stackItem(item: Inventory.Item) {
     // fast path, max quantity can't be added to an existent item, or the inventory/item is empty

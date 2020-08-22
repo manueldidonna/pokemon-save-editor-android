@@ -2,7 +2,7 @@ package com.manueldidonna.redhex.details
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumnForIndexed
+import androidx.compose.foundation.lazy.LazyColumnFor
 import androidx.compose.material.EmphasisAmbient
 import androidx.compose.material.IconButton
 import androidx.compose.material.ListItem
@@ -10,10 +10,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.AddCircle
 import androidx.compose.material.icons.twotone.RemoveCircle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +22,8 @@ import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.rememberMutableState
 import com.manueldidonna.redhex.common.ui.ThemedDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 @Composable
@@ -137,21 +136,34 @@ private fun IconButton(enabled: Boolean, asset: VectorAsset, onClick: () -> Unit
     }
 }
 
+@Immutable
+private data class MoveEntity(val id: Int, val name: String)
+
 @Composable
 private fun ChangeMoveDialog(
     version: Version,
     onCloseRequest: () -> Unit,
     onMoveChange: (Pokemon.Move) -> Unit,
 ) {
-    val moves = PokemonResourcesAmbient.current.moves.getAllMoves(version)
+    val resources = PokemonResourcesAmbient.current.moves
+    val (moves, updateMoves) = rememberMutableState<List<MoveEntity>> { emptyList() }
+    launchInComposition {
+        withContext(Dispatchers.IO) {
+            updateMoves(resources
+                .getAllMoves(version)
+                .mapIndexed { index, name -> MoveEntity(index, name) }
+                .sortedBy { it.name }
+            )
+        }
+    }
     ThemedDialog(onCloseRequest = onCloseRequest) {
-        LazyColumnForIndexed(items = moves) { index, name ->
+        LazyColumnFor(items = moves) { entity ->
             ListItem(
-                text = name,
+                text = entity.name,
                 onClick = {
                     val move =
-                        if (index == 0) Pokemon.Move.Empty
-                        else Pokemon.Move.Immutable(id = index, powerPoints = 999, ups = 0)
+                        if (entity.id == 0) Pokemon.Move.Empty
+                        else Pokemon.Move.Immutable(id = entity.id, powerPoints = 999, ups = 0)
                     onMoveChange(move)
                     onCloseRequest()
                 }
