@@ -21,7 +21,7 @@ import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.rememberMutableState
-import com.manueldidonna.redhex.common.ui.ThemedDialog
+import com.manueldidonna.redhex.common.ThemedDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

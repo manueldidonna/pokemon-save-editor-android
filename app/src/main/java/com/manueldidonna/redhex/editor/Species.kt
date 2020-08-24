@@ -19,7 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.*
-import com.manueldidonna.redhex.common.ui.ThemedDialog
+import com.manueldidonna.redhex.common.ThemedDialog
 
 @Composable
 fun ModifySpecies(

@@ -16,8 +16,8 @@ import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.resources.unownLetters
 import com.manueldidonna.redhex.common.LabelledValue
 import com.manueldidonna.redhex.common.rememberMutableState
-import com.manueldidonna.redhex.common.ui.RadioButtonWithText
-import com.manueldidonna.redhex.common.ui.ThemedDialog
+import com.manueldidonna.redhex.common.RadioButtonWithText
+import com.manueldidonna.redhex.common.ThemedDialog
 
 @Composable
 fun ModifyForm(

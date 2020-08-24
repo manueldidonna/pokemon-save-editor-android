@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.common.ui
+package com.manueldidonna.redhex.common
 
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors

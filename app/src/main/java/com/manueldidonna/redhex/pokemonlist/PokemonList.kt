@@ -20,7 +20,7 @@ import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.PokemonSprite
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
 import com.manueldidonna.redhex.common.rememberMutableState
-import com.manueldidonna.redhex.common.ui.ThemedDialog
+import com.manueldidonna.redhex.common.ThemedDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

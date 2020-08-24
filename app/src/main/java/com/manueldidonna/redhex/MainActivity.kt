@@ -27,8 +27,8 @@ import com.manueldidonna.redhex.common.ActivityResultRegistryAmbient
 import com.manueldidonna.redhex.common.AssetsSpritesRetriever
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
-import com.manueldidonna.redhex.common.ui.DarkColors
-import com.manueldidonna.redhex.common.ui.LightColors
+import com.manueldidonna.redhex.common.DarkColors
+import com.manueldidonna.redhex.common.LightColors
 import com.manueldidonna.redhex.editor.PokemonEditor
 import com.manueldidonna.redhex.editor.PokemonEditorEvents
 import com.manueldidonna.redhex.inventory.Inventory

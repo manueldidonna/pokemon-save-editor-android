@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.redhex.common.*
-import com.manueldidonna.redhex.common.ui.ThemedDialog
+import com.manueldidonna.redhex.common.ThemedDialog
 import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
