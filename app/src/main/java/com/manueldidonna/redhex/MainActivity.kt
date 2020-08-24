@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
         }
     }
 
-    private fun showPokemonDetails(position: Pokemon.Position) {
+    private fun editPokemonBy(position: Pokemon.Position) {
         AppState.currentScreen = AppScreen.PokemonEditor(position)
     }
 
@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
                             PokemonList(
                                 modifier = modifier,
                                 storageSystem = saveData,
-                                showPokemonDetails = ::showPokemonDetails,
+                                editPokemonByPosition = ::editPokemonBy,
                                 initialStorageIndex = initialStorageIndex
                             )
                         }

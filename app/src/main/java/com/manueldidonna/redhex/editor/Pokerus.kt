@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.Pokerus
+import com.manueldidonna.redhex.common.LabelledValue
 import com.manueldidonna.redhex.common.rememberMutableState
 import com.manueldidonna.redhex.common.ui.ThemedDialog
 import kotlin.random.Random

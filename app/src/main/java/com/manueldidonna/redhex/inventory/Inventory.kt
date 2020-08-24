@@ -49,7 +49,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
             }
         }
         if (!inventory.value.isFull)
-            InsertItemButton {
+            InsertItemButton(Modifier.padding(16.dp).gravity(Alignment.BottomEnd)) {
                 selectItem(InventoryItem.empty(index = inventory.value.size))
             }
     }
@@ -88,9 +88,9 @@ private fun InventoryEditorDialog(
 }
 
 @Composable
-private fun StackScope.InsertItemButton(onClick: () -> Unit) {
+private fun InsertItemButton(modifier: Modifier, onClick: () -> Unit) {
     FloatingActionButton(
-        modifier = Modifier.padding(16.dp).gravity(Alignment.BottomEnd),
+        modifier = modifier,
         icon = { Icon(asset = Icons.TwoTone.Add) },
         onClick = onClick
     )

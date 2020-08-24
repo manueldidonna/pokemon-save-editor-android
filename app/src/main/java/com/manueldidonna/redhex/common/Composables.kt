@@ -1,7 +1,8 @@
-package com.manueldidonna.redhex.editor
+package com.manueldidonna.redhex.common
 
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope.weight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.preferredHeight
 import androidx.compose.foundation.layout.width
