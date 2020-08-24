@@ -1,9 +1,6 @@
 package com.manueldidonna.redhex.pokedex
 
-import androidx.compose.foundation.Box
-import androidx.compose.foundation.ContentGravity
-import androidx.compose.foundation.Icon
-import androidx.compose.foundation.Text
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumnFor
@@ -78,7 +75,6 @@ private fun getPokedexEntries(pokedex: Pokedex): SnapshotStateList<PokedexEntry>
             mutableEntries.addAll(entries)
         }
     }
-
     return mutableEntries
 }
 
@@ -92,7 +88,7 @@ private fun PokedexEntry(entry: PokedexEntry, onClick: (PokedexEntry) -> Unit) {
         text = { Text(text = entry.name) },
         overlineText = { Text(text = "#${entry.speciesId}") },
         trailing = if (entry.isOwned) OwnedIcon else null,
-        onClick = { onClick(entry) },
+        modifier = Modifier.clickable(onClick = { onClick(entry) }),
         icon = {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
                 PokedexSprite(source = entry.source, isSeen = entry.isSeen)

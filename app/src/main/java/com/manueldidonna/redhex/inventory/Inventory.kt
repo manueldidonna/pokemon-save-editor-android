@@ -1,9 +1,6 @@
 package com.manueldidonna.redhex.inventory
 
-import androidx.compose.foundation.Box
-import androidx.compose.foundation.ContentGravity
-import androidx.compose.foundation.Icon
-import androidx.compose.foundation.Text
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumnFor
 import androidx.compose.material.*
@@ -13,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawShadow
 import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.redhex.common.*
@@ -33,8 +29,9 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
 
     // fetch all the items when the inventory change
     launchInComposition(inventory) {
+        val currentInventory = inventory.value
         withContext(Dispatchers.IO) {
-            inventory.value.fetchAllItems()
+            currentInventory.fetchAllItems()
         }
     }
 
@@ -56,7 +53,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
 
     if (selectedItem != InventoryItem.Invalid)
         InventoryEditorDialog(
-            onCloseRequest = { selectItem(InventoryItem.Invalid) },
+            onDismissRequest = { selectItem(InventoryItem.Invalid) },
             inventory = inventory.value,
             item = selectedItem
         )
@@ -64,13 +61,13 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
 
 @Composable
 private fun InventoryEditorDialog(
-    onCloseRequest: () -> Unit,
+    onDismissRequest: () -> Unit,
     inventory: ObservableInventory,
     item: InventoryItem,
 ) {
     // TODO: use a bottom sheet
     val scope = rememberCoroutineScope()
-    ThemedDialog(onCloseRequest = onCloseRequest) {
+    ThemedDialog(onDismissRequest = onDismissRequest) {
         InventoryEditor(
             item = item,
             itemIds = inventory.supportedItemIds,
@@ -81,7 +78,7 @@ private fun InventoryEditorDialog(
                         inventory.stackItem(item)
                     }
                 }
-                onCloseRequest()
+                onDismissRequest()
             }
         )
     }
@@ -110,21 +107,21 @@ private fun getInventory(saveData: SaveData, type: Inventory.Type): State<Observ
 private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory.Type) -> Unit) {
     val resources = PokemonResourcesAmbient.current.items
     var selectedIndex by rememberMutableState { 0 }
-    TabRow(
-        items = types,
-        modifier = Modifier.fillMaxWidth().drawShadow(4.dp),
-        selectedIndex = selectedIndex,
-        scrollable = false
-    ) { index, type ->
-        Tab(
-            modifier = Modifier.preferredHeight(48.dp),
-            text = { Text(text = resources.getTypeName(type)) },
-            selected = index == selectedIndex,
-            onSelected = {
-                onTypeChange(type)
-                selectedIndex = index
-            }
-        )
+    ScrollableTabRow(
+        selectedTabIndex = selectedIndex,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        types.forEachIndexed { index, type ->
+            Tab(
+                modifier = Modifier.preferredHeight(48.dp),
+                content = { Text(text = resources.getTypeName(type)) },
+                selected = index == selectedIndex,
+                onClick = {
+                    onTypeChange(type)
+                    selectedIndex = index
+                }
+            )
+        }
     }
 }
 
@@ -133,7 +130,7 @@ private fun InventoryItem(item: InventoryItem, onClick: (item: InventoryItem) ->
     ListItem(
         text = { Text(text = item.name) },
         secondaryText = { Text(text = "Qt. ${item.quantity}") },
-        onClick = { onClick(item) },
+        modifier = Modifier.clickable(onClick = { onClick(item) }),
         icon = {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
                 CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize)

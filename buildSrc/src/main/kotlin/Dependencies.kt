@@ -13,8 +13,8 @@ object Modules {
 object Libs {
 
     object Versions {
-        const val kotlin = "1.4.0-rc"
-        const val compose = "0.1.0-dev16"
+        const val kotlin = "1.4.0"
+        const val compose = "0.1.0-dev17"
     }
 
     object Kotlin {
@@ -22,7 +22,7 @@ object Libs {
     }
 
     object KotlinX {
-        private const val coroutines = "1.3.5"
+        private const val coroutines = "1.3.9"
         const val coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines"
         const val coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines"
     }
@@ -30,8 +30,8 @@ object Libs {
     object Android {
         const val materialComponents = "com.google.android.material:material:1.2.0"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
-        const val coil = "io.coil-kt:coil:0.10.1"
-        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.8"
+        const val coil = "io.coil-kt:coil:1.0.0-rc1"
+        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.9"
     }
 
     object AndroidX {
@@ -47,7 +47,6 @@ object Libs {
             object Foundation {
                 internal const val artifact = "androidx.compose.foundation"
                 const val layout = "$artifact:foundation-layout:${Versions.compose}"
-
             }
 
             object Runtime {

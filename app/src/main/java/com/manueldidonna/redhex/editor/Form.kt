@@ -40,7 +40,7 @@ fun ModifyForm(
     if (changeForm) {
         ChangeUnownLetterDialog(
             version = version,
-            onCloseRequest = { changeForm = false },
+            onDismissRequest = { changeForm = false },
             selectedLetter = unwrappedForm.letter,
             onLetterChange = {
                 onFormChange(Pokemon.Form.Unown(letter = it))
@@ -50,7 +50,7 @@ fun ModifyForm(
     if (changeForm)
         ChangeUnownLetterDialog(
             version = version,
-            onCloseRequest = { changeForm = false },
+            onDismissRequest = { changeForm = false },
             selectedLetter = unwrappedForm.letter,
             onLetterChange = {
                 onFormChange(Pokemon.Form.Unown(letter = it))
@@ -61,12 +61,12 @@ fun ModifyForm(
 @Composable
 private fun ChangeUnownLetterDialog(
     version: Version,
-    onCloseRequest: () -> Unit,
+    onDismissRequest: () -> Unit,
     selectedLetter: Char,
     onLetterChange: (Char) -> Unit,
 ) {
     val unownLetters = unownLetters(version)
-    ThemedDialog(onCloseRequest = onCloseRequest) {
+    ThemedDialog(onDismissRequest = onDismissRequest) {
         Column {
             Text(
                 text = "Unown Letter",
@@ -79,7 +79,7 @@ private fun ChangeUnownLetterDialog(
                     selected = letter == selectedLetter,
                     onClick = {
                         onLetterChange(letter)
-                        onCloseRequest()
+                        onDismissRequest()
                     }
                 )
             }

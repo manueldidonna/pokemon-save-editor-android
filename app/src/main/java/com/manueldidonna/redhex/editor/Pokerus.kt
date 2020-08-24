@@ -38,7 +38,7 @@ fun ModifyPokerus(strain: Int, days: Int, onChange: (Pokerus) -> Unit) {
 
 
     if (changePokerus)
-        ThemedDialog(onCloseRequest = { changePokerus = false }) {
+        ThemedDialog(onDismissRequest = { changePokerus = false }) {
             Column {
                 Text(
                     text = "Pokerus",

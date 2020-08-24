@@ -35,7 +35,7 @@ fun ModifySpecies(
     if (changeSpecies) {
         ChangeSpeciesDialog(
             version = version,
-            onCloseRequest = { changeSpecies = false },
+            onDismissRequest = { changeSpecies = false },
             onSpeciesChange = onSpeciesChange
         )
     }
@@ -87,18 +87,18 @@ private fun speciesName(speciesId: Int): String {
 @Composable
 private fun ChangeSpeciesDialog(
     version: Version,
-    onCloseRequest: () -> Unit,
+    onDismissRequest: () -> Unit,
     onSpeciesChange: (speciesId: Int) -> Unit,
 ) {
     val resources = PokemonResourcesAmbient.current.species
-    ThemedDialog(onCloseRequest = onCloseRequest) {
+    ThemedDialog(onDismissRequest = onDismissRequest) {
         LazyColumnForIndexed(items = resources.getAllSpecies(version)) { index, name ->
             ListItem(
-                text = name,
-                onClick = {
+                text = { Text(text = name) },
+                modifier = Modifier.clickable(onClick = {
                     onSpeciesChange(index + 1)
-                    onCloseRequest()
-                }
+                    onDismissRequest()
+                })
             )
         }
     }

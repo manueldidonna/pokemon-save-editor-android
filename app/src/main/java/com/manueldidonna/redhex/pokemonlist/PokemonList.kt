@@ -1,9 +1,6 @@
 package com.manueldidonna.redhex.pokemonlist
 
-import androidx.compose.foundation.Box
-import androidx.compose.foundation.ContentGravity
-import androidx.compose.foundation.Icon
-import androidx.compose.foundation.Text
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumnForIndexed
 import androidx.compose.material.*
@@ -66,7 +63,7 @@ fun PokemonList(
         )
     }
     if (changeIndex) {
-        ThemedDialog(onCloseRequest = { changeIndex = false }) {
+        ThemedDialog(onDismissRequest = { changeIndex = false }) {
             StorageSelector(storageSystem = storageSystem) { index ->
                 currentIndex = index
                 changeIndex = false
@@ -98,9 +95,9 @@ private fun getPokemonPreviews(
     val spritesRetriever = SpritesRetrieverAmbient.current
 
     launchInComposition(key = storageIndex) {
-        withContext(Dispatchers.IO) {
+        previews.value = withContext(Dispatchers.IO) {
             val storage = storageSystem[storageIndex]
-            previews.value = PokemonPreview.fromStorage(storage, resources, spritesRetriever)
+            PokemonPreview.fromStorage(storage, resources, spritesRetriever)
         }
     }
 
@@ -116,7 +113,7 @@ private fun PokemonPreview(preview: PokemonPreview, onSelection: () -> Unit) {
                 PokemonSprite(source = preview.source)
             }
         },
-        onClick = onSelection,
+        modifier = Modifier.clickable(onClick = onSelection),
         secondaryText = pokemonPreviewCharacteristics(preview.label)
     )
 

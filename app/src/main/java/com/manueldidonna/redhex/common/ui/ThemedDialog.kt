@@ -10,8 +10,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ThemedDialog(onCloseRequest: () -> Unit, children: @Composable () -> Unit) {
-    Dialog(onCloseRequest = onCloseRequest) {
+fun ThemedDialog(onDismissRequest: () -> Unit, children: @Composable () -> Unit) {
+    Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             modifier = Modifier.preferredWidth(280.dp).padding(top = 48.dp, bottom = 48.dp),
             shape = RoundedCornerShape(8.dp),

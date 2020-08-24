@@ -14,10 +14,10 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
 
     override fun <E> selectEntry(
         speciesId: Int,
-        mapTo: (speciesId: Int, isSeen: Boolean, isOwned: Boolean) -> E
+        mapTo: (speciesId: Int, isSeen: Boolean, isOwned: Boolean) -> E,
     ): E {
         require(speciesId in 1..pokemonCount) {
-            "SpeciesId $speciesId is out of bounds [1 - $pokemonCount]"
+            "Species Id $speciesId is out of bounds [1 - $pokemonCount]"
         }
         val bitIndex = getEntryBitIndex(speciesId)
         val offset = getEntryOffset(speciesId)
@@ -30,7 +30,7 @@ internal class Pokedex(private val data: UByteArray) : CorePokedex {
 
     override fun setEntry(entry: CorePokedex.Entry) {
         require(entry.speciesId in 1..pokemonCount) {
-            "SpeciesId ${entry.speciesId} is out of bounds [1 - $pokemonCount]"
+            "Species Id ${entry.speciesId} is out of bounds [1 - $pokemonCount]"
         }
         val bitIndex = getEntryBitIndex(entry.speciesId)
         val offset = getEntryOffset(entry.speciesId)

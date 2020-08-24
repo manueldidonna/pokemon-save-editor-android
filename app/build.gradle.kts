@@ -26,7 +26,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion = "1.4.0-rc"
+        kotlinCompilerVersion = "1.4.0"
         kotlinCompilerExtensionVersion = Libs.Versions.compose
     }
 
@@ -45,7 +45,6 @@ dependencies {
     implementation(project(Modules.Pokemon.rby))
     implementation(project(Modules.Pokemon.gsc))
     implementation(project(Modules.Pokemon.resources))
-    implementation(Libs.Kotlin.stdlib)
     implementation(Libs.AndroidX.core)
     implementation(Libs.AndroidX.appcompat)
     implementation(Libs.AndroidX.activity)

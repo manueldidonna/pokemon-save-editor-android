@@ -156,17 +156,17 @@ private fun ChangeMoveDialog(
             )
         }
     }
-    ThemedDialog(onCloseRequest = onCloseRequest) {
+    ThemedDialog(onDismissRequest = onCloseRequest) {
         LazyColumnFor(items = moves) { entity ->
             ListItem(
-                text = entity.name,
-                onClick = {
+                text = { Text(text = entity.name) },
+                modifier = Modifier.clickable(onClick = {
                     val move =
                         if (entity.id == 0) Pokemon.Move.Empty
                         else Pokemon.Move.Immutable(id = entity.id, powerPoints = 999, ups = 0)
                     onMoveChange(move)
                     onCloseRequest()
-                }
+                })
             )
         }
     }
