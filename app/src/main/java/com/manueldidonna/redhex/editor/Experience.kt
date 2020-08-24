@@ -32,6 +32,7 @@ fun ModifyExperience(
             label = { Text(text = "Experience points") },
             keyboardType = KeyboardType.Number
         )
+        Spacer(Modifier.height(4.dp))
         LabelledValue(label = "Level", value = level.toString())
         Slider(
             modifier = Modifier.fillMaxWidth(),

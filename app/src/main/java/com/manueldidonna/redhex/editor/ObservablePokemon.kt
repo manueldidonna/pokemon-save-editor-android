@@ -6,26 +6,30 @@ import com.manueldidonna.pk.core.*
 
 @Stable
 class ObservablePokemon(private val pokemon: MutablePokemon) : MutablePokemon by pokemon {
-    override var speciesId by mutableStateOf(pokemon.speciesId)
-    override var isShiny by mutableStateOf(pokemon.isShiny)
-    override var nickname by mutableStateOf(pokemon.nickname)
-    override var pokerus: Property<Pokerus> by mutableStateOf(pokemon.pokerus)
-    override var friendship by mutableStateOf(pokemon.friendship)
+
+    override val speciesId get() = throw IllegalStateException()
+    override val isShiny get() = throw IllegalStateException()
+    override val nickname get() = throw IllegalStateException()
+    override val form get() = throw IllegalStateException()
+
+    override var pokerus: Pokerus? by mutableStateOf(pokemon.pokerus)
+    override var friendship: Int? by mutableStateOf(pokemon.friendship)
     override val eV: StatisticValues = StatisticValues(pokemon.eV)
     override val iV: StatisticValues = StatisticValues(pokemon.iV)
+
     override var level by mutableStateOf(pokemon.level)
+        private set
+
     override var experiencePoints by mutableStateOf(pokemon.experiencePoints)
+        private set
+
     override var trainer by mutableStateOf(pokemon.trainer)
 
-    @Deprecated(
-        message = "Replace form usages with wrappedForm",
-        replaceWith = ReplaceWith(expression = "wrappedForm"),
-        level = DeprecationLevel.ERROR
-    )
-    override val form: Pokemon.Form?
-        get() = throw IllegalStateException()
+    var species: Species by mutableStateOf(Species(pokemon))
+        private set
 
     var wrappedForm by mutableStateOf(FormWrapper(pokemon.form))
+        private set
 
     val moves: SnapshotStateList<Move> =
         mutableStateListOf(
@@ -40,17 +44,17 @@ class ObservablePokemon(private val pokemon: MutablePokemon) : MutablePokemon by
     override val mutator = object : MutablePokemon.Mutator by realMutator {
         override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
             realMutator.speciesId(value)
-            speciesId = pokemon.speciesId
+            species = Species(pokemon)
         }
 
         override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
             realMutator.nickname(value, ignoreCase)
-            nickname = pokemon.nickname
+            species = Species(pokemon)
         }
 
         override fun shiny(value: Boolean): MutablePokemon.Mutator = apply {
             realMutator.shiny(value)
-            isShiny = pokemon.isShiny
+            species = Species(pokemon)
             iV.update(pokemon.iV)
         }
 
@@ -118,6 +122,19 @@ class ObservablePokemon(private val pokemon: MutablePokemon) : MutablePokemon by
             realMutator.move(index, move)
             moves[index] = pokemon.selectMove(index, ::Move)
         }
+    }
+
+    @Immutable
+    data class Species(
+        val id: Int,
+        val nickname: String,
+        val isShiny: Boolean,
+    ) {
+        constructor(pokemon: Pokemon) : this(
+            id = pokemon.speciesId,
+            nickname = pokemon.nickname,
+            isShiny = pokemon.isShiny
+        )
     }
 
     @Immutable

@@ -2,6 +2,7 @@ package com.manueldidonna.pk.core
 
 /**
  * A read-only entity that holds some properties.
+ * Nullable properties may not exist in some games.
  */
 interface Pokemon {
     val version: Version
@@ -36,11 +37,11 @@ interface Pokemon {
 
     val natureId: Int
 
-    val heldItemId: Property<Int>
+    val heldItemId: Int?
 
-    val pokerus: Property<Pokerus>
+    val pokerus: Pokerus?
 
-    val friendship: Property<Int>
+    val friendship: Int?
 
     /**
      * Get info about a specific move.
@@ -92,7 +93,7 @@ interface Pokemon {
         data class Unown(val letter: Char) : Form()
     }
 
-    val metInfo: Property<MetInfo>
+    val metInfo: MetInfo?
 
     /**
      * Return a new [MutablePokemon] instance.

@@ -168,10 +168,10 @@ internal class Pokemon(
         }
     }
 
-    override val heldItemId: Property<Int> = Property.Nothing
-    override val friendship: Property<Int> = Property.Nothing
-    override val pokerus: Property<Pokerus> = Property.Nothing
-    override val metInfo: Property<MetInfo> = Property.Nothing
+    override val heldItemId: Int? = null
+    override val friendship: Int? = null
+    override val pokerus: Pokerus? = null
+    override val metInfo: MetInfo? = null
 
     override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
 

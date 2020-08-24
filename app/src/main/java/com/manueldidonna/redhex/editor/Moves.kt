@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.Pokemon
 import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.rememberMutableState
 import com.manueldidonna.redhex.common.ThemedDialog
+import com.manueldidonna.redhex.common.rememberMutableState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,12 +32,12 @@ fun ModifyMoves(
     moves: List<ObservablePokemon.Move>,
     onMoveChange: (index: Int, move: Pokemon.Move) -> Unit,
 ) {
-    var chosenMoveIndex by rememberMutableState { -1 }
-    if (chosenMoveIndex >= 0) {
-        ChangeMoveDialog(
+    var selectMoveAtIndex by rememberMutableState { -1 }
+    if (selectMoveAtIndex >= 0) {
+        MoveSelectorDialog(
             version = version,
-            onCloseRequest = { chosenMoveIndex = -1 },
-            onMoveChange = { onMoveChange(chosenMoveIndex, it) }
+            onCloseRequest = { selectMoveAtIndex = -1 },
+            onMoveChange = { onMoveChange(selectMoveAtIndex, it) }
         )
     }
     Column {
@@ -53,7 +53,7 @@ fun ModifyMoves(
                 name = moveNameById(move.id),
                 powerPoints = move.powerPoints,
                 ups = move.ups,
-                onClick = { chosenMoveIndex = index },
+                onClick = { selectMoveAtIndex = index },
                 increaseUps = {
                     onMoveChange(index, move.copy(ups = move.ups + 1, powerPoints = 999))
                 },
@@ -140,7 +140,7 @@ private fun IconButton(enabled: Boolean, asset: VectorAsset, onClick: () -> Unit
 private data class MoveEntity(val id: Int, val name: String)
 
 @Composable
-private fun ChangeMoveDialog(
+private fun MoveSelectorDialog(
     version: Version,
     onCloseRequest: () -> Unit,
     onMoveChange: (Pokemon.Move) -> Unit,
@@ -148,13 +148,12 @@ private fun ChangeMoveDialog(
     val resources = PokemonResourcesAmbient.current.moves
     val (moves, updateMoves) = rememberMutableState<List<MoveEntity>> { emptyList() }
     launchInComposition {
-        withContext(Dispatchers.IO) {
-            updateMoves(resources
+        updateMoves(withContext(Dispatchers.IO) {
+            resources
                 .getAllMoves(version)
                 .mapIndexed { index, name -> MoveEntity(index, name) }
                 .sortedBy { it.name }
-            )
-        }
+        })
     }
     ThemedDialog(onDismissRequest = onCloseRequest) {
         LazyColumnFor(items = moves) { entity ->

@@ -115,8 +115,8 @@ internal class Pokemon(
     override val natureId: Int
         get() = experiencePoints % 25
 
-    override val friendship: Property<Int>
-        get() = data[0x1B].toInt().asProperty()
+    override val friendship: Int?
+        get() = data[0x1B].toInt()
 
     override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
         require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
@@ -127,20 +127,20 @@ internal class Pokemon(
         )
     }
 
-    override val heldItemId: Property<Int>
-        get() = getUniversalItemId(data[0x1].toInt()).asProperty()
+    override val heldItemId: Int?
+        get() = getUniversalItemId(data[0x1].toInt())
 
-    override val pokerus: Property<Pokerus>
+    override val pokerus: Pokerus?
         get() {
             val strain = data[0x1C].toInt() ushr 4
             val days = data[0x1C].toInt() and 0xF
-            val pokerus =
-                if (strain !in Pokerus.StrainValues) Pokerus.NeverInfected
-                else Pokerus(
+            return if (strain !in Pokerus.StrainValues)
+                Pokerus.NeverInfected
+            else
+                Pokerus(
                     strain = strain,
                     days = days.coerceIn(0, Pokerus.maxAllowedDays(strain))
                 )
-            return pokerus.asProperty()
         }
 
     override val iV: CorePokemon.StatisticValues by lazy {
@@ -200,15 +200,16 @@ internal class Pokemon(
             return CorePokemon.Form.Unown(letter = getUnownLetter(this))
         }
 
-    override val metInfo: Property<MetInfo>
+    override val metInfo: MetInfo?
         get() {
+            if (version != Version.Crystal) return null
             val caught = data.readBigEndianUShort(0x1D).toInt()
             return MetInfo(
                 level = caught ushr 8 and 0x3F,
                 locationId = caught and 0x7F,
                 time = MetInfo.Time.TimesOfDay((caught ushr 14) and 0x3),
                 trainerGender = if (caught ushr 7 and 1 == 0) Gender.Male else Gender.Female
-            ).asProperty()
+            )
         }
 
     companion object {

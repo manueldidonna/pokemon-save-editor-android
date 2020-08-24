@@ -24,10 +24,8 @@ import com.manueldidonna.redhex.common.ThemedDialog
 @Composable
 fun ModifySpecies(
     version: Version,
-    speciesId: Int,
-    nickname: String,
-    isShiny: Boolean,
-    onSpeciesChange: (id: Int) -> Unit,
+    species: ObservablePokemon.Species,
+    onSpeciesIdChange: (id: Int) -> Unit,
     onNicknameChange: (String) -> Unit,
     onShinyChange: (Boolean) -> Unit,
 ) {
@@ -36,7 +34,7 @@ fun ModifySpecies(
         ChangeSpeciesDialog(
             version = version,
             onDismissRequest = { changeSpecies = false },
-            onSpeciesChange = onSpeciesChange
+            onSpeciesChange = onSpeciesIdChange
         )
     }
     Column {
@@ -47,22 +45,22 @@ fun ModifySpecies(
                 .padding(horizontal = 8.dp)
         ) {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(48.dp)) {
-                PokemonSprite(source = spriteSource(speciesId, shinySprite = isShiny))
+                PokemonSprite(source = spriteSource(species.id, shinySprite = species.isShiny))
             }
             Text(
-                text = speciesName(speciesId),
+                text = speciesName(species.id),
                 style = MaterialTheme.typography.body1,
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             )
-            IconButton(onClick = { onShinyChange(!isShiny) }) {
-                val tint = if (isShiny) MaterialTheme.colors.secondary else contentColor()
+            IconButton(onClick = { onShinyChange(!species.isShiny) }) {
+                val tint = if (species.isShiny) MaterialTheme.colors.secondary else contentColor()
                 Icon(asset = Icons.TwoTone.Star, tint = tint)
             }
         }
         Spacer(Modifier.height(8.dp))
         TextField(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp),
-            value = nickname,
+            value = species.nickname,
             onValueChange = onNicknameChange,
             label = { Text(text = "Nickname") },
             keyboardType = KeyboardType.Text

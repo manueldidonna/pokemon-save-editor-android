@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,15 +48,6 @@ fun ModifyForm(
             }
         )
     }
-    if (changeForm)
-        ChangeUnownLetterDialog(
-            version = version,
-            onDismissRequest = { changeForm = false },
-            selectedLetter = unwrappedForm.letter,
-            onLetterChange = {
-                onFormChange(Pokemon.Form.Unown(letter = it))
-            }
-        )
 }
 
 @Composable
@@ -73,6 +65,7 @@ private fun ChangeUnownLetterDialog(
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.padding(16.dp)
             )
+            Divider()
             LazyColumnFor(items = unownLetters) { letter ->
                 RadioButtonWithText(
                     text = letter.toString(),
