@@ -45,14 +45,7 @@ internal class SaveData(
 
     override val pokedex: CorePokedex by lazy { Pokedex(data) }
 
-    override val supportedInventoryTypes: List<CoreInventory.Type> =
-        listOf(CoreInventory.Type.General, CoreInventory.Type.Computer)
-
-    override fun getInventory(type: CoreInventory.Type): CoreInventory {
-        require(type in supportedInventoryTypes) { "Type $type is not supported" }
-        return Inventory(type, data)
-    }
-
+    override val bag: Bag by lazy { Bag(data) }
 
     /**
      * Export data and fix the checksum

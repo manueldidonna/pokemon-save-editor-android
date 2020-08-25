@@ -7,9 +7,7 @@ interface SaveData : StorageSystem {
 
     val pokedex: Pokedex
 
-    val supportedInventoryTypes: List<Inventory.Type>
-
-    fun getInventory(type: Inventory.Type): Inventory
+    val bag: Bag
 
     fun exportToBytes(): UByteArray
 

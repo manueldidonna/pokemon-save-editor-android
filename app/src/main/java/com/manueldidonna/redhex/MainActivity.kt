@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity(), PokemonEditorEvents {
                         }
                         BottomDestination.More -> SettingsScreen()
                         BottomDestination.Pokedex -> Pokedex(modifier, saveData.pokedex)
-                        BottomDestination.Inventory -> Inventory(modifier, saveData)
+                        BottomDestination.Inventory -> Inventory(modifier, saveData.bag)
                     }
                 }
             }

@@ -11,19 +11,23 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.Bag
+import com.manueldidonna.pk.core.Inventory
+import com.manueldidonna.pk.core.isFull
+import com.manueldidonna.pk.core.stackItem
 import com.manueldidonna.redhex.common.*
-import com.manueldidonna.redhex.common.ThemedDialog
 import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun Inventory(modifier: Modifier, saveData: SaveData) {
-    val (type, setType) = rememberMutableState { saveData.supportedInventoryTypes.first() }
+fun Inventory(modifier: Modifier, bag: Bag) {
+    val inventoryTypes = remember { bag.inventoryTypes.toList() }
 
-    val inventory = getInventory(saveData = saveData, type = type)
+    val (type, setType) = rememberMutableState { inventoryTypes.first() }
+
+    val inventory = getInventory(bag = bag, type = type)
 
     val items by remember(type) { inventory.value.items }
 
@@ -39,7 +43,7 @@ fun Inventory(modifier: Modifier, saveData: SaveData) {
 
     Stack(modifier = modifier.fillMaxSize()) {
         Column {
-            InventoryTypes(types = saveData.supportedInventoryTypes, setType)
+            InventoryTypes(types = inventoryTypes, setType)
             LazyColumnFor(items = items) { item ->
                 InventoryItem(item = item, selectItem)
                 Divider()
@@ -73,7 +77,10 @@ private fun InventoryEditorDialog(
             itemIds = inventory.supportedItemIds,
             maxAllowedQuantity = inventory.maxQuantity,
             onItemChange = { item ->
-                if (inventory.getItem(item.index) != item) {
+                val areItemsDifferent = inventory.selectItem(item.index) { _, id, quantity ->
+                    item.id != id || item.quantity != quantity
+                }
+                if (areItemsDifferent) {
                     scope.launch(Dispatchers.IO) {
                         inventory.stackItem(item)
                     }
@@ -95,11 +102,11 @@ private fun InsertItemButton(modifier: Modifier, onClick: () -> Unit) {
 
 @Composable
 @Stable
-private fun getInventory(saveData: SaveData, type: Inventory.Type): State<ObservableInventory> {
+private fun getInventory(bag: Bag, type: Inventory.Type): State<ObservableInventory> {
     val resources = PokemonResourcesAmbient.current.items
     val spritesRetriever = SpritesRetrieverAmbient.current
     return rememberMutableStateFor(type) {
-        ObservableInventory(saveData.getInventory(type), resources, spritesRetriever)
+        ObservableInventory(bag[type], resources, spritesRetriever)
     }
 }
 

@@ -40,4 +40,11 @@ class ObservableInventory(
         if (this.capacity != other.capacity) return false
         return true
     }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + capacity.hashCode()
+        result = 31 * result + size.hashCode()
+        return result
+    }
 }

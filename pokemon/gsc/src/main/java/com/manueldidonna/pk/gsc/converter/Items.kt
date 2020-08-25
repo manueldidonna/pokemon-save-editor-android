@@ -39,29 +39,17 @@ internal fun getUniversalItemId(valueToConvert: Int): Int {
     return value
 }
 
-internal fun getIdsByType(type: Inventory.Type, isCrystal: Boolean): List<Int> {
-    return when (type) {
-        Inventory.Type.General -> Items
-        Inventory.Type.Computer -> if (isCrystal) (AllItems + CrystalExclusiveKeys) else AllItems
-        Inventory.Type.Balls -> Balls
-        Inventory.Type.Keys -> if (isCrystal) (Keys + CrystalExclusiveKeys) else Keys
-        Inventory.Type.HiddenMachines -> HiddenMachines
-        Inventory.Type.TechnicalMachines -> TechnicalMachines
-        else -> throw IllegalArgumentException("Unsupported type $type")
-    }
-}
-
-private val CrystalExclusiveKeys: List<Int> by lazy {
+internal val CrystalExclusiveKeys: List<Int> by lazy {
     listOf(70, 115, 116, 129).map { getUniversalItemId(it) }
 }
 
-private val AllItems: List<Int> by lazy { LocalToUniversalItemIds.drop(1).filter { it != NaN } }
+internal val AllItems: List<Int> by lazy { LocalToUniversalItemIds.drop(1).filter { it != NaN } }
 
-private val Balls: List<Int> by lazy {
+internal val Balls: List<Int> by lazy {
     listOf(1, 2, 4, 5, 157, 159, 160, 161, 164, 165, 166).map { getUniversalItemId(it) }
 }
 
-private val Items: List<Int> by lazy {
+internal val Items: List<Int> by lazy {
     listOf(
         3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28,
         29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 51,
@@ -73,13 +61,13 @@ private val Items: List<Int> by lazy {
     ).map { getUniversalItemId(it) }
 }
 
-private val Keys: List<Int> by lazy {
+internal val Keys: List<Int> by lazy {
     listOf(
         7, 54, 55, 58, 59, 61, 66, 67, 68, 69, 71, 127, 128, 130, 133, 134, 175, 178
     ).map { getUniversalItemId(it) }
 }
 
-private val TechnicalMachines: List<Int> by lazy {
+internal val TechnicalMachines: List<Int> by lazy {
     listOf(
         191, 192, 193, 194, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
         208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 221, 222, 223, 224,
@@ -88,7 +76,7 @@ private val TechnicalMachines: List<Int> by lazy {
     ).map { getUniversalItemId(it) }
 }
 
-private val HiddenMachines: List<Int> by lazy {
+internal val HiddenMachines: List<Int> by lazy {
     listOf(243, 244, 245, 246, 247, 248, 249).map { getUniversalItemId(it) }
 }
 

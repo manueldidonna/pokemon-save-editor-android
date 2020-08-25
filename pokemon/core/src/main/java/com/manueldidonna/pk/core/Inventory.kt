@@ -8,7 +8,7 @@ interface Inventory {
 
     /**
      * Every game supports a limited set of types.
-     * @see SaveData.supportedInventoryTypes
+     * @see Bag.inventoryTypes
      */
     enum class Type {
         General,
@@ -97,16 +97,19 @@ interface Inventory {
     }
 }
 
-/**
- * Returns true if the [Inventory] is full
- */
 inline val Inventory.isFull: Boolean get() = size == capacity
 
+inline val Inventory.Item.isEmpty: Boolean get() = quantity <= 0 || id <= 0
+
 /**
- * Get an instance of [Inventory.Item] from the Inventory at [index]
+ * Convert a generic [Inventory.Item] implementation to an [Inventory.Item.Immutable] data class
  */
-fun Inventory.getItem(index: Int): Inventory.Item {
-    return selectItem(index, mapTo = Inventory.Item::Immutable)
+fun Inventory.Item.toImmutable(
+    index: Int = this.index,
+    id: Int = this.id,
+    quantity: Int = this.quantity,
+): Inventory.Item.Immutable {
+    return Inventory.Item.Immutable(index = index, id = id, quantity = quantity)
 }
 
 /**
@@ -120,11 +123,10 @@ inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity:
 
 /**
  * Insert the [item] into the Inventory, allowing to stack its quantity
- * if it already exists at a different index
+ * if it already exists but in a different position
  */
 fun Inventory.stackItem(item: Inventory.Item) {
-    // fast path, max quantity can't be added to an existent item, or the inventory/item is empty
-    if (item.quantity == maxQuantity || size == 0 || item.quantity <= 0 || item.id == 0) {
+    if (item.quantity == maxQuantity || size == 0 || item.isEmpty) {
         setItem(item)
         return
     }
@@ -133,21 +135,25 @@ fun Inventory.stackItem(item: Inventory.Item) {
         // check if exists an item with the same id
         withItem(index = i) { id, quantity ->
             if (id == item.id) {
-                // if the index is the same, the user is editing an existing item,
-                // so consume the quantity and overwrite the item
+                // the index is the same, the user is editing an existing item
                 if (i == item.index) {
+                    // overwrite the item with the newest one and consume the itemQuantity
+                    // to interrupts the loop
                     setItem(item)
                     itemQuantity = 0
-                } else if (quantity < maxQuantity) {
+                }
+                // modify the quantity of an item with the same id but in a different index
+                else if (quantity < maxQuantity) {
                     val newItemQuantity = (itemQuantity + quantity).coerceAtMost(maxQuantity)
                     setItem(Inventory.Item.Immutable(i, id, newItemQuantity))
+                    // update the quantity still to be allocated
                     itemQuantity -= newItemQuantity - quantity
                 }
             }
         }
         if (itemQuantity <= 0) {
             // if the passed item is stacked in a different index than item.index
-            // delete the item at item.index
+            // delete the item at that index
             val isItemEdited = selectItem(item.index) { _, id, _ -> id == item.id }
             if (!isItemEdited) {
                 setItem(Inventory.Item.empty(item.index))
@@ -157,15 +163,4 @@ fun Inventory.stackItem(item: Inventory.Item) {
     }
     // insert the item in a new slot of the inventory
     setItem(item.toImmutable(quantity = itemQuantity))
-}
-
-/**
- * Convert a generic [Inventory.Item] implementation to an [Inventory.Item.Immutable] data class
- */
-fun Inventory.Item.toImmutable(
-    index: Int = this.index,
-    id: Int = this.id,
-    quantity: Int = this.quantity,
-): Inventory.Item.Immutable {
-    return Inventory.Item.Immutable(index = index, id = id, quantity = quantity)
 }

@@ -1,5 +1,6 @@
 package com.manueldidonna.pk.gsc
 
+import com.manueldidonna.pk.core.Bag
 import com.manueldidonna.pk.core.Storage
 import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.core.Version
@@ -52,19 +53,7 @@ internal class SaveData(
 
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 
-    override val supportedInventoryTypes: List<CoreInventory.Type> = listOf(
-        CoreInventory.Type.General,
-        CoreInventory.Type.Balls,
-        CoreInventory.Type.TechnicalMachines,
-        CoreInventory.Type.HiddenMachines,
-        CoreInventory.Type.Keys,
-        CoreInventory.Type.Computer
-    )
-
-    override fun getInventory(type: CoreInventory.Type): CoreInventory {
-        require(type in supportedInventoryTypes) { "Type $type is not supported" }
-        return Inventory.newInstance(data, version, type)
-    }
+    override val bag: Bag by lazy { Bag(data, version) }
 
     override val storageIndices: IntRange = storageSystem.storageIndices
 
