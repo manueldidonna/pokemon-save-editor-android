@@ -80,15 +80,12 @@ interface Pokemon {
         val speed: Int
     }
 
-    /**
-     * Return null if the pokemon doesn't have an alternative form
-     */
     val form: Form?
 
     sealed class Form {
         /**
-         * Accepted values for [letter] are A-Z and !, ? (since Generation III)
-         * [letter] should be case-insensitive.
+         * Accepted values for [letter] are A-Z and !, ? (since Generation III),
+         * [letter] should be treated as case-insensitive.
          */
         data class Unown(val letter: Char) : Form()
     }

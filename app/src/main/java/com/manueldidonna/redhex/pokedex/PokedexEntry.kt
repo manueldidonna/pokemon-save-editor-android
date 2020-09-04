@@ -11,17 +11,12 @@ data class PokedexEntry(
     override val speciesId: Int,
     override val isSeen: Boolean,
     override val isOwned: Boolean,
+    val name: String,
+    val source: SpriteSource,
 ) : Pokedex.Entry {
-    lateinit var name: String
-        private set
-    var source: SpriteSource = SpriteSource.PokeBall
-        private set
 
     fun copy(isSeen: Boolean, isOwned: Boolean): PokedexEntry {
-        return PokedexEntry(speciesId, isSeen, isOwned).apply {
-            this.name = this@PokedexEntry.name
-            this.source = this@PokedexEntry.source
-        }
+        return PokedexEntry(speciesId, isSeen, isOwned, name, source)
     }
 
     companion object {
@@ -30,13 +25,14 @@ data class PokedexEntry(
             spritesRetriever: SpritesRetriever,
             resources: PokemonTextResources.Species,
         ): List<PokedexEntry> {
+            val createEntry: (Int, Boolean, Boolean) -> PokedexEntry =
+                { speciesId, isSeen, isOwned ->
+                    val source = spritesRetriever.getPokemonSprite(speciesId, shiny = false)
+                    val name = resources.getSpeciesById(speciesId)
+                    PokedexEntry(speciesId, isSeen, isOwned, name, source)
+                }
             return List(pokedex.pokemonCount) {
-                pokedex
-                    .selectEntry(speciesId = it + 1, mapTo = ::PokedexEntry)
-                    .apply {
-                        name = resources.getSpeciesById(speciesId)
-                        source = spritesRetriever.getPokemonSprite(speciesId, shiny = false)
-                    }
+                pokedex.selectEntry(speciesId = it + 1, mapTo = createEntry)
             }
         }
     }
