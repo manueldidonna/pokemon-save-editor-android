@@ -15,12 +15,6 @@ internal class SaveData(
     private val data: UByteArray,
 ) : CoreSaveData {
 
-    private val storageSystem = StorageSystem(data, version)
-
-    override fun hashCode(): Int {
-        return data.contentHashCode()
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -54,6 +48,8 @@ internal class SaveData(
     override val pokedex: Pokedex by lazy { Pokedex(data, version) }
 
     override val bag: Bag by lazy { Bag(data, version) }
+
+    private val storageSystem = StorageSystem(data, version)
 
     override val storageIndices: IntRange = storageSystem.storageIndices
 

@@ -225,18 +225,18 @@ internal class Pokemon(
             return (letterIndex + 'A'.toInt()).toChar()
         }
 
-        internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
+        internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonDataOffset: Int) {
             val stats: CorePokemon.StatisticValues = with(pokemon) {
                 val base = getBaseStatistics(speciesId, version)
                 calculateStatistics(level, base, iV, eV, version)
             }
 
             fun setStat(offset: Int, value: Int) {
-                into.writeBidEndianShort(pokemonOffset + offset, value.toShort())
+                into.writeBidEndianShort(pokemonDataOffset + offset, value.toShort())
             }
 
             // update current HP
-            into.writeBidEndianShort(pokemonOffset + 0x22, stats.health.toShort())
+            into.writeBidEndianShort(pokemonDataOffset + 0x22, stats.health.toShort())
 
             // update current stats
             setStat(offset = 0x24, value = stats.health)

@@ -1,8 +1,7 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.Pokemon.Companion.DataSizeInBox
-import com.manueldidonna.pk.rby.Pokemon.Companion.NameMaxSize
+import com.manueldidonna.pk.utils.copyIntoFor
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**
@@ -50,18 +49,15 @@ internal class Storage(
         }
 
         @Suppress("NAME_SHADOWING")
+        val index = coerceIndexBySize(index)
+
+        @Suppress("NAME_SHADOWING")
         val pokemon = pokemon.toMutablePokemon()
 
         // update level if pokemon is moved from party to box
         if (pokemon.position.storageIndex.isPartyIndex && !storageIndex.isPartyIndex) {
             pokemon.mutator.experiencePoints(pokemon.experiencePoints).level(pokemon.level)
         }
-
-        // increase size if needed
-        if (index >= size) size++
-
-        @Suppress("NAME_SHADOWING")
-        val index = index.coerceAtMost(size - 1)
 
         // set species id
         data[1 + index] = pokemon.speciesId.toUByte()
@@ -70,72 +66,51 @@ internal class Storage(
 
         // recalculate level from exp & stats if pokemon is moved from box to party
         if (storageIndex.isPartyIndex) {
-            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(index).first)
+            Pokemon.moveToParty(pokemon, data, getPokemonOffsetByIndex(index).firstByte)
         }
+    }
+
+    private fun coerceIndexBySize(index: Int): Int {
+        // increase size if needed
+        // size is automatically coerced within its bounds
+        if (index >= size) size++
+        return index.coerceAtMost(size - 1)
     }
 
     override fun removeAt(index: Int): com.manueldidonna.pk.core.Pokemon {
         TODO("Not yet implemented")
     }
 
-    /**
-     * Return offsets respectively for data - trainer name - nickname
-     *
-     * Use destructuring declarations with the returned Triple instance:
-     * - val (data, trainerName, nickname) = getPokemonOffsets(index, startOffset, slot)
-     */
-    private fun getPokemonOffsets(slot: Int): Triple<Int, Int, Int> {
-        val dataOffset: Int
-        val trainerNameOffset: Int
-        val nicknameOffset: Int
-        val size: Int
-
-        if (storageIndex.isPartyIndex) {
-            size = Pokemon.DataSizeInParty
-            dataOffset = PokemonDataPartyOffset
-            nicknameOffset = NicknamePartyOffset
-            trainerNameOffset = TrainerNamePartyOffset
-        } else {
-            size = DataSizeInBox
-            dataOffset = PokemonDataBoxOffset
-            nicknameOffset = NicknameBoxOffset
-            trainerNameOffset = TrainerNameBoxOffset
-        }
-
-        return Triple(
-            dataOffset + (size * slot),
-            trainerNameOffset + (NameMaxSize * slot),
-            nicknameOffset + (NameMaxSize * slot)
-        )
+    private fun getPokemonOffsetByIndex(index: Int): PokemonOffset {
+        val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
+        val firstByteOffset = capacity + 2 + index * size
+        val trainerNameOffset = capacity + 2 + size * capacity + index * 11
+        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + index * 11
+        return PokemonOffset(firstByteOffset, trainerNameOffset, nicknameOffset)
     }
 
     private fun getPokemonData(index: Int): UByteArray {
-        if (index >= size) return UByteArray(Pokemon.FullDataSizeInBox)
-        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(index)
-        return UByteArray(Pokemon.FullDataSizeInBox).apply {
-            // Copy Pokemon Box Data
-            data.copyInto(this, 0, dataOfs, dataOfs + DataSizeInBox)
-            // Copy Trainer Name
-            data.copyInto(this, DataSizeInBox, trainerNameOfs, trainerNameOfs + NameMaxSize)
-            // Copy Pokemon Name
-            data.copyInto(this, DataSizeInBox + NameMaxSize, nickOfs, nickOfs + NameMaxSize)
+        if (index >= size) return UByteArray(PokemonSizeInBoxWithNames)
+        val offset = getPokemonOffsetByIndex(index)
+        return UByteArray(PokemonSizeInBoxWithNames).apply {
+            data.copyIntoFor(this, 0, offset.firstByte, length = PokemonSizeInBox)
+            data.copyIntoFor(this, PokemonSizeInBox, offset.trainerName, length = 11)
+            data.copyIntoFor(this, PokemonSizeInBox + 11, offset.nickname, length = 11)
         }
     }
 
     private fun setPokemonData(pokemonData: UByteArray, slot: Int) {
-        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(slot)
+        val offset = getPokemonOffsetByIndex(slot)
         with(pokemonData) {
-            // insert pokemon data
-            copyInto(data, dataOfs, 0, DataSizeInBox)
-            // insert trainer name and nickname
-            copyInto(data, trainerNameOfs, DataSizeInBox, DataSizeInBox + NameMaxSize)
-            copyInto(data, nicknameOfs, DataSizeInBox + NameMaxSize)
+            copyIntoFor(data, offset.firstByte, 0, length = PokemonSizeInBox)
+            copyIntoFor(data, offset.trainerName, PokemonSizeInBox, length = 11)
+            copyInto(data, offset.nickname, PokemonSizeInBox + 11)
         }
     }
 
     override fun toMutableStorage(): MutableStorage {
         return Storage(
-            data = data,
+            data = exportToBytes(),
             storageIndex = storageIndex,
             capacity = capacity,
             version = version,
@@ -147,14 +122,15 @@ internal class Storage(
         return data.copyOf()
     }
 
+    private data class PokemonOffset(
+        val firstByte: Int,
+        val trainerName: Int,
+        val nickname: Int,
+    )
+
     companion object {
-        private const val PokemonDataBoxOffset = 0x16
-        private const val PokemonDataPartyOffset = 0x8
-
-        private const val TrainerNameBoxOffset = 0x2AA
-        private const val TrainerNamePartyOffset = 0x110
-
-        private const val NicknameBoxOffset = 0x386
-        private const val NicknamePartyOffset = 0x152
+        private const val PokemonSizeInParty = 44
+        private const val PokemonSizeInBox = 33
+        private const val PokemonSizeInBoxWithNames = PokemonSizeInBox + 11 + 11
     }
 }

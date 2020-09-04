@@ -99,7 +99,6 @@ internal class Mutator(
 
     override fun pokerus(value: Pokerus): MutablePokemon.Mutator = apply {
         var pkrs = 0
-        // set strain
         pkrs = (pkrs and 0xF) or value.strain shl 4
         pkrs = (pkrs and 0xF.inv()) or value.days
         data[0x1C] = pkrs.toUByte()

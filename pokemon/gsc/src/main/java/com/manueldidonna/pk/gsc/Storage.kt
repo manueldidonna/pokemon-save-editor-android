@@ -1,6 +1,7 @@
 package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.utils.copyIntoFor
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 internal class Storage(
@@ -26,78 +27,66 @@ internal class Storage(
         return Pokemon(getPokemonData(index), version, storageIndex, index)
     }
 
-    private fun getPokemonData(index: Int): UByteArray {
-        if (index >= size) return UByteArray(PokemonSizeInBox + 11 * 2)
-        val (dataOfs, trainerNameOfs, nickOfs) = getPokemonOffsets(index)
-        return UByteArray(PokemonSizeInBox + 11 * 2).apply {
-            // Copy Pokemon Box Data
-            data.copyInto(this, 0, dataOfs, dataOfs + PokemonSizeInBox)
-            // Copy Trainer Name
-            data.copyInto(this, PokemonSizeInBox, trainerNameOfs, trainerNameOfs + 11)
-            // Copy Pokemon Name
-            data.copyInto(this, PokemonSizeInBox + 11, nickOfs, nickOfs + 11)
-        }
-    }
-
-    /**
-     * Return offsets respectively for data - trainer name - nickname
-     *
-     * Use destructuring declarations with the returned Triple instance:
-     * - val (data, trainerName, nickname) = getPokemonOffsets(index, startOffset, slot)
-     */
-    private fun getPokemonOffsets(index: Int): Triple<Int, Int, Int> {
-        val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
-        val dataOffset = capacity + 2 + index * size
-        val trainerNameOffset = capacity + 2 + size * capacity + index * 11
-        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + index * 11
-        return Triple(dataOffset, trainerNameOffset, nicknameOffset)
-    }
-
     override fun set(index: Int, pokemon: CorePokemon) {
         require(index in 0 until capacity) {
             "Index $index is out of bounds [0 - ${capacity - 1}]"
         }
-        require(pokemon.version.isSecondGeneration) {
+        require(pokemon.version.generation == 2) {
             "Unsupported pokemon version: ${pokemon.version}"
         }
+
         if (pokemon.isEmpty) {
             removeAt(index)
             return
         }
 
-        // increase size if needed
-        if (index >= size) size++
-
         @Suppress("NAME_SHADOWING")
-        val index = index.coerceAtMost(size - 1)
+        val index = coerceIndexBySize(index)
 
         // set species id
         data[1 + index] = pokemon.speciesId.toUByte()
 
+        // set pokemon data
         setPokemonData(pokemon.exportToBytes(), index)
 
         // calculate stats if pokemon is moved to party
         if (storageIndex.isPartyIndex) {
-            Pokemon.moveToParty(pokemon, data, getPokemonOffsets(index).first)
+            Pokemon.moveToParty(pokemon, data, getPokemonOffsetByIndex(index).firstByte)
         }
     }
 
+    private fun coerceIndexBySize(index: Int): Int {
+        // increase size if needed
+        // size is automatically coerced within its bounds
+        if (index >= size) size++
+        return index.coerceAtMost(size - 1)
+    }
+
+    private fun getPokemonData(index: Int): UByteArray {
+        if (index >= size) return UByteArray(PokemonSizeInBoxWithNames)
+        val offset = getPokemonOffsetByIndex(index)
+        return UByteArray(PokemonSizeInBoxWithNames).apply {
+            data.copyIntoFor(this, 0, offset.firstByte, length = PokemonSizeInBox)
+            data.copyIntoFor(this, PokemonSizeInBox, offset.trainerName, length = 11)
+            data.copyIntoFor(this, PokemonSizeInBox + 11, offset.nickname, length = 11)
+        }
+    }
 
     private fun setPokemonData(pokemonData: UByteArray, index: Int) {
-        val (dataOfs, trainerNameOfs, nicknameOfs) = getPokemonOffsets(index)
+        val offset = getPokemonOffsetByIndex(index)
         with(pokemonData) {
-            // set pokemon data
-            copyInto(
-                destination = data,
-                destinationOffset = dataOfs,
-                startIndex = 0,
-                endIndex = PokemonSizeInBox
-            )
-            // set trainer name
-            copyInto(data, trainerNameOfs, PokemonSizeInBox, PokemonSizeInBox + 11)
-            // set nickname
-            copyInto(data, nicknameOfs, PokemonSizeInBox + 11)
+            copyIntoFor(data, offset.firstByte, 0, length = PokemonSizeInBox)
+            copyIntoFor(data, offset.trainerName, PokemonSizeInBox, length = 11)
+            copyIntoFor(data, offset.nickname, PokemonSizeInBox + 11, length = 11)
         }
+    }
+
+    private fun getPokemonOffsetByIndex(index: Int): PokemonOffset {
+        val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
+        val firstByteOffset = capacity + 2 + index * size
+        val trainerNameOffset = capacity + 2 + size * capacity + index * 11
+        val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + index * 11
+        return PokemonOffset(firstByteOffset, trainerNameOffset, nicknameOffset)
     }
 
     override fun removeAt(index: Int): CorePokemon {
@@ -118,8 +107,15 @@ internal class Storage(
         return data.copyOf()
     }
 
+    private data class PokemonOffset(
+        val firstByte: Int,
+        val trainerName: Int,
+        val nickname: Int,
+    )
+
     companion object {
         private const val PokemonSizeInParty = 48
         private const val PokemonSizeInBox = 32
+        private const val PokemonSizeInBoxWithNames = PokemonSizeInBox + 11 + 11
     }
 }

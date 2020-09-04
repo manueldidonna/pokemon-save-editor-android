@@ -7,30 +7,14 @@ import com.manueldidonna.pk.core.Inventory as CoreInventory
 
 internal class Inventory(
     override val type: CoreInventory.Type,
-    private val data: UByteArray
+    private val data: UByteArray,
+    override val capacity: Int,
+    private val startOffset: Int
 ) : CoreInventory {
 
     override val maxQuantity: Int = 99
 
     override val supportedItemIds = SupportedItemIds
-
-    override val capacity: Int
-
-    private val startOffset: Int
-
-    init {
-        when (type) {
-            CoreInventory.Type.General -> {
-                capacity = 20
-                startOffset = BagOffset
-            }
-            CoreInventory.Type.Computer -> {
-                capacity = 50
-                startOffset = ComputerOffset
-            }
-            else -> throw IllegalStateException("Inventory Type not supported: $type")
-        }
-    }
 
     override var size: Int
         get() {
@@ -46,7 +30,7 @@ internal class Inventory(
 
     override fun <T> selectItem(index: Int, mapTo: (index: Int, id: Int, quantity: Int) -> T): T {
         require(index in 0 until capacity) {
-            "Index ($index) out of Inventory bounds [0-$capacity]"
+            "Index $index out of Inventory bounds [0 - $capacity]"
         }
         if (index >= size)
             return mapTo(index, 0, 0)
@@ -59,14 +43,12 @@ internal class Inventory(
 
     override fun setItem(item: CoreInventory.Item, index: Int) {
         require(index in 0 until capacity) {
-            "Index ($index) out of Inventory bounds [0-$capacity]"
+            "Index $index out of Inventory bounds [0 - $capacity]"
         }
         if (item.id == 0 || item.quantity == 0) {
             deleteItem(index)
         } else {
-            require(item.id in supportedItemIds) {
-                "Item id (${item.id}) is not supported"
-            }
+            require(item.id in supportedItemIds) { "Item Id ${item.id} is not supported" }
             if (index >= size) size++
             val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
             data[offset] = getGameBoyItemId(item.id).toUByte()
@@ -84,10 +66,5 @@ internal class Inventory(
         }
         data.fill(0u, lastIndexOffset, lastIndexOffset + 2)
         size--
-    }
-
-    companion object {
-        private const val BagOffset = 0x25C9
-        private const val ComputerOffset = 0x27E6
     }
 }

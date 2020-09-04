@@ -19,11 +19,16 @@ internal class Bag(internal val data: UByteArray) : CoreBag {
         return "RBY Bag"
     }
 
-    override val inventoryTypes: Set<Inventory.Type> =
-        setOf(Inventory.Type.General, Inventory.Type.Computer)
+    override val inventoryTypes = setOf(Inventory.Type.General, Inventory.Type.Computer)
 
     override fun get(type: Inventory.Type): Inventory {
         require(inventoryTypes.contains(type)) { "Type $type is not supported" }
-        return Inventory(type, data)
+        val isComputer = type == Inventory.Type.Computer
+        return Inventory(
+            type = type,
+            data = data,
+            capacity = if (isComputer) 50 else 20,
+            startOffset = if (isComputer) 0x27E6 else 0x25C9
+        )
     }
 }

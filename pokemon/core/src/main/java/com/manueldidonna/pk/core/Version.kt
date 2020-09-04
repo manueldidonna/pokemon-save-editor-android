@@ -20,8 +20,8 @@ inline val Version.isSecondGeneration: Boolean
     get() = this.value in 39..41
 
 inline val Version.generation: Int
-    get() = when {
-        isFirstGeneration -> 1
-        isSecondGeneration -> 2
+    get() = when (this.value) {
+        in 35..38 -> 1
+        in 39..41 -> 2
         else -> throw IllegalStateException()
     }

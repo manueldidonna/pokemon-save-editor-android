@@ -1,13 +1,15 @@
 package com.manueldidonna.pk.rby
 
 import com.manueldidonna.pk.core.*
-import com.manueldidonna.pk.rby.converter.getGameBoySpecies
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
-import com.manueldidonna.pk.rby.info.getFirstType
-import com.manueldidonna.pk.rby.info.getSecondType
-import com.manueldidonna.pk.rby.info.isEvolutionOf
-import com.manueldidonna.pk.resources.*
-import com.manueldidonna.pk.utils.*
+import com.manueldidonna.pk.resources.calculateStatistics
+import com.manueldidonna.pk.resources.getBaseStatistics
+import com.manueldidonna.pk.resources.getExperienceGroup
+import com.manueldidonna.pk.resources.getLevel
+import com.manueldidonna.pk.utils.getStringFromGameBoyData
+import com.manueldidonna.pk.utils.readBigEndianInt
+import com.manueldidonna.pk.utils.readBigEndianUShort
+import com.manueldidonna.pk.utils.writeBidEndianShort
 import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 /**
@@ -65,7 +67,7 @@ internal class Pokemon(
 
     override val trainer: Trainer
         get() = Trainer(
-            name = getStringFromGameBoyData(data, DataSizeInBox, 11, false),
+            name = getStringFromGameBoyData(data, 0x21, 11, false),
             visibleId = data.readBigEndianUShort(0x0C).toInt(),
             secretId = 0, // unused in gen 1
             gender = Trainer.Gender.Male
@@ -75,7 +77,7 @@ internal class Pokemon(
         get() = getNationalSpecies(data[0].toInt())
 
     override val nickname: String
-        get() = getStringFromGameBoyData(data, DataSizeInBox + NameMaxSize, 11, false)
+        get() = getStringFromGameBoyData(data, 0x2C, 11, false)
 
     override val level: Int
         get() {
@@ -173,176 +175,10 @@ internal class Pokemon(
     override val pokerus: Pokerus? = null
     override val metInfo: MetInfo? = null
 
-    override val mutator: MutablePokemon.Mutator by lazy { Mutator() }
-
-    inner class Mutator : MutablePokemon.Mutator {
-
-        override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
-            require(value in 1..151) { "Unsupported species id: $value" }
-            // set species id
-            data[0] = getGameBoySpecies(value).toUByte()
-            // set sane status
-            data[0x4] = 0u
-            // set cache rate
-            if (!value.isEvolutionOf(speciesId)) {
-                // TODO: check if the pokemon is catchable in the game
-                data[0x7] = getCatchRate(value, version).toUByte()
-            }
-            // set types
-            data[0x5] = getFirstType(value).toUByte()
-            data[0x6] = getSecondType(value).toUByte()
-            // set max health
-            val base = getBaseStatistics(speciesId, version)
-            val health = calculateStatistics(level, base, iV, eV, version).health
-            data.writeBidEndianShort(0x1, health.toShort())
-        }
-
-        override fun nickname(value: String, ignoreCase: Boolean): MutablePokemon.Mutator = apply {
-            getGameBoyDataFromString(value, 10, false, 11, ignoreCase)
-                .copyInto(data, DataSizeInBox + NameMaxSize)
-        }
-
-        override fun trainer(value: Trainer, ignoreNameCase: Boolean): MutablePokemon.Mutator {
-            data.writeBidEndianShort(0xC, value.visibleId.coerceAtMost(65535).toShort())
-            getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase)
-                .copyInto(data, DataSizeInBox)
-            return this
-        }
-
-        override fun experiencePoints(value: Int): MutablePokemon.Mutator = apply {
-            val experienceGroup = getExperienceGroup(speciesId)
-            val coercedValue = value.coerceAtMost(getExperiencePoints(100, experienceGroup))
-            data.writeBidEndianInt(0xE, coercedValue shl 8, write3Bytes = true)
-            val newLevel = getLevel(coercedValue, experienceGroup)
-            if (newLevel != level) {
-                level(newLevel)
-            }
-        }
-
-        override fun level(value: Int): MutablePokemon.Mutator = apply {
-            require(value in 1..100) { "Level $value is out of bounds [1 - 100]" }
-            data[0x3] = value.toUByte()
-            val sanitizedExperience = sanitizeExperiencePoints(
-                points = experiencePoints,
-                level = value,
-                experienceGroup = getExperienceGroup(speciesId)
-            )
-            if (sanitizedExperience != experiencePoints) {
-                experiencePoints(sanitizedExperience)
-            }
-        }
-
-        override fun move(index: Int, move: CorePokemon.Move): MutablePokemon.Mutator = apply {
-            require(index in 0..3) { "Index $index is out of bounds [0 - 3]" }
-            // set id
-            data[0x08 + index] = move.id.toUByte()
-            // set ups
-            val ups = move.ups.coerceIn(0, 3)
-            val upsIndex = 0X1D + index
-            data[upsIndex] = (data[upsIndex] and 0x3Fu) or ((ups and 0x3) shl 6).toUByte()
-            // set power points
-            val pp = move.powerPoints.coerceIn(0, getPowerPoints(move.id, ups, version))
-            val ppIndex = 0X1D + index
-            data[ppIndex] = (data[ppIndex] and 0xC0u) or pp.toUByte()
-        }
-
-        override fun shiny(value: Boolean): MutablePokemon.Mutator = apply {
-            if (isShiny == value) return@apply
-            if (value) {
-                individualValues(
-                    health = 10,
-                    defense = 10,
-                    specialAttack = 10,
-                    speed = 10,
-                    attack = iV.attack or 2
-                )
-            } else {
-                individualValues(attack = NonShinyAttackValues.random())
-            }
-        }
-
-        /**
-         * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
-         * If both are greater than -1, [specialDefense] will override [specialAttack]
-         */
-        override fun individualValues(
-            health: Int,
-            attack: Int,
-            defense: Int,
-            speed: Int,
-            specialAttack: Int,
-            specialDefense: Int,
-        ): MutablePokemon.Mutator = apply {
-            // health is ignored, in gen 1 it's determined by the other ivs
-            var totalIVs = data.readBigEndianUShort(0x1b).toInt()
-            fun setValue(value: Int, shiftAmount: Int) {
-                if (value >= 0) {
-                    totalIVs = (totalIVs and (0xF shl shiftAmount).inv()) or
-                            (value.coerceAtMost(0xF) shl shiftAmount)
-                }
-            }
-            setValue(attack, shiftAmount = 12)
-            setValue(defense, shiftAmount = 8)
-            setValue(speed, shiftAmount = 4)
-            setValue(specialAttack, shiftAmount = 0)
-            setValue(specialDefense, shiftAmount = 0)
-            data.writeBidEndianShort(0x1B, totalIVs.toShort())
-        }
-
-        /**
-         * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
-         * If both are greater than -1, [specialDefense] will override [specialAttack]
-         */
-        override fun effortValues(
-            health: Int,
-            attack: Int,
-            defense: Int,
-            speed: Int,
-            specialAttack: Int,
-            specialDefense: Int,
-        ): MutablePokemon.Mutator = apply {
-            fun setValue(value: Int, effortOffset: Int) {
-                if (value >= 0) {
-                    data.writeBidEndianShort(effortOffset, value.coerceAtMost(65535).toShort())
-                }
-            }
-            setValue(health, effortOffset = 0x11)
-            setValue(attack, effortOffset = 0x13)
-            setValue(defense, effortOffset = 0x15)
-            setValue(speed, effortOffset = 0x17)
-            setValue(specialAttack, effortOffset = 0x19)
-            setValue(specialDefense, effortOffset = 0x19)
-        }
-
-        override fun form(value: CorePokemon.Form): MutablePokemon.Mutator = this
-        override fun friendship(value: Int): MutablePokemon.Mutator = this
-        override fun heldItemId(value: Int): MutablePokemon.Mutator = this
-        override fun pokerus(value: Pokerus): MutablePokemon.Mutator = this
-        override fun metInfo(value: MetInfo): MutablePokemon.Mutator = this
-    }
+    override val mutator: MutablePokemon.Mutator by lazy { Mutator(this, data) }
 
     companion object {
-        /**
-         * Used by trainer name and pokemon nicknames
-         */
-        internal const val NameMaxSize = 11
-
-        /**
-         * Box Data + Trainer Name + Nickname
-         */
-        internal const val FullDataSizeInBox = 33 + NameMaxSize * 2
-
-        /**
-         * Pokemon Data stored in the box, without trainer name and nickname
-         */
-        internal const val DataSizeInBox = 33
-
-        /**
-         * Box Data + Party data, without trainer name and nickname
-         */
-        internal const val DataSizeInParty = 44
-
-        private val NonShinyAttackValues = listOf(1, 4, 5, 8, 9, 12, 13)
+        internal val NonShinyAttackValues = listOf(1, 4, 5, 8, 9, 12, 13)
 
         internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
             // update level

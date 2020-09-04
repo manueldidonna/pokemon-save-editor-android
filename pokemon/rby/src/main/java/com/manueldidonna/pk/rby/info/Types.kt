@@ -1,6 +1,5 @@
 package com.manueldidonna.pk.rby.info
 
-
 internal fun getFirstType(speciesId: Int): Int {
     return FirstTypes[speciesId - 1]
 }

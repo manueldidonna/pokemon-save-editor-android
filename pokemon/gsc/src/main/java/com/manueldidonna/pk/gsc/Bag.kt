@@ -26,7 +26,7 @@ internal class Bag(
         return "GSC Bag. Version: $version"
     }
 
-    override val inventoryTypes: Set<Type> = setOf(
+    override val inventoryTypes = setOf(
         Type.General,
         Type.Balls,
         Type.TechnicalMachines,

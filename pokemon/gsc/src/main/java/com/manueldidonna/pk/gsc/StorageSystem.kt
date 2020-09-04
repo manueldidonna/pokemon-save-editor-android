@@ -2,6 +2,7 @@ package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.Storage
 import com.manueldidonna.pk.core.Version
+import com.manueldidonna.pk.utils.copyIntoFor
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.core.StorageSystem as CoreStorageSystem
 
@@ -71,7 +72,7 @@ internal class StorageSystem(
     internal fun exportCurrentStorage(into: UByteArray) {
         val currentIndex = getCurrentBoxIndex()
         val currentOffset = getStorageOffset(currentIndex)
-        data.copyInto(into, BoxOffsets[currentIndex], currentOffset, currentOffset + BoxSize)
+        data.copyIntoFor(into, BoxOffsets[currentIndex], currentOffset, length = BoxSize)
     }
 
     companion object {
