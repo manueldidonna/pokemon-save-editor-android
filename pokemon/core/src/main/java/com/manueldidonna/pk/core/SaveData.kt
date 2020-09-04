@@ -12,6 +12,6 @@ interface SaveData : StorageSystem {
     fun exportToBytes(): UByteArray
 
     interface Factory {
-        fun createSaveData(data: UByteArray): SaveData?
+        fun create(data: UByteArray): SaveData?
     }
 }

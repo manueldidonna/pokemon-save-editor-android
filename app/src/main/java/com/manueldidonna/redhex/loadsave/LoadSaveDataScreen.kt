@@ -50,7 +50,7 @@ private fun createSaveData(uri: Uri?, context: Context) {
     if (uri == null) return
     context.contentResolver.openInputStream(uri).use { input ->
         if (input == null) return
-        AppState.saveData = SaveDataFactory.createSaveData(input.readBytes().toUByteArray())
+        AppState.saveData = SaveDataFactory.create(input.readBytes().toUByteArray())
         Log.d("savedata", AppState.saveData.toString())
     }
 }

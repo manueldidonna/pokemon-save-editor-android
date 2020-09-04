@@ -3,6 +3,7 @@ package com.manueldidonna.pk.gsc
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.core.Version
 
+// TODO: DETECT jap and kor saves
 object GSCSaveDataFactory : SaveData.Factory {
 
     private const val SizeRawU = 0x8000
@@ -10,8 +11,7 @@ object GSCSaveDataFactory : SaveData.Factory {
     private const val SizeBatU = 0x802C
     private const val SizeEmulatorU = 0x8030
 
-    // TODO: DETECT jap and kor saves
-    override fun createSaveData(data: UByteArray): SaveData? {
+    override fun create(data: UByteArray): SaveData? {
         val supportedSizes = listOf(SizeBatU, SizeEmulatorU, SizeRawU, SizeVirtualU)
         return when {
             !supportedSizes.contains(data.size) -> null

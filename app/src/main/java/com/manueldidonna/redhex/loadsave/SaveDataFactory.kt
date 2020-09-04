@@ -11,9 +11,9 @@ object SaveDataFactory : SaveData.Factory {
         GSCSaveDataFactory
     )
 
-    override fun createSaveData(data: UByteArray): SaveData? {
+    override fun create(data: UByteArray): SaveData? {
         for (factory in factories) {
-            val saveData = factory.createSaveData(data)
+            val saveData = factory.create(data)
             if (saveData != null)
                 return saveData
         }
