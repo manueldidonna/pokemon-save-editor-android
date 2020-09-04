@@ -39,7 +39,7 @@ internal class Storage(
         require(index in 0 until capacity) {
             "Index $index is out of bounds [0 - ${capacity - 1}]"
         }
-        require(pokemon.version.isFirstGeneration) {
+        require(pokemon.version.generation == 1) {
             "Unsupported pokemon version: ${pokemon.version}"
         }
 

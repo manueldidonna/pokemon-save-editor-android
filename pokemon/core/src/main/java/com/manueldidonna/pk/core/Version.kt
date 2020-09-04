@@ -13,15 +13,9 @@ enum class Version(val value: Int) {
     Crystal(41)
 }
 
-inline val Version.isFirstGeneration: Boolean
-    get() = this.value in 35..38
-
-inline val Version.isSecondGeneration: Boolean
-    get() = this.value in 39..41
-
-inline val Version.generation: Int
-    get() = when (this.value) {
+val Version.generation: Int
+    get() = when (value) {
         in 35..38 -> 1
         in 39..41 -> 2
-        else -> throw IllegalStateException()
+        else -> throw IllegalStateException("Unsupported Version value: $value")
     }

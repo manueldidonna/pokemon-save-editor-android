@@ -1,16 +1,15 @@
 package com.manueldidonna.pk.resources.text.english
 
 import com.manueldidonna.pk.core.Version
-import com.manueldidonna.pk.core.isFirstGeneration
-import com.manueldidonna.pk.core.isSecondGeneration
+import com.manueldidonna.pk.core.generation
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 internal class EnglishSpecies : PokemonTextResources.Species {
 
     override fun getAllSpecies(version: Version): List<String> {
-        return when {
-            version.isFirstGeneration -> species.subList(0, 151)
-            version.isSecondGeneration -> species
+        return when (version.generation) {
+            1 -> species.subList(0, 151)
+            2 -> species
             else -> throw IllegalStateException("Unsupported version: $version")
         }
     }

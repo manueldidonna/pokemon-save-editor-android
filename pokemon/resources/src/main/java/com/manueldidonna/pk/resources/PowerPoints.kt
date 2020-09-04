@@ -1,14 +1,13 @@
 package com.manueldidonna.pk.resources
 
 import com.manueldidonna.pk.core.Version
-import com.manueldidonna.pk.core.isFirstGeneration
-import com.manueldidonna.pk.core.isSecondGeneration
+import com.manueldidonna.pk.core.generation
 
 fun getPowerPoints(moveId: Int, ups: Int, version: Version): Int {
     if (moveId == 0) return 0
-    val points = when {
-        version.isFirstGeneration -> FirstGenPowerPoints[moveId].toInt()
-        version.isSecondGeneration -> SecondGenPowerPoints[moveId].toInt()
+    val points = when(version.generation) {
+        1 -> FirstGenPowerPoints[moveId].toInt()
+        2 -> SecondGenPowerPoints[moveId].toInt()
         else -> throw IllegalStateException("Unsupported version: $version")
     }
     return when {

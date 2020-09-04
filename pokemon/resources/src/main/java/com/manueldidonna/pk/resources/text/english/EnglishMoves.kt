@@ -1,8 +1,7 @@
 package com.manueldidonna.pk.resources.text.english
 
 import com.manueldidonna.pk.core.Version
-import com.manueldidonna.pk.core.isFirstGeneration
-import com.manueldidonna.pk.core.isSecondGeneration
+import com.manueldidonna.pk.core.generation
 import com.manueldidonna.pk.resources.text.PokemonTextResources
 
 internal class EnglishMoves : PokemonTextResources.Moves {
@@ -13,9 +12,9 @@ internal class EnglishMoves : PokemonTextResources.Moves {
     }
 
     override fun getAllMoves(version: Version): List<String> {
-        return when {
-            version.isFirstGeneration -> moves.subList(0, 166)
-            version.isSecondGeneration -> moves
+        return when (version.generation) {
+            1 -> moves.subList(0, 166)
+            2 -> moves
             else -> throw IllegalStateException("Unsupported version: $version")
         }
     }

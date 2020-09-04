@@ -27,9 +27,9 @@ class EmptyPokemonTemplate(
     }
 
     private fun getSpeciesId(version: Version): Int {
-        return when {
-            version.isFirstGeneration -> 151
-            version.isSecondGeneration -> 251
+        return when (version.generation) {
+            1 -> 151
+            2 -> 251
             else -> throw IllegalStateException("Unsupported version $version")
         }
     }
