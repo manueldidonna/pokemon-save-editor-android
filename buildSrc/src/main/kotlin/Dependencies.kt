@@ -14,7 +14,7 @@ object Libs {
 
     object Versions {
         const val kotlin = "1.4.0"
-        const val compose = "0.1.0-dev17"
+        const val compose = "1.0.0-alpha02"
     }
 
     object Kotlin {
@@ -31,7 +31,7 @@ object Libs {
         const val materialComponents = "com.google.android.material:material:1.2.0"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
         const val coil = "io.coil-kt:coil:1.0.0-rc1"
-        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.1.9"
+        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.2.1"
     }
 
     object AndroidX {
