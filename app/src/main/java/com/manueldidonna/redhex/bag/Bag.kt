@@ -1,8 +1,10 @@
-package com.manueldidonna.redhex.inventory
+package com.manueldidonna.redhex.bag
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.foundation.lazy.LazyColumnForIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Add
@@ -11,18 +13,18 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.manueldidonna.pk.core.Bag
 import com.manueldidonna.pk.core.Inventory
 import com.manueldidonna.pk.core.isFull
 import com.manueldidonna.pk.core.stackItem
 import com.manueldidonna.redhex.common.*
-import dev.chrisbanes.accompanist.coil.CoilImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun Inventory(modifier: Modifier, bag: Bag) {
+fun Bag(bag: Bag) {
     val inventoryTypes = remember { bag.inventoryTypes.toList() }
 
     val (type, setType) = rememberMutableState { inventoryTypes.first() }
@@ -41,15 +43,24 @@ fun Inventory(modifier: Modifier, bag: Bag) {
 
     val (selectedItem, selectItem) = rememberMutableState { InventoryItem.Invalid }
 
-    Stack(modifier = modifier.fillMaxSize()) {
-        Column {
-            InventoryTypes(types = inventoryTypes, setType)
-            LazyColumnFor(items = items) { item ->
-                InventoryItem(item = item, selectItem)
+    Stack(modifier = Modifier.fillMaxSize()) {
+        val isInventoryFull = inventory.value.isFull
+        InventoryTypes(types = inventoryTypes, setType)
+        LazyColumnForIndexed(
+            items = items,
+            modifier = Modifier.fillMaxSize()
+        ) { index, item ->
+            if (index == 0) {
+                Spacer(Modifier.height(48.dp))
+            }
+            InventoryItem(item = item, selectItem)
+            if (index == items.lastIndex && !isInventoryFull) {
+                Spacer(Modifier.height(72.dp))
+            } else {
                 Divider()
             }
         }
-        if (!inventory.value.isFull)
+        if (!isInventoryFull)
             InsertItemButton(Modifier.padding(16.dp).gravity(Alignment.BottomEnd)) {
                 selectItem(InventoryItem.empty(index = inventory.value.size))
             }
@@ -72,7 +83,7 @@ private fun InventoryEditorDialog(
     // TODO: use a bottom sheet
     val scope = rememberCoroutineScope()
     ThemedDialog(onDismissRequest = onDismissRequest) {
-        InventoryEditor(
+        InventoryItemEditor(
             item = item,
             itemIds = inventory.supportedItemIds,
             maxAllowedQuantity = inventory.maxQuantity,
@@ -93,10 +104,11 @@ private fun InventoryEditorDialog(
 
 @Composable
 private fun InsertItemButton(modifier: Modifier, onClick: () -> Unit) {
-    FloatingActionButton(
-        modifier = modifier,
+    ExtendedFloatingActionButton(
+        text = { Text(text = "INSERT ITEM") },
         icon = { Icon(asset = Icons.TwoTone.Add) },
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier
     )
 }
 
@@ -115,8 +127,11 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
     val resources = PokemonResourcesAmbient.current.items
     var selectedIndex by rememberMutableState { 0 }
     ScrollableTabRow(
+        contentColor = MaterialTheme.colors.onSurface,
+        backgroundColor = TranslucentSurfaceColor(),
+        edgePadding = 0.dp,
         selectedTabIndex = selectedIndex,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().height(AppBarHeight).zIndex(8f),
     ) {
         types.forEachIndexed { index, type ->
             Tab(
@@ -134,14 +149,10 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
 
 @Composable
 private fun InventoryItem(item: InventoryItem, onClick: (item: InventoryItem) -> Unit) {
-    ListItem(
-        text = { Text(text = item.name) },
-        secondaryText = { Text(text = "Qt. ${item.quantity}") },
-        modifier = Modifier.clickable(onClick = { onClick(item) }),
-        icon = {
-            Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
-                CoilImage(data = item.spriteSource.value, modifier = ItemSpriteSize)
-            }
-        }
+    ListItemWithSprite(
+        primaryText = item.name,
+        secondaryText = "Qt. ${item.quantity}",
+        spriteSource = item.spriteSource,
+        modifier = Modifier.clickable(onClick = { onClick(item) })
     )
 }

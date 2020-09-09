@@ -1,10 +1,8 @@
-package com.manueldidonna.redhex.loadsave
+package com.manueldidonna.redhex.settings
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.activity.invoke
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,19 +15,18 @@ import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ContextAmbient
-import androidx.ui.tooling.preview.Preview
-import com.manueldidonna.redhex.AppState
+import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.redhex.common.PrepareActivityContract
 
 @Composable
-fun LoadSaveDataScreen() {
+fun ImportSaveDataFromFile(onImportFinish: (SaveData?) -> Unit) {
     val context = ContextAmbient.current
     val launchIntent = savedInstanceState { false }
     val launcher = PrepareActivityContract(
         contractKey = "OPEN_SAVE_DATA",
         contract = ActivityResultContracts.OpenDocument(),
-        activityResultCallback = ActivityResultCallback { uri: Uri? ->
-            createSaveData(uri, context)
+        activityResultCallback = { uri: Uri? ->
+            onImportFinish(createSaveData(uri, context))
         }
     )
     Surface(color = MaterialTheme.colors.background, modifier = Modifier.fillMaxSize()) {
@@ -46,19 +43,10 @@ fun LoadSaveDataScreen() {
     }
 }
 
-private fun createSaveData(uri: Uri?, context: Context) {
-    if (uri == null) return
+private fun createSaveData(uri: Uri?, context: Context): SaveData? {
+    if (uri == null) return null
     context.contentResolver.openInputStream(uri).use { input ->
-        if (input == null) return
-        AppState.saveData = SaveDataFactory.create(input.readBytes().toUByteArray())
-        Log.d("savedata", AppState.saveData.toString())
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewLoadSaveDataScreen() {
-    MaterialTheme {
-        LoadSaveDataScreen()
+        if (input == null) return null
+        return SaveDataFactory.create(input.readBytes().toUByteArray())
     }
 }

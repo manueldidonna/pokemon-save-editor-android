@@ -3,11 +3,13 @@ package com.manueldidonna.redhex.editor
 import androidx.compose.foundation.Icon
 import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.Text
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.InnerPadding
+import androidx.compose.foundation.layout.Stack
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.IconButton
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Save
@@ -16,13 +18,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.redhex.common.AppBarHeight
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
+import com.manueldidonna.redhex.common.TranslucentAppBar
 
 interface PokemonEditorEvents {
-    fun goBackToPokemonList()
-    fun savePokemon(pokemon: Pokemon)
+    fun closeEditor()
+    fun applyPokemonChanges(pokemon: Pokemon)
 }
 
 @Composable
@@ -33,26 +38,25 @@ fun PokemonEditor(
 ) {
     val observablePokemon = remember { ObservablePokemon(pokemon) }
     Stack(modifier.fillMaxSize()) {
-        Column {
-            TopAppBar(
-                title = { Text(text = "Pokemon Editor") },
-                navigationIcon = {
-                    IconButton(onClick = listener::goBackToPokemonList) {
-                        Icon(Icons.TwoTone.ArrowBack)
-                    }
+        TranslucentAppBar(
+            modifier = Modifier.zIndex(8f),
+            title = "Pokemon Editor",
+            navigationIcon = {
+                IconButton(onClick = listener::closeEditor) {
+                    Icon(Icons.TwoTone.ArrowBack)
                 }
-            )
-            EditorFields(
-                observablePokemon = observablePokemon,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = InnerPadding(top = 16.dp, bottom = 32.dp + 48.dp)
-            )
-        }
+            }
+        )
+        EditorFields(
+            observablePokemon = observablePokemon,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = InnerPadding(top = 16.dp + AppBarHeight, bottom = 32.dp + 48.dp)
+        )
         ExtendedFloatingActionButton(
             modifier = Modifier.gravity(Alignment.BottomEnd).padding(16.dp),
-            text = { Text("Save Pokemon") },
+            text = { Text("APPLY CHANGES") },
             icon = { Icon(asset = Icons.TwoTone.Save) },
-            onClick = { listener.savePokemon(pokemon) }
+            onClick = { listener.applyPokemonChanges(pokemon) }
         )
     }
 }

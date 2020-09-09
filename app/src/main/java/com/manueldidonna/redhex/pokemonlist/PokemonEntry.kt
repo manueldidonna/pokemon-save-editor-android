@@ -8,24 +8,24 @@ import com.manueldidonna.redhex.common.SpriteSource
 import com.manueldidonna.redhex.common.SpritesRetriever
 
 @Immutable
-data class PokemonPreview(
+data class PokemonEntry(
     val isEmpty: Boolean,
     val nickname: String,
     val label: String,
     val source: SpriteSource,
 ) {
     companion object {
-        val Empty = PokemonPreview(true, "Empty Slot", "", SpriteSource.PokeBall)
+        private val Empty = PokemonEntry(true, "Empty Slot", "", SpriteSource.PokeBall)
 
         fun fromStorage(
             storage: Storage,
             resources: PokemonTextResources.Natures,
             spritesRetriever: SpritesRetriever,
-        ): List<PokemonPreview> {
+        ): List<PokemonEntry> {
             return List(storage.capacity) { i ->
                 val pokemon = storage[i]
                 if (pokemon.isEmpty) return@List Empty
-                return@List PokemonPreview(
+                return@List PokemonEntry(
                     isEmpty = false,
                     nickname = pokemon.nickname,
                     label = "${resources.getNatureById(pokemon.natureId)} - Lv.${pokemon.level}",

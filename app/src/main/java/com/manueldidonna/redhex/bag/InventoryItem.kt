@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.inventory
+package com.manueldidonna.redhex.bag
 
 import androidx.compose.runtime.Immutable
 import com.manueldidonna.pk.core.Inventory

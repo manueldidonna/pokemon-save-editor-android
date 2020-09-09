@@ -1,25 +1,26 @@
 package com.manueldidonna.redhex.editor
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Icon
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.contentColor
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumnForIndexed
+import androidx.compose.foundation.lazy.LazyColumnFor
 import androidx.compose.material.IconButton
 import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Star
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.manueldidonna.pk.core.Version
 import com.manueldidonna.redhex.common.*
-import com.manueldidonna.redhex.common.ThemedDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ModifySpecies(
@@ -31,10 +32,10 @@ fun ModifySpecies(
 ) {
     var changeSpecies by rememberMutableState { false }
     if (changeSpecies) {
-        ChangeSpeciesDialog(
+        SpeciesSelectorDialog(
             version = version,
             onDismissRequest = { changeSpecies = false },
-            onSpeciesChange = onSpeciesIdChange
+            onSelect = onSpeciesIdChange
         )
     }
     Column {
@@ -44,9 +45,10 @@ fun ModifySpecies(
                 .clickable(onClick = { changeSpecies = true })
                 .padding(horizontal = 8.dp)
         ) {
-            Box(gravity = ContentGravity.Center, modifier = Modifier.size(48.dp)) {
-                PokemonSprite(source = spriteSource(species.id, shinySprite = species.isShiny))
-            }
+            PokemonSprite(
+                source = spriteSource(species.id, shinySprite = species.isShiny),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
             Text(
                 text = speciesName(species.id),
                 style = MaterialTheme.typography.body1,
@@ -82,19 +84,32 @@ private fun speciesName(speciesId: Int): String {
     return resources.species.getSpeciesById(speciesId)
 }
 
+@Immutable
+private data class SpeciesIdWithName(val id: Int, val name: String)
+
 @Composable
-private fun ChangeSpeciesDialog(
+private fun SpeciesSelectorDialog(
     version: Version,
     onDismissRequest: () -> Unit,
-    onSpeciesChange: (speciesId: Int) -> Unit,
+    onSelect: (speciesId: Int) -> Unit,
 ) {
     val resources = PokemonResourcesAmbient.current.species
+    val (species, updateSpecies) = rememberMutableState<List<SpeciesIdWithName>> { emptyList() }
+    launchInComposition {
+        updateSpecies(withContext(Dispatchers.IO) {
+            resources
+                .getAllSpecies(version)
+                .mapIndexed { index, name -> SpeciesIdWithName(index + 1, name) }
+                .sortedBy { it.name }
+        })
+    }
+    if (species.isEmpty()) return
     ThemedDialog(onDismissRequest = onDismissRequest) {
-        LazyColumnForIndexed(items = resources.getAllSpecies(version)) { index, name ->
+        LazyColumnFor(items = species) { entity ->
             ListItem(
-                text = { Text(text = name) },
+                text = { Text(text = entity.name) },
                 modifier = Modifier.clickable(onClick = {
-                    onSpeciesChange(index + 1)
+                    onSelect(entity.id)
                     onDismissRequest()
                 })
             )

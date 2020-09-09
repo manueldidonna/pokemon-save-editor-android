@@ -14,11 +14,6 @@ data class PokedexEntry(
     val name: String,
     val source: SpriteSource,
 ) : Pokedex.Entry {
-
-    fun copy(isSeen: Boolean, isOwned: Boolean): PokedexEntry {
-        return PokedexEntry(speciesId, isSeen, isOwned, name, source)
-    }
-
     companion object {
         fun getAllFromPokedex(
             pokedex: Pokedex,

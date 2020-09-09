@@ -1,32 +1,31 @@
 package com.manueldidonna.redhex.pokedex
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumnFor
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumnForIndexed
+import androidx.compose.material.Divider
+import androidx.compose.material.IconButton
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.manueldidonna.pk.core.Pokedex
-import com.manueldidonna.redhex.common.PokemonResourcesAmbient
-import com.manueldidonna.redhex.common.PokemonSpriteSize
-import com.manueldidonna.redhex.common.SpriteSource
-import com.manueldidonna.redhex.common.SpritesRetrieverAmbient
-import dev.chrisbanes.accompanist.coil.CoilImage
+import com.manueldidonna.redhex.common.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
-    val entries: SnapshotStateList<PokedexEntry> = getPokedexEntries(pokedex)
+fun Pokedex(pokedex: Pokedex, onClosePokedex: () -> Unit) {
+    val entries = getPokedexEntries(pokedex)
 
-    val mutateEntries: (PokedexEntry) -> Unit = remember(entries) {
-        { entry ->
+    val mutateEntries = remember(entries) {
+        { entry: PokedexEntry ->
             val newEntry = when {
                 entry.isOwned -> entry.copy(isSeen = false, isOwned = false)
                 entry.isSeen -> entry.copy(isSeen = true, isOwned = true)
@@ -37,29 +36,25 @@ fun Pokedex(modifier: Modifier = Modifier, pokedex: Pokedex) {
         }
     }
 
-    Column(modifier = modifier) {
-        TopAppBar(
-            title = {
-                Text(text = pokedexCompletionStatus(pokedex.pokemonCount, entries))
+    Stack(Modifier.fillMaxSize()) {
+        TranslucentAppBar(
+            title = "Pokedex",
+            modifier = Modifier.zIndex(8f),
+            navigationIcon = {
+                IconButton(onClick = onClosePokedex) {
+                    Icon(asset = Icons.TwoTone.ArrowBack)
+                }
             }
         )
-        if (entries.isEmpty()) return@Column
-        LazyColumnFor(items = entries) { entry ->
+        if (entries.isEmpty()) return@Stack
+        LazyColumnForIndexed(items = entries) { index, entry ->
+            if (index == 0) {
+                // TODO: BUG with lazy column contentPadding
+                Spacer(Modifier.height(AppBarHeight))
+            }
             PokedexEntry(entry = entry, mutateEntries)
             Divider()
         }
-    }
-}
-
-@Stable
-@Composable
-private fun pokedexCompletionStatus(pokedexCount: Int, entries: List<PokedexEntry>): String {
-    val seenCount = entries.count { it.isSeen }
-    return if (seenCount != pokedexCount) {
-        "${(seenCount.toDouble() / pokedexCount * 100).toInt()}% Pokemon Seen"
-    } else {
-        val ownedCount = entries.count { it.isOwned }
-        "${(ownedCount.toDouble() / pokedexCount * 100).toInt()}% Pokemon Owned"
     }
 }
 
@@ -78,10 +73,6 @@ private fun getPokedexEntries(pokedex: Pokedex): SnapshotStateList<PokedexEntry>
     return mutableEntries
 }
 
-private val OwnedIcon = @Composable {
-    Icon(asset = Icons.TwoTone.CheckCircle, tint = MaterialTheme.colors.secondary)
-}
-
 @Composable
 private fun PokedexEntry(entry: PokedexEntry, onClick: (PokedexEntry) -> Unit) {
     ListItem(
@@ -91,22 +82,12 @@ private fun PokedexEntry(entry: PokedexEntry, onClick: (PokedexEntry) -> Unit) {
         modifier = Modifier.clickable(onClick = { onClick(entry) }),
         icon = {
             Box(gravity = ContentGravity.Center, modifier = Modifier.size(40.dp)) {
-                PokedexSprite(source = entry.source, isSeen = entry.isSeen)
+                PokemonSprite(source = entry.source, enabled = entry.isSeen)
             }
         }
     )
 }
 
-@Composable
-private fun PokedexSprite(source: SpriteSource, isSeen: Boolean) {
-    var colorFilter: ColorFilter? = null
-    if (!isSeen) {
-        val emphasis = EmphasisAmbient.current.disabled
-        colorFilter = ColorFilter.tint(emphasis.applyEmphasis(MaterialTheme.colors.onSurface))
-    }
-    CoilImage(
-        modifier = PokemonSpriteSize,
-        colorFilter = colorFilter,
-        data = source.value
-    )
+private val OwnedIcon = @Composable {
+    Icon(asset = Icons.TwoTone.CheckCircle, tint = MaterialTheme.colors.secondary)
 }

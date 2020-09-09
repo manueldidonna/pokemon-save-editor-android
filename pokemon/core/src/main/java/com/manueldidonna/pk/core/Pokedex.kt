@@ -28,3 +28,7 @@ interface Pokedex {
         ) : Entry
     }
 }
+
+fun Pokedex.catchPokemonById(speciesId: Int) {
+    setEntry(Pokedex.Entry.Immutable(speciesId, isSeen = true, isOwned = true))
+}

@@ -155,6 +155,7 @@ private fun MoveSelectorDialog(
                 .sortedBy { it.name }
         })
     }
+    if (moves.isEmpty()) return
     ThemedDialog(onDismissRequest = onCloseRequest) {
         LazyColumnFor(items = moves) { entity ->
             ListItem(

@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.inventory
+package com.manueldidonna.redhex.bag
 
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.layout.*
@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
-fun InventoryEditor(
+fun InventoryItemEditor(
     item: Inventory.Item,
     maxAllowedQuantity: Int,
     itemIds: List<Int>,

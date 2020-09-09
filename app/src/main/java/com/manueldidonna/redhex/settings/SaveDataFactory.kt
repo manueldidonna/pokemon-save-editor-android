@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.loadsave
+package com.manueldidonna.redhex.settings
 
 import com.manueldidonna.pk.core.SaveData
 import com.manueldidonna.pk.gsc.GSCSaveDataFactory

@@ -1,4 +1,4 @@
-package com.manueldidonna.redhex.inventory
+package com.manueldidonna.redhex.bag
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
