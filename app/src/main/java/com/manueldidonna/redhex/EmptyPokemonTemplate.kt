@@ -20,7 +20,7 @@ class EmptyPokemonTemplate(
             .move(index = 3, move = Pokemon.Move.Empty)
             .nickname(resources.getSpeciesById(pokemon.speciesId), ignoreCase = true)
             .trainer(trainer)
-            .individualValues(all = 15)
+            .individualValues(all = 31)
             .effortValues(all = 999999)
             .shiny(false)
             .friendship(0)

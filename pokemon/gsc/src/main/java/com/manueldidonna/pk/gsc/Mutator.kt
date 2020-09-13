@@ -13,7 +13,7 @@ import kotlin.random.Random
 
 internal class Mutator(
     private val pokemon: MutablePokemon,
-    private val data: UByteArray
+    private val data: UByteArray,
 ) : MutablePokemon.Mutator {
 
     override fun speciesId(value: Int): MutablePokemon.Mutator = apply {
@@ -29,7 +29,7 @@ internal class Mutator(
         data.writeBidEndianShort(0x06, value.visibleId.coerceAtMost(65535).toShort())
         getGameBoyDataFromString(value.name, 7, false, 11, ignoreNameCase).copyInto(data, 0x20)
         // set trainer gender in pokemon crystal
-        if (pokemon.version == Version.Crystal && pokemon.trainer.gender != value.gender) {
+        if (pokemon.version == Version.Crystal) {
             var caughtData = data.readBigEndianUShort(0x1D).toInt()
             val genderValue = if (value.gender == Trainer.Gender.Male) 0 else 1
             caughtData = (caughtData and 0xFF7F) or ((genderValue and 1) shl 7)
@@ -110,7 +110,7 @@ internal class Mutator(
         defense: Int,
         speed: Int,
         specialAttack: Int,
-        specialDefense: Int
+        specialDefense: Int,
     ): MutablePokemon.Mutator = apply {
         // health is ignored, in gen 2 it's determined by the other ivs
         var ivs = data.readBigEndianUShort(0x15).toInt()
@@ -132,7 +132,7 @@ internal class Mutator(
         defense: Int,
         speed: Int,
         specialAttack: Int,
-        specialDefense: Int
+        specialDefense: Int,
     ): MutablePokemon.Mutator = apply {
         fun setValue(value: Int, effortOffset: Int) {
             if (value < 0) return
@@ -164,7 +164,7 @@ internal class Mutator(
     }
 
     override fun metInfo(value: MetInfo): MutablePokemon.Mutator = apply {
-        val (metLevel, time, locationId, gender) = value
+        val (metLevel, time, locationId) = value
         require(time is MetInfo.Time.TimesOfDay && time.value in 1..3) {
             "Invalid time format or value for $time"
         }
@@ -179,8 +179,6 @@ internal class Mutator(
         caught = (caught and 0xC0FF) or (metLevel and 0x3F shl 8)
         caught = (caught and 0xFF80) or (locationId and 0x7F)
         caught = (caught and 0x3FFF) or (time.value and 0x3 shl 14)
-        val genderValue = if (gender == Trainer.Gender.Male) 0 else 1
-        caught = (caught and 0xFF7F) or ((genderValue and 1) shl 7)
         data.writeBidEndianShort(0x1D, caught.toShort())
     }
 

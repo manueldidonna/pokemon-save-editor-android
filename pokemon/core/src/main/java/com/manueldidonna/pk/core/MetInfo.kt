@@ -4,7 +4,6 @@ data class MetInfo(
     val level: Int,
     val time: Time,
     val locationId: Int,
-    val trainerGender: Trainer.Gender
     // TODO: val ballId: Int
 ) {
 

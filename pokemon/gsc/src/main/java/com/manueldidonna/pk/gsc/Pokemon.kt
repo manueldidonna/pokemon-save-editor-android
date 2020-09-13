@@ -207,8 +207,7 @@ internal class Pokemon(
             return MetInfo(
                 level = caught ushr 8 and 0x3F,
                 locationId = caught and 0x7F,
-                time = MetInfo.Time.TimesOfDay((caught ushr 14) and 0x3),
-                trainerGender = if (caught ushr 7 and 1 == 0) Gender.Male else Gender.Female
+                time = MetInfo.Time.TimesOfDay((caught ushr 14) and 0x3)
             )
         }
 

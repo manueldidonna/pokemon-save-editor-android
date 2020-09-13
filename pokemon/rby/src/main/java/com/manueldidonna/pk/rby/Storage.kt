@@ -126,11 +126,11 @@ internal class Storage(
         }
     }
 
-    private fun setPokemonData(pokemonData: UByteArray, slot: Int) {
+    private fun setPokemonData(pokemonData: UByteArray, index: Int) {
         require(pokemonData.size == PokemonSizeInBoxWithNames) {
             "Invalid Pokemon data size: ${pokemonData.size}"
         }
-        val offset = getPokemonOffsetByIndex(slot)
+        val offset = getPokemonOffsetByIndex(index)
         with(pokemonData) {
             copyIntoFor(data, offset.firstByte, 0, length = PokemonSizeInBox)
             copyIntoFor(data, offset.trainerName, PokemonSizeInBox, length = 11)
