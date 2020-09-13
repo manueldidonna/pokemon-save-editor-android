@@ -6,8 +6,10 @@ import com.manueldidonna.pk.resources.text.PokemonTextResources
 class EmptyPokemonTemplate(
     private val trainer: Trainer,
     private val resources: PokemonTextResources.Species,
-) : MutablePokemon.Template {
-    override fun apply(pokemon: MutablePokemon) {
+) : Pokemon.Template {
+    override fun applyTo(pokemon: Pokemon): Pokemon {
+        @Suppress("NAME_SHADOWING")
+        val pokemon = pokemon.toMutablePokemon()
         pokemon.mutator
             .speciesId(getSpeciesId(pokemon.version))
             .level(1)
@@ -24,6 +26,7 @@ class EmptyPokemonTemplate(
             .friendship(0)
             .pokerus(Pokerus.NeverInfected)
             .heldItemId(0)
+        return pokemon
     }
 
     private fun getSpeciesId(version: Version): Int {

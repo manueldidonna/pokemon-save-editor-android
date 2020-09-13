@@ -35,7 +35,7 @@ fun PokemonSprite(
 fun ListItemWithSprite(
     modifier: Modifier = Modifier,
     primaryText: String,
-    secondaryText: String?,
+    secondaryText: String? = null,
     spriteSource: SpriteSource,
     enabled: Boolean = true,
 ) {

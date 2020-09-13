@@ -17,11 +17,16 @@ interface Storage {
     val size: Int
 
     /**
-     * Return a [Pokemon] instance.
+     * A [Pokemon.Factory] to create a valid pokemon for this storage.
+     */
+    val pokemonFactory: Pokemon.Factory
+
+    /**
+     * Return a [Pokemon] instance or null if the [index] is empty.
      *
      * Should throw an [IllegalStateException] if [index] isn't lower than [capacity]
      */
-    operator fun get(index: Int): Pokemon
+    operator fun get(index: Int): Pokemon?
 
     /**
      * Return a new [MutableStorage] instance.
@@ -47,9 +52,16 @@ interface MutableStorage : Storage {
 
     /**
      * Removes a pokemon at the specified [index] from the storage.
-     * Return the pokemon that has been removed.
      *
      * Should throw an [IllegalStateException] if [index] isn't lower than [capacity]
      */
-    fun removeAt(index: Int): Pokemon
+    fun removeAt(index: Int)
+}
+
+/**
+ * Replaces the pokemon at the specified [index] in this storage with the specified [pokemon]
+ * if it's not null, otherwise removes a pokemon at [index]
+ */
+fun MutableStorage.setOrRemove(index: Int, pokemon: Pokemon?) {
+    if (pokemon.isEmpty()) removeAt(index) else set(index, pokemon)
 }

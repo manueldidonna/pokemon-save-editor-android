@@ -12,10 +12,9 @@ internal class StorageSystem(
 
     override fun set(index: Int, storage: Storage) {
         require(index in storageIndices) { "Index $index is out of bounds [$storageIndices]" }
-        require(storage is com.manueldidonna.pk.rby.Storage) { "Invalid Storage class" }
         val import = storage.exportToBytes()
         require(import.size == getStorageSize(index)) {
-            "Storage size ${storage.size} is incompatible with the index $index"
+            "Incompatible Storage data size: ${storage.size}"
         }
         import.copyInto(data, getStorageOffset(index))
     }

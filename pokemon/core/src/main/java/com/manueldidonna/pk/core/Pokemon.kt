@@ -1,5 +1,9 @@
 package com.manueldidonna.pk.core
 
+import com.manueldidonna.pk.core.MutablePokemon.Mutator
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
+
 /**
  * A read-only entity that holds some properties.
  * Nullable properties may not exist in some games.
@@ -101,26 +105,45 @@ interface Pokemon {
      * Return a bytes representation of this pokemon.
      */
     fun exportToBytes(): UByteArray
+
+    /**
+     * An interface to apply a predefined set of values to a [Pokemon]
+     */
+    fun interface Template {
+        /**
+         * Return a new [Pokemon] instance.
+         */
+        fun applyTo(pokemon: Pokemon): Pokemon
+    }
+
+    /**
+     * An interface to create a valid [Pokemon] instance.
+     */
+    interface Factory {
+        /**
+         * Return a new [Pokemon] instance from a [Template].
+         * Should return null if [template] create an empty pokemon.
+         *
+         * @see isEmpty
+         * @see Pokemon.position
+         */
+        fun create(template: Template, position: Position): Pokemon?
+    }
 }
 
-// TODO: remove nickname check
-inline val Pokemon.isEmpty: Boolean get() = speciesId == 0 || nickname.isEmpty()
+@OptIn(ExperimentalContracts::class)
+fun Pokemon?.isEmpty(): Boolean {
+    contract {
+        returns(false) implies (this@isEmpty != null)
+    }
+    return this == null || speciesId == 0
+}
 
 /**
  * A mutable variant of [Pokemon].
  * @see Mutator
  */
 interface MutablePokemon : Pokemon {
-
-    /**
-     * An interface to apply a predefined set of values to a [MutablePokemon]
-     *
-     * TODO: with kotlin 1.4 -> fun interface Template
-     */
-    interface Template {
-        fun apply(pokemon: MutablePokemon)
-    }
-
     /**
      * A [Mutator] makes explicit the desire to modify the pokemon's data
      */
@@ -174,10 +197,10 @@ interface MutablePokemon : Pokemon {
     }
 }
 
-fun MutablePokemon.Mutator.effortValues(all: Int): MutablePokemon.Mutator = apply {
+fun Mutator.effortValues(all: Int): Mutator = apply {
     effortValues(all, all, all, all, all, all)
 }
 
-fun MutablePokemon.Mutator.individualValues(all: Int): MutablePokemon.Mutator = apply {
+fun Mutator.individualValues(all: Int): Mutator = apply {
     individualValues(all, all, all, all, all, all)
 }

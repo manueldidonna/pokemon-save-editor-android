@@ -12,6 +12,8 @@ internal class Storage(
     override val name: String,
 ) : MutableStorage {
 
+    override val pokemonFactory: CorePokemon.Factory by lazy { PokemonFactory(version) }
+
     override var size: Int
         get() = data[0].toInt()
         private set(value) {
@@ -20,22 +22,19 @@ internal class Storage(
             data[coercedValue + 1] = 0xFF.toUByte()
         }
 
-    override fun get(index: Int): CorePokemon {
-        require(index in 0 until capacity) {
-            "Index $index is out of bounds [0 - ${capacity - 1}]"
-        }
+    override fun get(index: Int): CorePokemon? {
+        checkPokemonIndex(index)
+        if (index >= size) return null
         return Pokemon(getPokemonData(index), version, storageIndex, index)
     }
 
     override fun set(index: Int, pokemon: CorePokemon) {
-        require(index in 0 until capacity) {
-            "Index $index is out of bounds [0 - ${capacity - 1}]"
-        }
+        checkPokemonIndex(index)
         require(pokemon.version.generation == 2) {
             "Unsupported pokemon version: ${pokemon.version}"
         }
 
-        if (pokemon.isEmpty) {
+        if (pokemon.isEmpty()) {
             removeAt(index)
             return
         }
@@ -73,6 +72,9 @@ internal class Storage(
     }
 
     private fun setPokemonData(pokemonData: UByteArray, index: Int) {
+        require(pokemonData.size == PokemonSizeInBoxWithNames) {
+            "Invalid Pokemon data size: ${pokemonData.size}"
+        }
         val offset = getPokemonOffsetByIndex(index)
         with(pokemonData) {
             copyIntoFor(data, offset.firstByte, 0, length = PokemonSizeInBox)
@@ -89,8 +91,34 @@ internal class Storage(
         return PokemonOffset(firstByteOffset, trainerNameOffset, nicknameOffset)
     }
 
-    override fun removeAt(index: Int): CorePokemon {
-        TODO("Not yet implemented")
+    override fun removeAt(index: Int) {
+        checkPokemonIndex(index)
+        if (index >= size) return
+        if (index < size - 1) {
+            shiftLeftPokemonBytes(index)
+        }
+        val pokemonSize = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
+        val offsetToDelete = getPokemonOffsetByIndex(size - 1)
+        data.fill(0u, offsetToDelete.firstByte, offsetToDelete.firstByte + pokemonSize)
+        data.fill(0u, offsetToDelete.trainerName, offsetToDelete.trainerName + 11)
+        data.fill(0u, offsetToDelete.nickname, offsetToDelete.nickname + 11)
+        size--
+    }
+
+    private fun shiftLeftPokemonBytes(index: Int) {
+        val pokemonSize = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
+        val location = getPokemonOffsetByIndex(index)
+        val first = getPokemonOffsetByIndex(index + 1)
+        val last = getPokemonOffsetByIndex(size - 1)
+        data.copyInto(data, location.firstByte, first.firstByte, last.firstByte + pokemonSize)
+        data.copyInto(data, location.nickname, first.nickname, last.nickname + 11)
+        data.copyInto(data, location.trainerName, first.trainerName, last.trainerName + 11)
+    }
+
+    private fun checkPokemonIndex(index: Int) {
+        require(index in 0 until capacity) {
+            "Index $index is out of bounds [0 - ${capacity - 1}]"
+        }
     }
 
     override fun toMutableStorage(): MutableStorage {
@@ -116,6 +144,6 @@ internal class Storage(
     companion object {
         private const val PokemonSizeInParty = 48
         private const val PokemonSizeInBox = 32
-        private const val PokemonSizeInBoxWithNames = PokemonSizeInBox + 11 + 11
+        internal const val PokemonSizeInBoxWithNames = PokemonSizeInBox + 11 + 11
     }
 }

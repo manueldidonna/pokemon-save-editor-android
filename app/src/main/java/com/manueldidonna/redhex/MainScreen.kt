@@ -17,10 +17,10 @@ import androidx.compose.runtime.savedinstancestate.savedInstanceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.VectorAsset
 import com.manueldidonna.pk.core.*
+import com.manueldidonna.redhex.bag.Bag
 import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.editor.PokemonEditor
 import com.manueldidonna.redhex.editor.PokemonEditorEvents
-import com.manueldidonna.redhex.bag.Bag
 import com.manueldidonna.redhex.pokedex.Pokedex
 import com.manueldidonna.redhex.pokemonlist.PokemonList
 import com.manueldidonna.redhex.pokemonlist.PokemonListEvents
@@ -60,12 +60,19 @@ fun MainScreen(screen: MainScreen, saveData: SaveData, events: MainEvents) {
 
 @Composable
 private fun SaveData.getPokemonNotEmpty(position: Pokemon.Position): MutablePokemon {
-    val pokemon = get(position).toMutablePokemon()
-    if (pokemon.isEmpty) {
+    val storage = get(position.storageIndex)
+    val pokemon = storage[position.pokemonIndex]
+    if (pokemon.isEmpty()) {
         val resources = PokemonResourcesAmbient.current.species
-        EmptyPokemonTemplate(trainer, resources).apply(pokemon)
+        val pokemonFromTemplate = storage
+            .pokemonFactory
+            .create(EmptyPokemonTemplate(trainer, resources), position)
+        require(!pokemonFromTemplate.isEmpty()) {
+            "The template used to create the Pokemon isn't valid"
+        }
+        return pokemonFromTemplate.toMutablePokemon()
     }
-    return pokemon
+    return pokemon.toMutablePokemon()
 }
 
 @Composable

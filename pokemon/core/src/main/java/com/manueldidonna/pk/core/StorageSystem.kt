@@ -43,7 +43,7 @@ inline fun StorageSystem.mutate(index: Int, action: (storage: MutableStorage) ->
     set(index, storage)
 }
 
-operator fun StorageSystem.get(position: Pokemon.Position): Pokemon {
+operator fun StorageSystem.get(position: Pokemon.Position): Pokemon? {
     return get(position.storageIndex)[position.pokemonIndex]
 }
 
@@ -60,6 +60,10 @@ private fun StorageSystem.swapPokemon(first: Pokemon.Position, second: Pokemon.P
     if (first == second) return // do nothing
     val firstPokemon = get(first)
     val secondPokemon = get(second)
-    set(first, secondPokemon)
-    set(second, firstPokemon)
+    mutate(first.storageIndex) {
+        it.setOrRemove(first.pokemonIndex, secondPokemon)
+    }
+    mutate(second.storageIndex) {
+        it.setOrRemove(second.pokemonIndex, firstPokemon)
+    }
 }
