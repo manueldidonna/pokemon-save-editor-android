@@ -2,7 +2,10 @@ package com.manueldidonna.redhex.editor
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.Pokemon
+import com.manueldidonna.pk.core.Pokerus
+import com.manueldidonna.pk.core.Trainer
 
 @Stable
 class ObservablePokemon(private val pokemon: MutablePokemon) : MutablePokemon by pokemon {

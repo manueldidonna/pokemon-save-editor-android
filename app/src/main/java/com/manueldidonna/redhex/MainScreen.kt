@@ -22,8 +22,8 @@ import com.manueldidonna.redhex.common.PokemonResourcesAmbient
 import com.manueldidonna.redhex.editor.PokemonEditor
 import com.manueldidonna.redhex.editor.PokemonEditorEvents
 import com.manueldidonna.redhex.pokedex.Pokedex
-import com.manueldidonna.redhex.pokemonlist.PokemonList
-import com.manueldidonna.redhex.pokemonlist.PokemonListEvents
+import com.manueldidonna.redhex.pokemonlist.StorageSystem
+import com.manueldidonna.redhex.pokemonlist.StorageSystemEvents
 import com.manueldidonna.redhex.settings.Settings
 
 sealed class MainScreen {
@@ -109,7 +109,7 @@ private fun Root(saveData: SaveData, events: MainEvents) {
                 modifier = Modifier.padding(padding)
             ) { editor ->
                 when (editor) {
-                    RootDestination.Storage -> PokemonList(saveData, pokemonListEvents(events))
+                    RootDestination.Storage -> StorageSystem(saveData, storageSystemEvents(events))
                     RootDestination.Settings -> Settings(saveData, events::removeSaveData)
                     RootDestination.Bag -> Bag(saveData.bag)
                 }
@@ -119,9 +119,9 @@ private fun Root(saveData: SaveData, events: MainEvents) {
 }
 
 @Composable
-private fun pokemonListEvents(events: MainEvents): PokemonListEvents {
+private fun storageSystemEvents(events: MainEvents): StorageSystemEvents {
     return remember {
-        object : PokemonListEvents {
+        object : StorageSystemEvents {
             override fun editPokemonByPosition(position: Pokemon.Position) {
                 events.setScreen(MainScreen.PokemonEditor(position))
             }

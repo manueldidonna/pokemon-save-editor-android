@@ -135,7 +135,7 @@ private fun InventoryTypes(types: List<Inventory.Type>, onTypeChange: (Inventory
     ) {
         types.forEachIndexed { index, type ->
             Tab(
-                modifier = Modifier.preferredHeight(48.dp),
+                modifier = Modifier.preferredHeight(AppBarHeight),
                 content = { Text(text = resources.getTypeName(type)) },
                 selected = index == selectedIndex,
                 onClick = {
