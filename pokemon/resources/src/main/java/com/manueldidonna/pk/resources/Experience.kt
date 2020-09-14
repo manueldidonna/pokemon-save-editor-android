@@ -28,9 +28,9 @@ fun sanitizeExperiencePoints(speciesId: Int, experience: Int, level: Int): Int {
  * Return the right amount of experience points, according to [level] and [experienceGroup]
  */
 fun sanitizeExperiencePoints(points: Int, level: Int, experienceGroup: ExperienceGroup): Int {
-    if (level == 100) {
+    if (level >= 100) {
         // coerce pokemon experience to the max allowed for his group.
-        return getExperiencePoints(100, experienceGroup)
+        return getExperiencePointsFromTable(100, experienceGroup)
     } else {
         val levelFromExperience = getLevel(points, experienceGroup)
         if (levelFromExperience != level) {
@@ -52,21 +52,25 @@ fun getExperienceGroup(speciesId: Int): ExperienceGroup {
 
 fun getLevel(experience: Int, group: ExperienceGroup): Int {
     // fast path for level 100
-    if (experience >= ExperiencePointsPerGrowth[99 * 6 + group.value])
+    if (experience >= getExperiencePointsFromTable(100, group)) {
         return 100
-
-    // Iterate upwards to find the level
-    for (level in 1..100) {
-        if (experience <= getExperiencePoints(level, group)) {
-            return level
-        }
     }
-    throw IllegalStateException()
+    // Iterate upwards to find the level
+    var level = 1
+    while (experience >= getExperiencePointsFromTable(level, group)) {
+        ++level
+    }
+    return level
 }
 
 fun getExperiencePoints(level: Int, group: ExperienceGroup): Int {
     if (level <= 1) return 0
-    return ExperiencePointsPerGrowth[(level.coerceAtMost(100) - 1) * 6 + group.value]
+    return getExperiencePointsFromTable(level.coerceAtMost(100), group)
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun getExperiencePointsFromTable(level: Int, group: ExperienceGroup): Int {
+    return ExperiencePointsPerGrowth[(level - 1) * 6 + group.value]
 }
 
 private val ExperiencePointsPerGrowth = intArrayOf(
