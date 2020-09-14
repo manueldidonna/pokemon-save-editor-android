@@ -33,8 +33,7 @@ internal fun getLocalItemId(valueToConvert: Int): Int {
 internal fun getUniversalItemId(valueToConvert: Int): Int {
     val value = LocalToUniversalItemIds[valueToConvert]
     if (value == NaN) {
-        println("Passed an invalid Local Item ID: $valueToConvert")
-        return value
+        throw IllegalStateException("Passed an invalid Local Item ID: $valueToConvert")
     }
     return value
 }

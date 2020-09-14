@@ -30,10 +30,12 @@ fun InventoryItemEditor(
     var itemId by rememberMutableState { item.id.coerceAtLeast(0) }
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        if (itemId > 0) {
-            SelectedItem(itemId = itemId)
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
-        }
+        Text(
+            text = getItemNameById(itemId),
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+        )
+        Divider(modifier = Modifier.padding(vertical = 16.dp))
         if (maxAllowedQuantity > 1) {
             ItemQuantity(
                 maxAllowedQuantity = maxAllowedQuantity,
@@ -66,6 +68,14 @@ private fun SelectedItem(itemId: Int) {
         style = MaterialTheme.typography.h6,
         modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
     )
+}
+
+@Stable
+@Composable
+private fun getItemNameById(id: Int): String {
+    if (id <= 0) return "Choose an item"
+    val resources = PokemonResourcesAmbient.current.items
+    return resources.getAllItems()[id]
 }
 
 @Composable

@@ -12,7 +12,7 @@ internal class Bag(
 ) : CoreBag {
 
     override fun hashCode(): Int {
-        return data.contentHashCode()
+        return version.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -23,7 +23,7 @@ internal class Bag(
     }
 
     override fun toString(): String {
-        return "GSC Bag. Version: $version"
+        return "GSC Bag => Version: $version"
     }
 
     override val inventoryTypes = setOf(
@@ -37,55 +37,42 @@ internal class Bag(
 
     override fun get(type: Type): Inventory {
         require(inventoryTypes.contains(type)) { "Type $type is not supported" }
-        val startOffset: Int
+        val startDataOffset: Int
         val capacity: Int
         when (type) {
             Type.Keys -> {
-                startOffset = if (version == Version.Crystal) 0x244A else 0x2449
+                startDataOffset = if (version == Version.Crystal) 0x244A else 0x2449
                 capacity = 26
             }
             Type.Computer -> {
-                startOffset = if (version == Version.Crystal) 0x247F else 0x247E
+                startDataOffset = if (version == Version.Crystal) 0x247F else 0x247E
                 capacity = 50
             }
             Type.Balls -> {
-                startOffset = if (version == Version.Crystal) 0x2465 else 0x2464
+                startDataOffset = if (version == Version.Crystal) 0x2465 else 0x2464
                 capacity = 12
             }
             Type.General -> {
-                startOffset = if (version == Version.Crystal) 0x2420 else 0x241F
+                startDataOffset = if (version == Version.Crystal) 0x2420 else 0x241F
                 capacity = 20
             }
             Type.HiddenMachines -> {
-                startOffset = (if (version == Version.Crystal) 0x23E7 else 0x23E6) + 0x32
+                startDataOffset = (if (version == Version.Crystal) 0x23E7 else 0x23E6) + 0x32
                 capacity = 7
             }
             Type.TechnicalMachines -> {
-                startOffset = if (version == Version.Crystal) 0x23E7 else 0x23E6
+                startDataOffset = if (version == Version.Crystal) 0x23E7 else 0x23E6
                 capacity = 50
             }
         }
-        val supportedIds = getIdsByType(type, isCrystal = version == Version.Crystal)
-        val maxQuantity = if (type == Type.HiddenMachines || type == Type.Keys) 1 else 99
-        return if (type == Type.TechnicalMachines || type == Type.HiddenMachines) {
-            MachinesInventory(
-                type = type,
-                data = data,
-                capacity = capacity,
-                startOffset = startOffset,
-                supportedItemIds = supportedIds,
-                maxQuantity = maxQuantity
-            )
-        } else {
-            ItemsInventory(
-                type = type,
-                data = data,
-                capacity = capacity,
-                startOffset = startOffset,
-                supportedItemIds = supportedIds,
-                maxQuantity = maxQuantity
-            )
-        }
+        return Inventory(
+            data = data,
+            startDataOffset = startDataOffset,
+            type = type,
+            capacity = capacity,
+            supportedItemIds = getIdsByType(type, isCrystal = version == Version.Crystal),
+            maxQuantity = if (type == Type.HiddenMachines || type == Type.Keys) 1 else 99
+        )
     }
 
     private fun getIdsByType(type: Type, isCrystal: Boolean): List<Int> {
