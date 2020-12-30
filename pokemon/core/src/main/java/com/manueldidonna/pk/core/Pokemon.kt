@@ -1,6 +1,5 @@
 package com.manueldidonna.pk.core
 
-import com.manueldidonna.pk.core.MutablePokemon.Mutator
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -16,12 +15,14 @@ interface Pokemon {
     data class Position(
         /**
          * The index of the [Storage] in the [StorageSystem].
+         *
          * @see StorageSystem.get
          */
         val storageIndex: Int,
 
         /**
          * The index of the [Pokemon] in the [Storage].
+         *
          * @see Storage.get
          */
         val pokemonIndex: Int,
@@ -48,12 +49,17 @@ interface Pokemon {
     val friendship: Int?
 
     /**
-     * Get info about a specific move.
-     * Use 'selectMove(index, Pokemon.Move::Immutable)' to get a [Move] instance
-     *
-     * Should throw an [IllegalStateException] if [index] is out of bounds [0 - 3]
+     * Get [Move] properties at [index] and map them to [M] with [mapper].
+     * Index cannot be grater than 3 or negative.
      */
-    fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T
+    fun <M> selectMove(index: Int, mapper: MoveMapper<M>): M
+
+    /**
+     * Map [Move] properties to a generic type [M]
+     */
+    fun interface MoveMapper<M> {
+        fun mapTo(id: Int, powerPoints: Int, ups: Int): M
+    }
 
     interface Move {
         val id: Int
@@ -82,6 +88,15 @@ interface Pokemon {
         val specialAttack: Int
         val specialDefense: Int
         val speed: Int
+
+        data class Immutable(
+            override val health: Int = -1,
+            override val attack: Int = -1,
+            override val defense: Int = -1,
+            override val specialAttack: Int = -1,
+            override val specialDefense: Int = -1,
+            override val speed: Int = -1,
+        ) : StatisticValues
     }
 
     val form: Form?
@@ -94,7 +109,21 @@ interface Pokemon {
         data class Unown(val letter: Char) : Form()
     }
 
-    val metInfo: MetInfo?
+    val caughtData: CaughtData?
+
+    data class CaughtData(
+        val level: Int,
+        val time: Time,
+        val locationId: Int,
+    ) {
+        sealed class Time {
+            sealed class TimeOfDay : Time() {
+                object Morning : TimeOfDay()
+                object DayTime : TimeOfDay()
+                object Night : TimeOfDay()
+            }
+        }
+    }
 
     /**
      * Return a new [MutablePokemon] instance.
@@ -121,11 +150,11 @@ interface Pokemon {
      */
     interface Factory {
         /**
-         * Return a new [Pokemon] instance from a [Template].
+         * Return a new [Pokemon] instance applying a [Template].
          * Should return null if [template] create an empty pokemon.
          *
+         * @see Pokemon.Template
          * @see isEmpty
-         * @see Pokemon.position
          */
         fun create(template: Template, position: Position): Pokemon?
     }
@@ -141,7 +170,6 @@ fun Pokemon?.isEmpty(): Boolean {
 
 /**
  * A mutable variant of [Pokemon].
- * @see Mutator
  */
 interface MutablePokemon : Pokemon {
     /**
@@ -173,34 +201,12 @@ interface MutablePokemon : Pokemon {
 
         fun friendship(value: Int): Mutator
 
-        fun individualValues(
-            health: Int = -1,
-            attack: Int = -1,
-            defense: Int = -1,
-            speed: Int = -1,
-            specialAttack: Int = -1,
-            specialDefense: Int = -1,
-        ): Mutator
+        fun individualValues(value: Pokemon.StatisticValues): Mutator
 
-        fun effortValues(
-            health: Int = -1,
-            attack: Int = -1,
-            defense: Int = -1,
-            speed: Int = -1,
-            specialAttack: Int = -1,
-            specialDefense: Int = -1,
-        ): Mutator
+        fun effortValues(value: Pokemon.StatisticValues): Mutator
 
         fun form(value: Pokemon.Form): Mutator
 
-        fun metInfo(value: MetInfo): Mutator
+        fun caughtData(value: Pokemon.CaughtData): Mutator
     }
-}
-
-fun Mutator.effortValues(all: Int): Mutator = apply {
-    effortValues(all, all, all, all, all, all)
-}
-
-fun Mutator.individualValues(all: Int): Mutator = apply {
-    individualValues(all, all, all, all, all, all)
 }

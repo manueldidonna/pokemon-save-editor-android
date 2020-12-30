@@ -1,43 +1,41 @@
 package com.manueldidonna.redhex.common
 
 import android.net.Uri
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.preferredSize
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.manueldidonna.pk.core.Inventory
-import com.manueldidonna.pk.core.Items
-import com.manueldidonna.redhex.R
+import com.manueldidonna.pk.core.Item
 
-@Immutable
-inline class SpriteSource(val value: Any) {
-    companion object {
-        val Size: Modifier = Modifier.preferredSize(40.dp, 32.dp)
-        val PokeBall = SpriteSource(R.drawable.pokeball_s)
-    }
-}
+val ItemSpriteModifier: Modifier = Modifier
+    .padding(start = 16.dp, end = 20.dp)
+    .preferredSize(40.dp, 32.dp)
+
+val PokemonSpriteModifier: Modifier =  Modifier
+    .padding(start = 16.dp, end = 20.dp)
+    .preferredSize(46.dp, 34.dp)
 
 interface SpritesRetriever {
-    fun getPokemonSprite(speciesId: Int, shiny: Boolean): SpriteSource
-    fun getItemSprite(itemId: Int): SpriteSource
+    fun getPokemonSprite(speciesId: Int, shiny: Boolean): Any
+    fun getItemSprite(itemId: Int): Any
 }
 
 object AssetsSpritesRetriever : SpritesRetriever {
     private const val assetPath = "file:///android_asset/"
 
-    override fun getItemSprite(itemId: Int): SpriteSource {
+    override fun getItemSprite(itemId: Int): Any {
         val asset = when {
-            itemId == Items.BikeVoucherId -> "item_bike_voucher.png"
-            itemId in Items.FlowerMailId..Items.MirageMailId -> "item_143.png"
-            Inventory.Item.isHiddenMachine(itemId) -> "item_332.png"
-            Inventory.Item.isTechnicalMachine(itemId) -> "item_328.png"
+            itemId == Item.BikeVoucherId -> "item_bike_voucher.png"
+            itemId in Item.FlowerMailId..Item.MirageMailId -> "item_143.png"
+            Item.isHiddenMachine(itemId) -> "item_332.png"
+            Item.isTechnicalMachine(itemId) -> "item_328.png"
             else -> "item_${itemId}.png"
         }
-        return SpriteSource(Uri.parse(assetPath + asset))
+        return Uri.parse(assetPath + asset)
     }
 
-    override fun getPokemonSprite(speciesId: Int, shiny: Boolean): SpriteSource {
+    override fun getPokemonSprite(speciesId: Int, shiny: Boolean): Any {
         val base = if (shiny) "pk_shiny" else "pk"
-        return SpriteSource(Uri.parse("${assetPath}${base}_$speciesId.png"))
+        return Uri.parse("$assetPath${base}_$speciesId.png")
     }
 }

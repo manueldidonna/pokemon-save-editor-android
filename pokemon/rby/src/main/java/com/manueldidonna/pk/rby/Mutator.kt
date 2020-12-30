@@ -1,6 +1,5 @@
 package com.manueldidonna.pk.rby
 
-import com.manueldidonna.pk.core.MetInfo
 import com.manueldidonna.pk.core.MutablePokemon
 import com.manueldidonna.pk.core.Pokerus
 import com.manueldidonna.pk.core.Trainer
@@ -13,6 +12,7 @@ import com.manueldidonna.pk.utils.getGameBoyDataFromString
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.utils.writeBidEndianInt
 import com.manueldidonna.pk.utils.writeBidEndianShort
+import com.manueldidonna.pk.core.Pokemon as CorePokemon
 
 internal class Mutator(
     private val pokemon: MutablePokemon,
@@ -73,10 +73,7 @@ internal class Mutator(
         }
     }
 
-    override fun move(
-        index: Int,
-        move: com.manueldidonna.pk.core.Pokemon.Move,
-    ): MutablePokemon.Mutator = apply {
+    override fun move(index: Int, move: CorePokemon.Move): MutablePokemon.Mutator = apply {
         require(index in 0..3) { "Index $index is out of bounds [0 - 3]" }
         // set id
         data[0x08 + index] = move.id.toUByte()
@@ -94,29 +91,24 @@ internal class Mutator(
         if (pokemon.isShiny == value) return@apply
         if (value) {
             individualValues(
-                health = 10,
-                defense = 10,
-                specialAttack = 10,
-                speed = 10,
-                attack = pokemon.iV.attack or 2
+                CorePokemon.StatisticValues.Immutable(
+                    health = 10,
+                    defense = 10,
+                    specialAttack = 10,
+                    speed = 10,
+                    attack = pokemon.iV.attack or 2
+                )
             )
         } else {
-            individualValues(attack = Pokemon.NonShinyAttackValues.random())
+            individualValues(
+                CorePokemon.StatisticValues.Immutable(
+                    attack = Pokemon.NonShinyAttackValues.random()
+                )
+            )
         }
     }
 
-    /**
-     * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
-     * If both are greater than -1, [specialDefense] will override [specialAttack]
-     */
-    override fun individualValues(
-        health: Int,
-        attack: Int,
-        defense: Int,
-        speed: Int,
-        specialAttack: Int,
-        specialDefense: Int,
-    ): MutablePokemon.Mutator = apply {
+    override fun individualValues(value: CorePokemon.StatisticValues): Mutator = apply {
         // health is ignored, in gen 1 it's determined by the other ivs
         var totalIVs = data.readBigEndianUShort(0x1b).toInt()
         fun setValue(value: Int, shiftAmount: Int) {
@@ -125,42 +117,35 @@ internal class Mutator(
                         (value.coerceAtMost(0xF) shl shiftAmount)
             }
         }
-        setValue(attack, shiftAmount = 12)
-        setValue(defense, shiftAmount = 8)
-        setValue(speed, shiftAmount = 4)
-        setValue(specialAttack, shiftAmount = 0)
-        setValue(specialDefense, shiftAmount = 0)
+        with(value) {
+            setValue(attack, shiftAmount = 12)
+            setValue(defense, shiftAmount = 8)
+            setValue(speed, shiftAmount = 4)
+            setValue(specialAttack, shiftAmount = 0)
+            setValue(specialDefense, shiftAmount = 0)
+        }
         data.writeBidEndianShort(0x1B, totalIVs.toShort())
     }
 
-    /**
-     * [specialAttack] and [specialDefense] represents the same attribute that is 'special'
-     * If both are greater than -1, [specialDefense] will override [specialAttack]
-     */
-    override fun effortValues(
-        health: Int,
-        attack: Int,
-        defense: Int,
-        speed: Int,
-        specialAttack: Int,
-        specialDefense: Int,
-    ): MutablePokemon.Mutator = apply {
+    override fun effortValues(value: CorePokemon.StatisticValues): Mutator = apply {
         fun setValue(value: Int, effortOffset: Int) {
             if (value >= 0) {
                 data.writeBidEndianShort(effortOffset, value.coerceAtMost(65535).toShort())
             }
         }
-        setValue(health, effortOffset = 0x11)
-        setValue(attack, effortOffset = 0x13)
-        setValue(defense, effortOffset = 0x15)
-        setValue(speed, effortOffset = 0x17)
-        setValue(specialAttack, effortOffset = 0x19)
-        setValue(specialDefense, effortOffset = 0x19)
+        with(value) {
+            setValue(health, effortOffset = 0x11)
+            setValue(attack, effortOffset = 0x13)
+            setValue(defense, effortOffset = 0x15)
+            setValue(speed, effortOffset = 0x17)
+            setValue(specialAttack, effortOffset = 0x19)
+            setValue(specialDefense, effortOffset = 0x19)
+        }
     }
 
-    override fun form(value: com.manueldidonna.pk.core.Pokemon.Form): MutablePokemon.Mutator = this
-    override fun friendship(value: Int): MutablePokemon.Mutator = this
-    override fun heldItemId(value: Int): MutablePokemon.Mutator = this
-    override fun pokerus(value: Pokerus): MutablePokemon.Mutator = this
-    override fun metInfo(value: MetInfo): MutablePokemon.Mutator = this
+    override fun form(value: CorePokemon.Form): Mutator = this
+    override fun friendship(value: Int): Mutator = this
+    override fun heldItemId(value: Int): Mutator = this
+    override fun pokerus(value: Pokerus): Mutator = this
+    override fun caughtData(value: CorePokemon.CaughtData): Mutator = this
 }

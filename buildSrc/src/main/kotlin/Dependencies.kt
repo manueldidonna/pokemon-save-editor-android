@@ -1,5 +1,7 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 
+import Libs.Versions.compose
+
 object Modules {
     object Pokemon {
         const val core = ":pokemon:core"
@@ -13,12 +15,8 @@ object Modules {
 object Libs {
 
     object Versions {
-        const val kotlin = "1.4.0"
-        const val compose = "1.0.0-alpha02"
-    }
-
-    object Kotlin {
-        const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+        const val kotlin = "1.4.21"
+        const val compose = "1.0.0-alpha09"
     }
 
     object KotlinX {
@@ -31,33 +29,23 @@ object Libs {
         const val materialComponents = "com.google.android.material:material:1.2.0"
         const val timber = "com.jakewharton.timber:timber:4.7.1"
         const val coil = "io.coil-kt:coil:1.0.0-rc1"
-        const val accompanistCoil = "dev.chrisbanes.accompanist:accompanist-coil:0.2.1"
     }
 
     object AndroidX {
-        const val core = "androidx.core:core-ktx:1.1.0"
-        const val activity = "androidx.activity:activity-ktx:1.2.0-alpha04"
-        const val appcompat = "androidx.appcompat:appcompat:1.1.0"
+        const val core = "androidx.core:core-ktx:1.5.0-alpha05"
+        const val activity = "androidx.activity:activity-ktx:1.2.0-rc01"
+        const val appcompat = "androidx.appcompat:appcompat:1.3.0-alpha02"
 
         object Compose {
-            const val foundation = "${Foundation.artifact}:foundation:${Versions.compose}"
-            const val material = "${Material.artifact}:material:${Versions.compose}"
-            const val tooling = "androidx.ui:ui-tooling:${Versions.compose}"
-
-            object Foundation {
-                internal const val artifact = "androidx.compose.foundation"
-                const val layout = "$artifact:foundation-layout:${Versions.compose}"
-            }
-
-            object Runtime {
-                private const val artifact = "androidx.compose.runtime"
-                const val savedState = "$artifact:runtime-saved-instance-state:${Versions.compose}"
-            }
-
-            object Material {
-                internal const val artifact = "androidx.compose.material"
-                const val icons = "$artifact:material-icons-extended:${Versions.compose}"
-            }
+            const val foundation = "androidx.compose.foundation:foundation:$compose"
+            const val tooling = "androidx.compose.ui:ui-tooling:$compose"
+            const val layout = "androidx.compose.foundation:foundation-layout:$compose"
+            const val savedState = "androidx.compose.runtime:runtime-saved-instance-state:$compose"
+            const val material = "androidx.compose.material:material:$compose"
+            const val icons = "androidx.compose.material:material-icons-extended:$compose"
+            // accompanist
+            const val insets = "dev.chrisbanes.accompanist:accompanist-insets:0.4.1"
+            const val coil = "dev.chrisbanes.accompanist:accompanist-coil:0.4.1"
         }
     }
 }

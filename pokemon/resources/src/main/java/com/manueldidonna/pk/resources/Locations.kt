@@ -14,9 +14,5 @@ fun getLocationsIdsBy(version: Version): IntRange {
 }
 
 fun isLocationIdValid(id: Int, version: Version): Boolean {
-    return when (version.generation) {
-        1 -> false
-        2 -> id in SecondGenLocationIds
-        else -> throw IllegalStateException("Unsupported version: $version")
-    }
+    return id in getLocationsIdsBy(version)
 }

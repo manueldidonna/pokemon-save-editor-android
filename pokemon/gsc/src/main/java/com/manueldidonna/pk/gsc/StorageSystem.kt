@@ -11,27 +11,23 @@ internal class StorageSystem(
     private val version: Version,
 ) : CoreStorageSystem {
 
-    private val currentBoxIndexOffset = if (version == Version.Crystal) 0x2700 else 0x2724
-
-    private val currentBoxOffset = if (version == Version.Crystal) 0x2D10 else 0x2D6C
-
-    private val partyOffset = if (version == Version.Crystal) 0x2865 else 0x288A
-
-    private val boxNamesOffset = if (version == Version.Crystal) 0x2703 else 0x2727
-
     override val storageIndices = CoreStorageSystem.PartyIndex until 14
 
+    private val offsets: Offsets =
+        if (version == Version.Crystal) Offsets.InternationalCrystal
+        else Offsets.InternationalGoldSilver
+
     override fun set(index: Int, storage: Storage) {
-        require(index in storageIndices) { "Index $index is out of bounds [$storageIndices]" }
+        checkStorageIndex(index)
         val import = storage.exportToBytes()
         require(import.size == getStorageSize(index)) {
-            "Incompatible Storage data size: ${storage.size}"
+            "Incompatible Storage Data Size: ${storage.size}"
         }
         import.copyInto(data, getStorageOffset(index))
     }
 
     override fun get(index: Int): Storage {
-        require(index in storageIndices) { "Index $index is out of bounds [$storageIndices]" }
+        checkStorageIndex(index)
         return Storage(
             data = getStorageData(index),
             version = version,
@@ -39,6 +35,12 @@ internal class StorageSystem(
             capacity = if (index == CoreStorageSystem.PartyIndex) 6 else 20,
             name = getStorageName(index)
         )
+    }
+
+    private fun checkStorageIndex(index: Int) {
+        require(index in storageIndices) {
+            "Index $index is out of bounds [$storageIndices]"
+        }
     }
 
     private fun getStorageData(index: Int): UByteArray {
@@ -52,19 +54,19 @@ internal class StorageSystem(
 
     private fun getStorageOffset(index: Int): Int {
         return when (index) {
-            CoreStorageSystem.PartyIndex -> partyOffset
-            getCurrentBoxIndex() -> currentBoxOffset
+            CoreStorageSystem.PartyIndex -> offsets.party
+            getCurrentBoxIndex() -> offsets.currentBox
             else -> BoxOffsets[index]
         }
     }
 
     private fun getCurrentBoxIndex(): Int {
-        return (data[currentBoxIndexOffset] and 0x7Fu).toInt()
+        return (data[offsets.currentBoxIndex] and 0x7Fu).toInt()
     }
 
     private fun getStorageName(index: Int): String {
-        if (index == CoreStorageSystem.PartyIndex) return "Party"
-        val offset = boxNamesOffset + (9 * index)
+        if (index == CoreStorageSystem.PartyIndex) return "PARTY"
+        val offset = offsets.boxNames + (9 * index)
         return getStringFromGameBoyData(data, offset, 9, false)
     }
 
@@ -81,5 +83,26 @@ internal class StorageSystem(
             0x4000, 0x4450, 0x48a0, 0x4cf0, 0x5140, 0x5590, 0x59e0,
             0x6000, 0x6450, 0x68a0, 0x6cf0, 0x7140, 0x7590, 0x79e0
         )
+    }
+
+    private sealed class Offsets {
+        abstract val currentBoxIndex: Int
+        abstract val currentBox: Int
+        abstract val party: Int
+        abstract val boxNames: Int
+
+        object InternationalCrystal : Offsets() {
+            override val currentBoxIndex = 0x2700
+            override val currentBox = 0x2D10
+            override val party = 0x2865
+            override val boxNames = 0x2703
+        }
+
+        object InternationalGoldSilver : Offsets() {
+            override val currentBoxIndex = 0x2724
+            override val currentBox = 0x2D6C
+            override val party = 0x288A
+            override val boxNames = 0x2727
+        }
     }
 }

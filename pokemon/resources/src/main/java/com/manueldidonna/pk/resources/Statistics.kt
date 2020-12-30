@@ -8,15 +8,6 @@ import kotlin.math.sqrt
 
 private typealias Stats = Pokemon.StatisticValues
 
-private data class StatsImpl(
-    override val health: Int,
-    override val attack: Int,
-    override val defense: Int,
-    override val speed: Int,
-    override val specialAttack: Int,
-    override val specialDefense: Int
-) : Stats
-
 private typealias StatisticsFormula = (level: Int, base: Int, iv: Int, ev: Int) -> Int
 
 private val GameBoyDefaultFormula: StatisticsFormula = { level, base, iv, ev ->
@@ -28,11 +19,18 @@ private val GameBoyHealthFormula: StatisticsFormula = { level, base, iv, ev ->
     GameBoyDefaultFormula(level, base, iv, ev) + 5 + level
 }
 
+fun calculateStatistics(pokemon: Pokemon): Stats {
+    return with(pokemon) {
+        val base = getBaseStatistics(speciesId, version)
+        calculateStatistics(level = level, base = base, ivs = iV, evs = eV, version = version)
+    }
+}
+
 fun calculateStatistics(level: Int, base: Stats, ivs: Stats, evs: Stats, version: Version): Stats {
     require(version.generation <= 2) { "Unsupported version: $version" }
     val default = GameBoyDefaultFormula
     val health = GameBoyHealthFormula
-    return StatsImpl(
+    return Pokemon.StatisticValues.Immutable(
         health = health(level, base.health, ivs.health, evs.health),
         attack = default(level, base.attack, ivs.attack, evs.attack),
         defense = default(level, base.defense, ivs.defense, evs.defense),
@@ -49,7 +47,7 @@ fun getBaseStatistics(speciesId: Int, version: Version): Stats {
         else -> throw IllegalStateException("Unsupported version: $version")
     }
     val index = (speciesId - 1) * 5
-    return StatsImpl(
+    return Pokemon.StatisticValues.Immutable(
         health = statistics[index],
         attack = statistics[index + 1],
         defense = statistics[index + 2],

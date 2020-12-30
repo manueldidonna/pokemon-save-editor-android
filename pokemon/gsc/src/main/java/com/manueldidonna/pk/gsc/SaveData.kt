@@ -1,13 +1,11 @@
 package com.manueldidonna.pk.gsc
 
 import com.manueldidonna.pk.core.Bag
-import com.manueldidonna.pk.core.Storage
 import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianUShort
 import com.manueldidonna.pk.utils.setLittleEndianShort
-import com.manueldidonna.pk.core.Inventory as CoreInventory
 import com.manueldidonna.pk.core.SaveData as CoreSaveData
 
 internal class SaveData(
@@ -15,19 +13,8 @@ internal class SaveData(
     private val data: UByteArray,
 ) : CoreSaveData {
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-        if (this.version != (other as SaveData).version) return false
-        return this.exportToBytes().contentEquals(other.exportToBytes())
-    }
-
     override fun toString(): String {
-        return """
-            GSC SaveData:
-            - version: $version
-            - data: ${data.contentToString()}
-        """.trimIndent()
+        return "GSC SaveData ver. $version"
     }
 
     override val trainer: Trainer by lazy {
@@ -49,13 +36,7 @@ internal class SaveData(
 
     override val bag: Bag by lazy { Bag(data, version) }
 
-    private val storageSystem = StorageSystem(data, version)
-
-    override val storageIndices: IntRange = storageSystem.storageIndices
-
-    override fun get(index: Int): Storage = storageSystem[index]
-
-    override fun set(index: Int, storage: Storage) = storageSystem.set(index, storage)
+    override val storageSystem = StorageSystem(data, version)
 
     /**
      * Data in Generation II is stored in the save file twice.

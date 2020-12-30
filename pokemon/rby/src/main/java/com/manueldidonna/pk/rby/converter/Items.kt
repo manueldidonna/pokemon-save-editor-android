@@ -1,6 +1,6 @@
 package com.manueldidonna.pk.rby.converter
 
-import com.manueldidonna.pk.core.Items
+import com.manueldidonna.pk.core.Item
 
 /**
  * Unused id for items
@@ -50,7 +50,7 @@ internal val SupportedItemIds: List<Int> by lazy {
 private val GameBoyToUniversalItemIds = intArrayOf(
     0, 1, 2, 3, 4, 442, 450, NaN, NaN, NaN, 81, 18, 19, 20, 21, 22, 23, 24, 25,
     26, 17, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, 78, 79, 103, 82, 83, 84, 45,
-    46, 47, 48, 49, 50, 102, 101, 467, NaN, Items.BikeVoucherId, 60, 85, 475, 92, NaN,
+    46, 47, 48, 49, 50, 102, 101, 467, NaN, Item.BikeVoucherId, 60, 85, 475, 92, NaN,
     63, 27, 28, 29, 55, 76, 77, 56, NaN, 30, 31, 32, 456, 877, 57, 58, 59, 61,
     444, 459, 471, 874, 651, 878, 216, 445, 446, 447, 51, 38, 39, 40, 41, NaN, NaN,
     NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,

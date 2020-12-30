@@ -8,9 +8,8 @@ class EmptyPokemonTemplate(
     private val resources: PokemonTextResources.Species,
 ) : Pokemon.Template {
     override fun applyTo(pokemon: Pokemon): Pokemon {
-        @Suppress("NAME_SHADOWING")
-        val pokemon = pokemon.toMutablePokemon()
-        pokemon.mutator
+        val mutatedPokemon = pokemon.toMutablePokemon()
+        mutatedPokemon.mutator
             .speciesId(getSpeciesId(pokemon.version))
             .level(1)
             .experiencePoints(0)
@@ -20,13 +19,13 @@ class EmptyPokemonTemplate(
             .move(index = 3, move = Pokemon.Move.Empty)
             .nickname(resources.getSpeciesById(pokemon.speciesId), ignoreCase = true)
             .trainer(trainer)
-            .individualValues(all = 31)
-            .effortValues(all = 999999)
+            .individualValues(Pokemon.StatisticValues.Immutable(0, 0, 0, 0, 0, 0))
+            .effortValues(Pokemon.StatisticValues.Immutable(0, 0, 0, 0, 0, 0))
             .shiny(false)
             .friendship(0)
             .pokerus(Pokerus.NeverInfected)
             .heldItemId(0)
-        return pokemon
+        return mutatedPokemon
     }
 
     private fun getSpeciesId(version: Version): Int {

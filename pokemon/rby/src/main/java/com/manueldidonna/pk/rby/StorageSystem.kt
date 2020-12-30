@@ -8,10 +8,12 @@ internal class StorageSystem(
     private val data: UByteArray,
     private val version: Version,
 ) : CoreStorageSystem {
-    override val storageIndices: IntRange = CoreStorageSystem.PartyIndex until 12
+    override val storageIndices = CoreStorageSystem.PartyIndex until 12
 
     override fun set(index: Int, storage: Storage) {
-        require(index in storageIndices) { "Index $index is out of bounds [$storageIndices]" }
+        require(index in storageIndices) {
+            "Index $index is out of bounds [$storageIndices]"
+        }
         val import = storage.exportToBytes()
         require(import.size == getStorageSize(index)) {
             "Incompatible Storage data size: ${storage.size}"
@@ -20,14 +22,16 @@ internal class StorageSystem(
     }
 
     override fun get(index: Int): Storage {
-        require(index in storageIndices) { "Index $index is out of bounds [$storageIndices]" }
+        require(index in storageIndices) {
+            "Index $index is out of bounds [$storageIndices]"
+        }
         val isParty = index == CoreStorageSystem.PartyIndex
         return Storage(
             data = getStorageData(index),
             storageIndex = index,
             capacity = if (isParty) 6 else 20,
             version = version,
-            name = if (isParty) "Party" else "Box ${index + 1}"
+            name = if (isParty) "PARTY" else "BOX${index + 1}"
         )
     }
 
@@ -43,7 +47,6 @@ internal class StorageSystem(
     private fun getStorageOffset(index: Int): Int {
         return when (index) {
             CoreStorageSystem.PartyIndex -> PartyOffset
-            // current box index
             (data[CurrentIndexOffset] and 0x7Fu).toInt() -> CurrentBoxOffset
             else -> getBoxDataOffset(index)
         }

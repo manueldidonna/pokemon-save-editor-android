@@ -9,33 +9,31 @@ import com.manueldidonna.pk.core.Pokedex as CorePokedex
  * However, indexes begin counting at 0, rather than 1
  */
 internal class Pokedex(private val data: UByteArray) : CorePokedex {
+    override val pokemonSpeciesIds = 1..151
 
-    override val pokemonCount: Int = 151
-
-    override fun <E> selectEntry(
-        speciesId: Int,
-        mapTo: (speciesId: Int, isSeen: Boolean, isOwned: Boolean) -> E,
-    ): E {
-        require(speciesId in 1..pokemonCount) {
-            "Species Id $speciesId is out of bounds [1 - $pokemonCount]"
-        }
+    override fun <E> selectEntry(speciesId: Int, mapper: CorePokedex.EntryMapper<E>): E {
+        checkEntrySpeciesId(speciesId)
         val bitIndex = getEntryBitIndex(speciesId)
-        val offset = getEntryOffset(speciesId)
-        return mapTo(
-            speciesId,
-            data[SeenOffset + offset].toInt().getBitAt(bitIndex),
-            data[OwnedOffset + offset].toInt().getBitAt(bitIndex)
+        val entryOffset = getEntryOffset(speciesId)
+        return mapper.mapTo(
+            speciesId = speciesId,
+            isSeen = data[SeenOffset + entryOffset].toInt().getBitAt(bitIndex),
+            isOwned = data[OwnedOffset + entryOffset].toInt().getBitAt(bitIndex)
         )
     }
 
     override fun setEntry(entry: CorePokedex.Entry) {
-        require(entry.speciesId in 1..pokemonCount) {
-            "Species Id ${entry.speciesId} is out of bounds [1 - $pokemonCount]"
-        }
+        checkEntrySpeciesId(entry.speciesId)
         val bitIndex = getEntryBitIndex(entry.speciesId)
         val offset = getEntryOffset(entry.speciesId)
         setFlag(SeenOffset + offset, bitIndex, entry.isSeen)
         setFlag(OwnedOffset + offset, bitIndex, entry.isOwned)
+    }
+
+    private fun checkEntrySpeciesId(speciesId: Int) {
+        require(speciesId in pokemonSpeciesIds) {
+            "Species Id $speciesId is out of bounds [$pokemonSpeciesIds]"
+        }
     }
 
     private fun getEntryOffset(speciesId: Int): Int = (speciesId - 1) ushr 3

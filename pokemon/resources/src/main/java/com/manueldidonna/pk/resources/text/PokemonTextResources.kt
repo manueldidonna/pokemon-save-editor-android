@@ -29,6 +29,7 @@ interface PokemonTextResources {
 
     interface Items {
         fun getAllItems(): List<String>
+        fun getItemById(id: Int): String
         fun getTypeName(type: Inventory.Type): String
     }
 

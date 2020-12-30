@@ -1,6 +1,6 @@
 package com.manueldidonna.pk.core
 
-interface SaveData : StorageSystem {
+interface SaveData {
     val version: Version
 
     val trainer: Trainer
@@ -8,6 +8,8 @@ interface SaveData : StorageSystem {
     val pokedex: Pokedex
 
     val bag: Bag
+
+    val storageSystem: StorageSystem
 
     fun exportToBytes(): UByteArray
 

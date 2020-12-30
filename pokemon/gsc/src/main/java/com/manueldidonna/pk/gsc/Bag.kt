@@ -11,20 +11,20 @@ internal class Bag(
     internal val version: Version,
 ) : CoreBag {
 
-    override fun hashCode(): Int {
-        return version.hashCode()
-    }
+    override fun toString(): String = "Bag for $version"
+
+    override fun hashCode() = version.hashCode()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
         if (this.version != (other as Bag).version) return false
-        return this.data.contentEquals(other.data)
+        return true
     }
 
-    override fun toString(): String {
-        return "GSC Bag => Version: $version"
-    }
+    private val offsets: Offsets =
+        if (version == Version.Crystal) Offsets.InternationalCrystal
+        else Offsets.InternationalGoldSilver
 
     override val inventoryTypes = setOf(
         Type.General,
@@ -36,46 +36,21 @@ internal class Bag(
     )
 
     override fun get(type: Type): Inventory {
-        require(inventoryTypes.contains(type)) { "Type $type is not supported" }
-        val startDataOffset: Int
-        val capacity: Int
-        when (type) {
-            Type.Keys -> {
-                startDataOffset = if (version == Version.Crystal) 0x244A else 0x2449
-                capacity = 26
-            }
-            Type.Computer -> {
-                startDataOffset = if (version == Version.Crystal) 0x247F else 0x247E
-                capacity = 50
-            }
-            Type.Balls -> {
-                startDataOffset = if (version == Version.Crystal) 0x2465 else 0x2464
-                capacity = 12
-            }
-            Type.General -> {
-                startDataOffset = if (version == Version.Crystal) 0x2420 else 0x241F
-                capacity = 20
-            }
-            Type.HiddenMachines -> {
-                startDataOffset = (if (version == Version.Crystal) 0x23E7 else 0x23E6) + 0x32
-                capacity = 7
-            }
-            Type.TechnicalMachines -> {
-                startDataOffset = if (version == Version.Crystal) 0x23E7 else 0x23E6
-                capacity = 50
-            }
+        require(inventoryTypes.contains(type)) {
+            "Type $type is not supported"
         }
         return Inventory(
             data = data,
-            startDataOffset = startDataOffset,
+            startOffset = getInventoryOffset(type),
             type = type,
-            capacity = capacity,
-            supportedItemIds = getIdsByType(type, isCrystal = version == Version.Crystal),
-            maxQuantity = if (type == Type.HiddenMachines || type == Type.Keys) 1 else 99
+            capacity = getCapacity(type),
+            supportedItemIds = getSupportedItemsIds(type),
+            maxQuantity = getMaxQuantityPerItem(type)
         )
     }
 
-    private fun getIdsByType(type: Type, isCrystal: Boolean): List<Int> {
+    private fun getSupportedItemsIds(type: Type): List<Int> {
+        val isCrystal = version == Version.Crystal
         return when (type) {
             Type.General -> Items
             Type.Computer -> if (isCrystal) (AllItems + CrystalExclusiveKeys) else AllItems
@@ -84,6 +59,60 @@ internal class Bag(
             Type.HiddenMachines -> HiddenMachines
             Type.TechnicalMachines -> TechnicalMachines
             else -> throw IllegalArgumentException("Unsupported type $type")
+        }
+    }
+
+    private fun getCapacity(type: Type): Int {
+        return when (type) {
+            Type.General -> 20
+            Type.Computer -> 50
+            Type.Balls -> 12
+            Type.Keys -> 26
+            Type.HiddenMachines -> 7
+            Type.TechnicalMachines -> 50
+            else -> throw IllegalArgumentException("Unsupported type $type")
+        }
+    }
+
+    private fun getInventoryOffset(type: Type): Int {
+        return when (type) {
+            Type.General -> offsets.items
+            Type.Computer -> offsets.computer
+            Type.Balls -> offsets.balls
+            Type.Keys -> offsets.keys
+            Type.HiddenMachines -> offsets.hiddenMachines
+            Type.TechnicalMachines -> offsets.technicalMachines
+        }
+    }
+
+    private fun getMaxQuantityPerItem(type: Type): Int {
+        return if (type == Type.HiddenMachines || type == Type.Keys) 1 else 99
+    }
+
+    private sealed class Offsets {
+        abstract val keys: Int
+        abstract val computer: Int
+        abstract val balls: Int
+        abstract val items: Int
+        abstract val hiddenMachines: Int
+        abstract val technicalMachines: Int
+
+        object InternationalCrystal : Offsets() {
+            override val balls = 0x2465
+            override val computer = 0x247F
+            override val items = 0x2420
+            override val hiddenMachines = 0x23E7 + 0x32
+            override val technicalMachines = 0x23E7
+            override val keys = 0x244A
+        }
+
+        object InternationalGoldSilver : Offsets() {
+            override val balls = 0x2464
+            override val computer = 0x247E
+            override val items = 0x241F
+            override val hiddenMachines = 0x23E6 + 0x32
+            override val technicalMachines = 0x23E6
+            override val keys = 0x2449
         }
     }
 }

@@ -35,18 +35,21 @@ internal class Storage(
     override fun get(index: Int): CorePokemon? {
         checkPokemonIndex(index)
         if (index >= size) return null
-        return Pokemon(version, getPokemonData(index), storageIndex, index)
+        return Pokemon(
+            version = version,
+            data = getPokemonData(index),
+            storageIndex = storageIndex,
+            pokemonIndex = index
+        )
     }
 
     override fun set(index: Int, pokemon: CorePokemon) {
         checkPokemonIndex(index)
-        require(pokemon.version.generation == 1) {
-            "Unsupported Game Version: ${pokemon.version}"
+        require(!pokemon.isEmpty()) {
+            "Pokemon is empty"
         }
-
-        if (pokemon.isEmpty()) {
-            removeAt(index)
-            return
+        require(pokemon.version.generation == 1) {
+            "Unsupported Version: ${pokemon.version}"
         }
 
         @Suppress("NAME_SHADOWING")
@@ -65,9 +68,8 @@ internal class Storage(
 
         setPokemonData(pokemon.exportToBytes(), index)
 
-        // recalculate level from exp & stats if pokemon is moved from box to party
         if (storageIndex.isPartyIndex) {
-            Pokemon.moveToParty(pokemon, data, getPokemonOffsetByIndex(index).firstByte)
+            Pokemon.setPartyProperties(pokemon, data, getPokemonOffsetsByIndex(index).data)
         }
     }
 
@@ -85,8 +87,8 @@ internal class Storage(
             shiftLeftPokemonBytes(index)
         }
         val pokemonSize = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
-        val offsetToDelete = getPokemonOffsetByIndex(size - 1)
-        data.fill(0u, offsetToDelete.firstByte, offsetToDelete.firstByte + pokemonSize)
+        val offsetToDelete = getPokemonOffsetsByIndex(size - 1)
+        data.fill(0u, offsetToDelete.data, offsetToDelete.data + pokemonSize)
         data.fill(0u, offsetToDelete.trainerName, offsetToDelete.trainerName + 11)
         data.fill(0u, offsetToDelete.nickname, offsetToDelete.nickname + 11)
         size--
@@ -94,10 +96,10 @@ internal class Storage(
 
     private fun shiftLeftPokemonBytes(index: Int) {
         val pokemonSize = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
-        val location = getPokemonOffsetByIndex(index)
-        val first = getPokemonOffsetByIndex(index + 1)
-        val last = getPokemonOffsetByIndex(size - 1)
-        data.copyInto(data, location.firstByte, first.firstByte, last.firstByte + pokemonSize)
+        val location = getPokemonOffsetsByIndex(index)
+        val first = getPokemonOffsetsByIndex(index + 1)
+        val last = getPokemonOffsetsByIndex(size - 1)
+        data.copyInto(data, location.data, first.data, last.data + pokemonSize)
         data.copyInto(data, location.nickname, first.nickname, last.nickname + 11)
         data.copyInto(data, location.trainerName, first.trainerName, last.trainerName + 11)
     }
@@ -108,21 +110,21 @@ internal class Storage(
         }
     }
 
-    private fun getPokemonOffsetByIndex(index: Int): PokemonOffset {
+    private fun getPokemonOffsetsByIndex(index: Int): PokemonOffsets {
         val size: Int = if (storageIndex.isPartyIndex) PokemonSizeInParty else PokemonSizeInBox
         val firstByteOffset = capacity + 2 + index * size
         val trainerNameOffset = capacity + 2 + size * capacity + index * 11
         val nicknameOffset = trainerNameOffset + (capacity - index) * 11 + index * 11
-        return PokemonOffset(firstByteOffset, trainerNameOffset, nicknameOffset)
+        return PokemonOffsets(firstByteOffset, trainerNameOffset, nicknameOffset)
     }
 
     private fun getPokemonData(index: Int): UByteArray {
         if (index >= size) return UByteArray(PokemonSizeInBoxWithNames)
-        val offset = getPokemonOffsetByIndex(index)
+        val offsets = getPokemonOffsetsByIndex(index)
         return UByteArray(PokemonSizeInBoxWithNames).apply {
-            data.copyIntoFor(this, 0, offset.firstByte, length = PokemonSizeInBox)
-            data.copyIntoFor(this, PokemonSizeInBox, offset.trainerName, length = 11)
-            data.copyIntoFor(this, PokemonSizeInBox + 11, offset.nickname, length = 11)
+            data.copyIntoFor(this, 0, offsets.data, length = PokemonSizeInBox)
+            data.copyIntoFor(this, PokemonSizeInBox, offsets.trainerName, length = 11)
+            data.copyIntoFor(this, PokemonSizeInBox + 11, offsets.nickname, length = 11)
         }
     }
 
@@ -130,9 +132,9 @@ internal class Storage(
         require(pokemonData.size == PokemonSizeInBoxWithNames) {
             "Invalid Pokemon data size: ${pokemonData.size}"
         }
-        val offset = getPokemonOffsetByIndex(index)
+        val offset = getPokemonOffsetsByIndex(index)
         with(pokemonData) {
-            copyIntoFor(data, offset.firstByte, 0, length = PokemonSizeInBox)
+            copyIntoFor(data, offset.data, 0, length = PokemonSizeInBox)
             copyIntoFor(data, offset.trainerName, PokemonSizeInBox, length = 11)
             copyInto(data, offset.nickname, PokemonSizeInBox + 11)
         }
@@ -152,8 +154,8 @@ internal class Storage(
         return data.copyOf()
     }
 
-    private data class PokemonOffset(
-        val firstByte: Int,
+    private data class PokemonOffsets(
+        val data: Int,
         val trainerName: Int,
         val nickname: Int,
     )

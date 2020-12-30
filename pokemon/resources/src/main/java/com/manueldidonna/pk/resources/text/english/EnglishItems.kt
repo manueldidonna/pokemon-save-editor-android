@@ -9,9 +9,13 @@ internal class EnglishItems : PokemonTextResources.Items {
         return items
     }
 
+    override fun getItemById(id: Int): String {
+        return if (id == 0) "" else items[id - 1]
+    }
+
     override fun getTypeName(type: Inventory.Type): String {
         return when (type) {
-            Inventory.Type.General -> "General"
+            Inventory.Type.General -> "Items"
             Inventory.Type.Computer -> "PC"
             Inventory.Type.Balls -> "Balls"
             Inventory.Type.Keys -> "Keys"
@@ -21,7 +25,6 @@ internal class EnglishItems : PokemonTextResources.Items {
     }
 
     private val items: List<String> = listOf(
-        "(None)",
         "Master Ball",
         "Ultra Ball",
         "Great Ball",

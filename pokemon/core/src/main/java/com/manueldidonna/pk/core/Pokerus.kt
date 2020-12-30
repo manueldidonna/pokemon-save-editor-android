@@ -1,7 +1,7 @@
 package com.manueldidonna.pk.core
 
 /**
- * Pokerus ia a pokemon property, introduced in Generation II games.
+ * Pokerus ia a pokemon property introduced in Generation II games.
  *
  * A Pokemon is or has been infected if [strain] is a nonzero positive value.
  *

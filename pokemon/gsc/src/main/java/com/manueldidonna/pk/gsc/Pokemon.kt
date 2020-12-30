@@ -1,10 +1,14 @@
 package com.manueldidonna.pk.gsc
 
-import com.manueldidonna.pk.core.*
+import com.manueldidonna.pk.core.MutablePokemon
+import com.manueldidonna.pk.core.Pokemon.CaughtData
+import com.manueldidonna.pk.core.Pokerus
+import com.manueldidonna.pk.core.Trainer
 import com.manueldidonna.pk.core.Trainer.Gender
+import com.manueldidonna.pk.core.Version
 import com.manueldidonna.pk.gsc.converter.getUniversalItemId
+import com.manueldidonna.pk.gsc.converter.getUnownLetterFromStatistics
 import com.manueldidonna.pk.resources.calculateStatistics
-import com.manueldidonna.pk.resources.getBaseStatistics
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
 import com.manueldidonna.pk.utils.readBigEndianInt
 import com.manueldidonna.pk.utils.readBigEndianUShort
@@ -88,13 +92,11 @@ internal class Pokemon(
     }
 
     override val isShiny: Boolean
-        get() {
-            with(iV) {
-                if (speed != 10) return false
-                if (specialAttack != 10) return false
-                if (defense != 10) return false
-                return attack and 2 == 2
-            }
+        get() = with(iV) {
+            if (speed != 10) return false
+            if (specialAttack != 10) return false
+            if (defense != 10) return false
+            return attack and 2 == 2
         }
 
     override val speciesId: Int
@@ -115,22 +117,22 @@ internal class Pokemon(
     override val natureId: Int
         get() = experiencePoints % 25
 
-    override val friendship: Int?
+    override val friendship: Int
         get() = data[0x1B].toInt()
 
-    override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
-        require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
-        return mapTo(
-            data[0x02 + index].toInt(),
-            data[0x17 + index].toInt() and 0x3F,
-            (data[0x17 + index].toInt() and 0xC0) ushr 6
+    override fun <M> selectMove(index: Int, mapper: CorePokemon.MoveMapper<M>): M {
+        require(index in 0..3) { "Move index is out of bounds [0..3]" }
+        return mapper.mapTo(
+            id = data[0x02 + index].toInt(),
+            powerPoints = data[0x17 + index].toInt() and 0x3F,
+            ups = (data[0x17 + index].toInt() and 0xC0) ushr 6
         )
     }
 
-    override val heldItemId: Int?
+    override val heldItemId: Int
         get() = getUniversalItemId(data[0x1].toInt())
 
-    override val pokerus: Pokerus?
+    override val pokerus: Pokerus
         get() {
             val strain = data[0x1C].toInt() ushr 4
             val days = data[0x1C].toInt() and 0xF
@@ -197,53 +199,41 @@ internal class Pokemon(
         get() {
             // only Unown has multiple forms
             if (speciesId != 201) return null
-            return CorePokemon.Form.Unown(letter = getUnownLetter(this))
+            return CorePokemon.Form.Unown(letter = getUnownLetterFromStatistics(iV = iV))
         }
 
-    override val metInfo: MetInfo?
+    override val caughtData: CaughtData?
         get() {
             if (version != Version.Crystal) return null
             val caught = data.readBigEndianUShort(0x1D).toInt()
-            return MetInfo(
+            val time = when ((caught ushr 14) and 0x3) {
+                1 -> CaughtData.Time.TimeOfDay.Morning
+                2 -> CaughtData.Time.TimeOfDay.DayTime
+                else -> CaughtData.Time.TimeOfDay.Night
+            }
+            return CaughtData(
                 level = caught ushr 8 and 0x3F,
                 locationId = caught and 0x7F,
-                time = MetInfo.Time.TimesOfDay((caught ushr 14) and 0x3)
+                time = time
             )
         }
 
     companion object {
-        internal fun getUnownLetter(pokemon: CorePokemon): Char {
-            val letterIndex = with(pokemon.iV) {
-                var letterIndex = attack and 0x6 shl 5
-                letterIndex = letterIndex or (defense and 0x6 shl 3)
-                letterIndex = letterIndex or (speed and 0x6 shl 1)
-                letterIndex = letterIndex or (specialAttack and 0x6 shr 1)
-                letterIndex / 10
+        internal fun setPartyProperties(
+            pokemon: CorePokemon,
+            writeInto: UByteArray,
+            dataOffset: Int
+        ) {
+            val stats = calculateStatistics(pokemon)
+            with(writeInto) {
+                // update stats
+                writeBidEndianShort(dataOffset + 0x24, stats.health.toShort())
+                writeBidEndianShort(dataOffset + 0x26, stats.attack.toShort())
+                writeBidEndianShort(dataOffset + 0x28, stats.defense.toShort())
+                writeBidEndianShort(dataOffset + 0x2A, stats.speed.toShort())
+                writeBidEndianShort(dataOffset + 0x2C, stats.specialAttack.toShort())
+                writeBidEndianShort(dataOffset + 0x2E, stats.specialDefense.toShort())
             }
-            require(letterIndex in 0..25) { "Unexpected Unown letter index $letterIndex" }
-            return (letterIndex + 'A'.toInt()).toChar()
-        }
-
-        internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonDataOffset: Int) {
-            val stats: CorePokemon.StatisticValues = with(pokemon) {
-                val base = getBaseStatistics(speciesId, version)
-                calculateStatistics(level, base, iV, eV, version)
-            }
-
-            fun setStat(offset: Int, value: Int) {
-                into.writeBidEndianShort(pokemonDataOffset + offset, value.toShort())
-            }
-
-            // update current HP
-            into.writeBidEndianShort(pokemonDataOffset + 0x22, stats.health.toShort())
-
-            // update current stats
-            setStat(offset = 0x24, value = stats.health)
-            setStat(offset = 0x26, value = stats.attack)
-            setStat(offset = 0x28, value = stats.defense)
-            setStat(offset = 0x2A, value = stats.speed)
-            setStat(offset = 0x2C, value = stats.specialAttack)
-            setStat(offset = 0x2E, value = stats.specialDefense)
         }
     }
 }

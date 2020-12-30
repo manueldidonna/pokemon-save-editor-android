@@ -1,24 +1,23 @@
 package com.manueldidonna.pk.gsc.converter
 
-import com.manueldidonna.pk.core.Inventory
-import com.manueldidonna.pk.core.Items.BerserkGeneId
-import com.manueldidonna.pk.core.Items.BlueSkyMailId
-import com.manueldidonna.pk.core.Items.BrickPieceId
-import com.manueldidonna.pk.core.Items.EggTicketId
-import com.manueldidonna.pk.core.Items.EonMailId
-import com.manueldidonna.pk.core.Items.FlowerMailId
-import com.manueldidonna.pk.core.Items.GSBallId
-import com.manueldidonna.pk.core.Items.GorgeousBoxId
-import com.manueldidonna.pk.core.Items.LiteBlueMailId
-import com.manueldidonna.pk.core.Items.LovelyMailId
-import com.manueldidonna.pk.core.Items.MirageMailId
-import com.manueldidonna.pk.core.Items.MorphMailId
-import com.manueldidonna.pk.core.Items.MusicMailId
-import com.manueldidonna.pk.core.Items.NormalBoxId
-import com.manueldidonna.pk.core.Items.PinkBowId
-import com.manueldidonna.pk.core.Items.PolkadotBowId
-import com.manueldidonna.pk.core.Items.PortraitMailId
-import com.manueldidonna.pk.core.Items.SurfMailId
+import com.manueldidonna.pk.core.Item.Companion.PinkBowId
+import com.manueldidonna.pk.core.Item.Companion.BerserkGeneId
+import com.manueldidonna.pk.core.Item.Companion.BlueSkyMailId
+import com.manueldidonna.pk.core.Item.Companion.BrickPieceId
+import com.manueldidonna.pk.core.Item.Companion.EggTicketId
+import com.manueldidonna.pk.core.Item.Companion.EonMailId
+import com.manueldidonna.pk.core.Item.Companion.FlowerMailId
+import com.manueldidonna.pk.core.Item.Companion.GSBallId
+import com.manueldidonna.pk.core.Item.Companion.GorgeousBoxId
+import com.manueldidonna.pk.core.Item.Companion.LiteBlueMailId
+import com.manueldidonna.pk.core.Item.Companion.LovelyMailId
+import com.manueldidonna.pk.core.Item.Companion.MirageMailId
+import com.manueldidonna.pk.core.Item.Companion.MorphMailId
+import com.manueldidonna.pk.core.Item.Companion.MusicMailId
+import com.manueldidonna.pk.core.Item.Companion.NormalBoxId
+import com.manueldidonna.pk.core.Item.Companion.PolkadotBowId
+import com.manueldidonna.pk.core.Item.Companion.PortraitMailId
+import com.manueldidonna.pk.core.Item.Companion.SurfMailId
 
 private const val NaN = -1
 

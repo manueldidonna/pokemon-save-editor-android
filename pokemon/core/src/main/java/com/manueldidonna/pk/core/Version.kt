@@ -6,7 +6,7 @@ package com.manueldidonna.pk.core
  */
 enum class Version(val value: Int) {
     Red(35),
-    Blue(36), // The same id is used for Green[only JP]
+    BlueGreen(36),
     Yellow(38),
     Gold(39),
     Silver(40),

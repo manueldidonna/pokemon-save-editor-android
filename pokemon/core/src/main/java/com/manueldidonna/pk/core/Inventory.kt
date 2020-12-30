@@ -2,12 +2,15 @@ package com.manueldidonna.pk.core
 
 /**
  * The Inventory holds all of the trainer's items
+ *
+ * @see Item
  */
 interface Inventory {
     val type: Type
 
     /**
      * Every game supports a limited set of types.
+     *
      * @see Bag.inventoryTypes
      */
     enum class Type {
@@ -27,7 +30,7 @@ interface Inventory {
     /**
      * It is the value to which all [Item.quantity] are coerced
      */
-    val maxQuantity: Int
+    val maxQuantity: Int // TODO: rename to maxQuantityPerItem
 
     /**
      * The maximum number of [Item] that can fit in this inventory.
@@ -40,133 +43,94 @@ interface Inventory {
     val size: Int
 
     /**
-     * Should throw an [IllegalStateException] if [index] is greater than [capacity]
-     */
-    fun <T> selectItem(index: Int, mapTo: (index: Int, id: Int, quantity: Int) -> T): T
-
-    /**
-     * Should throw an [IllegalStateException]
-     * if [item] id isn't included in [supportedItemIds]
-     * or [index] is greater than [capacity]
-     */
-    fun setItem(item: Item, index: Int = item.index)
-
-    /**
-     * An object stored in the Inventory.
+     * Map [Item] properties to [I] with [mapper].
+     * The passed [index] cannot be grater than [capacity].
      *
-     * Some items are specific to a game or should be treated specially.
-     * These 'special items' are listed in [Items]
-     * @see Items
+     * @see ItemMapper
      */
-    interface Item {
-        val index: Int
-        val id: Int
-        val quantity: Int
+    fun <I> selectItem(index: Int, mapper: ItemMapper<I>): I
 
-        /**
-         * Used to represent an immutable [Item].
-         * Use [Item.toImmutable] to get an instance of [Immutable] from every [Item] instance.
-         */
-        data class Immutable(
-            override val index: Int,
-            override val id: Int,
-            override val quantity: Int,
-        ) : Item
-
-        companion object {
-            /**
-             * Pass this instance to [Inventory.setItem] to delete the item in [index] position.
-             */
-            fun empty(index: Int): Item = Immutable(index = index, id = 0, quantity = 0)
-
-            /**
-             * A Hidden Machine is an item that is used to teach a Pokemon a move.
-             * HMs can be used an unlimited number of times and cannot be disposed of.
-             */
-            fun isHiddenMachine(itemId: Int): Boolean {
-                return itemId == 737 || itemId in 420..427
-            }
-
-            /**
-             * A Technical Machine is an item that can be used to teach a Pokemon a move.
-             */
-            fun isTechnicalMachine(itemId: Int): Boolean {
-                return itemId == 1230 || itemId in 328..419 || itemId in 618..620 || itemId in 690..694
-            }
-        }
+    /**
+     * Used to map [Item] properties to a generic type [I].
+     *
+     * @see Item
+     */
+    fun interface ItemMapper<I> {
+        fun mapTo(id: Int, quantity: Int): I
     }
+
+    /**
+     * Set the passed [item] in the inventory:
+     * - [Item.id] must be included in [supportedItemIds]
+     * - [index] cannot be greater than [capacity] or negative
+     * - [Item] cannot be empty
+     *
+     * @see Item
+     * @see Inventory.removeItemAt
+     * @see Item.isEmpty
+     */
+    fun setItem(index: Int, item: Item)
+
+    /**
+     * Remove an item by [index]
+     *
+     * TODO: return boolean or Item?
+     */
+    fun removeItemAt(index: Int)
 }
 
 inline val Inventory.Type.isMachinesType: Boolean
     get() = this == Inventory.Type.HiddenMachines || this == Inventory.Type.TechnicalMachines
 
-inline val Inventory.isFull: Boolean
-    get() = size == capacity
+inline val Inventory.isFull: Boolean get() = size == capacity
 
-inline val Inventory.Item.isEmpty: Boolean
-    get() = quantity <= 0 || id <= 0
+inline val Inventory.isEmpty: Boolean get() = size <= 0
 
 /**
- * Convert a generic [Inventory.Item] implementation to an [Inventory.Item.Immutable] data class
- */
-fun Inventory.Item.toImmutable(
-    index: Int = this.index,
-    id: Int = this.id,
-    quantity: Int = this.quantity,
-): Inventory.Item.Immutable {
-    return Inventory.Item.Immutable(index = index, id = id, quantity = quantity)
-}
-
-/**
- * Execute an action with the id and the quantity of an item at [index].
+ * Create an [Item] instance from the passed properties and set it in the inventory.
+ * Return the [Item] set in the inventory.
  *
- * The same limitations of [Inventory.selectItem] are applied to this function as well
+ * @see Inventory.setItem
  */
-inline fun Inventory.withItem(index: Int, crossinline block: (id: Int, quantity: Int) -> Unit) {
-    selectItem(index) { _, id, quantity -> block(id, quantity) }
+fun Inventory.setItem(index: Int, id: Int, quantity: Int): Item {
+    val item = object : Item {
+        override val id: Int = id
+        override val quantity: Int = quantity.coerceIn(1, maxQuantity)
+    }
+    require(!item.isEmpty) { "Item cannot be empty" }
+    setItem(index, item)
+    return item
 }
 
-/**
- * Insert the [item] into the Inventory, allowing to stack its quantity
- * if it already exists but in a different position
- */
-fun Inventory.stackItem(item: Inventory.Item) {
-    if (item.quantity >= maxQuantity || size == 0 || item.isEmpty) {
-        setItem(item)
-        return
-    }
+fun Inventory.stackItem(index: Int, item: Item) {
+    // ignore empty items or invalid indices
+    if (item.isEmpty || index < 0) return
+
+    // the item cannot be stacked
+    if (item.quantity >= maxQuantity || isEmpty)
+        return setItem(index, item)
+
+    // The inventory already contains the passed item in the same slot,
+    // so the user is editing the item quantity
+    if (selectItem(index) { id, _ -> id == item.id })
+        return setItem(index, item)
+
     var quantityToStack = item.quantity
-    for (index in 0 until size) {
-        // check if exists an item with the same id
-        withItem(index = index) { id, quantity ->
-            if (id == item.id) {
-                // the index is the same, the user is editing an existing item
-                if (index == item.index) {
-                    // overwrite the item with the newest one and consume the itemQuantity
-                    // to interrupts the loop
-                    setItem(item)
-                    quantityToStack = 0
-                }
-                // modify the quantity of an item with the same id but in a different index
-                else if (quantity < maxQuantity) {
-                    val newItemQuantity = (quantityToStack + quantity).coerceAtMost(maxQuantity)
-                    setItem(Inventory.Item.Immutable(index, id, newItemQuantity))
-                    quantityToStack -= newItemQuantity - quantity
-                }
-            }
+    for (@Suppress("NAME_SHADOWING") index in 0 until size) {
+        selectItem(index) { id, quantity ->
+            // get the items with the same id of the passed one
+            if (id != item.id || quantity >= maxQuantity) return@selectItem
+            val newItem = setItem(index, id, quantity = quantityToStack + quantity)
+            quantityToStack -= newItem.quantity - quantity
         }
-        if (quantityToStack <= 0) {
-            // the user is editing an item
-            if (item.index < size) {
-                // delete the item if it has been stacked in a different index than item.index
-                val isItemEdited = selectItem(item.index) { _, id, _ -> id == item.id }
-                if (!isItemEdited) {
-                    setItem(Inventory.Item.empty(item.index))
-                }
-            }
-            return
-        }
+        if (quantityToStack <= 0) break
     }
-    // insert the item without stacking it
-    setItem(item.toImmutable(quantity = quantityToStack))
+
+    if (quantityToStack > 0) {
+        // insert the item without stacking it
+        setItem(index = index, id = item.id, quantity = quantityToStack)
+    } else {
+        // the user is editing the item id but the quantity has been added to other slots
+        removeItemAt(index)
+    }
 }

@@ -3,7 +3,6 @@ package com.manueldidonna.pk.rby
 import com.manueldidonna.pk.core.*
 import com.manueldidonna.pk.rby.converter.getNationalSpecies
 import com.manueldidonna.pk.resources.calculateStatistics
-import com.manueldidonna.pk.resources.getBaseStatistics
 import com.manueldidonna.pk.resources.getExperienceGroup
 import com.manueldidonna.pk.resources.getLevel
 import com.manueldidonna.pk.utils.getStringFromGameBoyData
@@ -93,43 +92,41 @@ internal class Pokemon(
         get() = data.readBigEndianInt(0xE) ushr 8
 
     /**
-     * This value doesn't exist in gen1 but the pokemon bank derives it from the exp. points
+     * This property doesn't exist in gen1 but the pokemon bank derives it from the exp. points
      */
     override val natureId: Int
         get() = experiencePoints % 25
 
     /**
-     * This property han been introduced in the second gen. games. When this pokemon is transf
+     * Shiny colors are visible when the pokemon is transferred to gen2 games
      */
     override val isShiny: Boolean
-        get() {
-            with(iV) {
-                if (speed != 10) return false
-                if (specialAttack != 10) return false
-                if (defense != 10) return false
-                return attack and 2 == 2
-            }
+        get() = with(iV) {
+            if (speed != 10) return false
+            if (specialAttack != 10) return false
+            if (defense != 10) return false
+            return attack and 2 == 2
         }
 
-    override fun <T> selectMove(index: Int, mapTo: (id: Int, powerPoints: Int, ups: Int) -> T): T {
-        require(index in 0..3) { "Move index is out of bounds [0 - 3]" }
-        return mapTo(
-            data[0x08 + index].toInt(),
-            data[0x1D + index].toInt() and 0x3F,
-            (data[0x1D + index].toInt() and 0xC0) ushr 6
+    override fun <M> selectMove(index: Int, mapper: CorePokemon.MoveMapper<M>): M {
+        require(index in 0..3) { "Move index is out of bounds [0..3]" }
+        return mapper.mapTo(
+            id = data[0x08 + index].toInt(),
+            powerPoints = data[0x1D + index].toInt() and 0x3F,
+            ups = (data[0x1D + index].toInt() and 0xC0) ushr 6
         )
     }
 
-    /**
-     * [CorePokemon.StatisticValues.specialDefense] is equal to [CorePokemon.StatisticValues.specialAttack]
-     */
     override val iV: CorePokemon.StatisticValues by lazy {
         object : CorePokemon.StatisticValues {
             private val DV16: Int
                 get() = data.readBigEndianUShort(0x1b).toInt()
 
             override val health: Int
-                get() = (attack and 1 shl 3) or (defense and 1 shl 2) or (speed and 1 shl 1) or (specialAttack and 1 shl 0)
+                get() = (attack and 1 shl 3) or
+                        (defense and 1 shl 2) or
+                        (speed and 1 shl 1) or
+                        (specialAttack and 1 shl 0)
 
             override val attack: Int
                 get() = DV16 shr 12 and 0xF
@@ -173,41 +170,33 @@ internal class Pokemon(
     override val heldItemId: Int? = null
     override val friendship: Int? = null
     override val pokerus: Pokerus? = null
-    override val metInfo: MetInfo? = null
+    override val caughtData: CorePokemon.CaughtData? = null
 
     override val mutator: MutablePokemon.Mutator by lazy { Mutator(this, data) }
 
     companion object {
         internal val NonShinyAttackValues = listOf(1, 4, 5, 8, 9, 12, 13)
 
-        internal fun moveToParty(pokemon: CorePokemon, into: UByteArray, pokemonOffset: Int) {
+        internal fun setPartyProperties(
+            pokemon: CorePokemon,
+            writeInto: UByteArray,
+            dataOffset: Int
+        ) {
+            val experienceGroup = getExperienceGroup(speciesId = pokemon.speciesId)
+            val level = getLevel(pokemon.experiencePoints, experienceGroup)
             // update level
-            val stats: CorePokemon.StatisticValues = with(pokemon) {
-                val base = getBaseStatistics(speciesId, version)
-                calculateStatistics(level, base, iV, eV, version)
+            writeInto[dataOffset + 0x21] = level.toUByte()
+            val stats = calculateStatistics(pokemon)
+            with(writeInto) {
+                // set current HP
+                writeBidEndianShort(dataOffset + 0x01, stats.health.toShort())
+                // update stats
+                writeBidEndianShort(dataOffset + 0x22, stats.health.toShort())
+                writeBidEndianShort(dataOffset + 0x24, stats.attack.toShort())
+                writeBidEndianShort(dataOffset + 0x26, stats.defense.toShort())
+                writeBidEndianShort(dataOffset + 0x28, stats.speed.toShort())
+                writeBidEndianShort(dataOffset + 0x2A, stats.specialAttack.toShort())
             }
-
-            fun setStat(offset: Int, value: Int) {
-                into.writeBidEndianShort(pokemonOffset + offset, value.toShort())
-            }
-
-            // calculate level from exp
-            into[pokemonOffset + 0x21] = pokemon.run {
-                getLevel(experiencePoints, getExperienceGroup(speciesId)).toUByte()
-            }
-
-            // remove any status
-            into[0x04] = 0u
-
-            // update current HP
-            setStat(0x1, stats.health)
-
-            // update current stats
-            setStat(offset = 0x22, value = stats.health)
-            setStat(offset = 0x24, value = stats.attack)
-            setStat(offset = 0x26, value = stats.defense)
-            setStat(offset = 0x28, value = stats.speed)
-            setStat(offset = 0x2A, value = stats.specialAttack)
         }
     }
 }

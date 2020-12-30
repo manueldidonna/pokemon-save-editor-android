@@ -1,5 +1,7 @@
 package com.manueldidonna.pk.rby
 
+import com.manueldidonna.pk.core.Item
+import com.manueldidonna.pk.core.isEmpty
 import com.manueldidonna.pk.rby.converter.SupportedItemIds
 import com.manueldidonna.pk.rby.converter.getGameBoyItemId
 import com.manueldidonna.pk.rby.converter.getUniversalItemId
@@ -9,10 +11,10 @@ internal class Inventory(
     override val type: CoreInventory.Type,
     private val data: UByteArray,
     override val capacity: Int,
-    private val startOffset: Int
+    private val startOffset: Int,
 ) : CoreInventory {
 
-    override val maxQuantity: Int = 99
+    override val maxQuantity = 99
 
     override val supportedItemIds = SupportedItemIds
 
@@ -25,46 +27,52 @@ internal class Inventory(
         private set(value) {
             data[startOffset] = value.coerceIn(0, capacity).toUByte()
             // end byte
-            data[startOffset + 1 + (size * 2)] = 0xFFu
+            data[startOffset + 1 + size * 2] = 0xFFu
         }
 
-    override fun <T> selectItem(index: Int, mapTo: (index: Int, id: Int, quantity: Int) -> T): T {
-        require(index in 0 until capacity) {
-            "Index $index out of Inventory bounds [0 - $capacity]"
-        }
+    override fun <I> selectItem(index: Int, mapper: CoreInventory.ItemMapper<I>): I {
+        checkItemIndex(index)
         if (index >= size)
-            return mapTo(index, 0, 0)
-        return mapTo(
-            index,
-            getUniversalItemId(data[startOffset + (index * 2) + 1].toInt()),
-            data[startOffset + (index * 2) + 2].toInt()
+            return mapper.mapTo(0, 0)
+        return mapper.mapTo(
+            id = getUniversalItemId(data[startOffset + 1 + index * 2].toInt()),
+            quantity = data[startOffset + 2 + index * 2].toInt()
         )
     }
 
-    override fun setItem(item: CoreInventory.Item, index: Int) {
-        require(index in 0 until capacity) {
-            "Index $index out of Inventory bounds [0 - $capacity]"
+
+    override fun setItem(index: Int, item: Item) {
+        checkItemIndex(index)
+        require(!item.isEmpty) {
+            "Cannot set an empty item"
         }
-        if (item.id == 0 || item.quantity == 0) {
-            deleteItem(index)
-        } else {
-            require(item.id in supportedItemIds) { "Item Id ${item.id} is not supported" }
-            if (index >= size) size++
-            val offset = startOffset + (index.coerceAtMost(size - 1) * 2) + 1
-            data[offset] = getGameBoyItemId(item.id).toUByte()
-            data[offset + 1] = item.quantity.coerceAtMost(maxQuantity).toUByte()
+        require(item.id in supportedItemIds) {
+            "Item Id ${item.id} is not supported"
         }
+        // increase size if needed
+        if (index >= size) size++
+        val itemIdOffset = startOffset + index.coerceAtMost(size - 1) * 2 + 1
+        data[itemIdOffset] = getGameBoyItemId(item.id).toUByte()
+        data[itemIdOffset + 1] = item.quantity.coerceAtMost(maxQuantity).toUByte()
     }
 
-    private fun deleteItem(index: Int) {
+    override fun removeItemAt(index: Int) {
+        checkItemIndex(index)
+        if(index > size) return
         val lastIndexOffset = startOffset + 1 + (capacity - 1) * 2
         //shift items left of 1 position
         if (index < size - 1) {
-            val destinationOffset = startOffset + 1 + (index) * 2
+            val destinationOffset = startOffset + 1 + index * 2
             val startShiftOffset = startOffset + 1 + (index + 1) * 2
             data.copyInto(data, destinationOffset, startShiftOffset, lastIndexOffset + 2)
         }
         data.fill(0u, lastIndexOffset, lastIndexOffset + 2)
         size--
+    }
+
+    private fun checkItemIndex(index: Int) {
+        require(index in 0 until capacity) {
+            "Index $index out of bounds [0..${capacity - 1}]"
+        }
     }
 }

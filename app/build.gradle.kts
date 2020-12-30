@@ -26,7 +26,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion = "1.4.0"
+        kotlinCompilerVersion = "1.4.21"
         kotlinCompilerExtensionVersion = Libs.Versions.compose
     }
 
@@ -45,17 +45,19 @@ dependencies {
     implementation(project(Modules.Pokemon.rby))
     implementation(project(Modules.Pokemon.gsc))
     implementation(project(Modules.Pokemon.resources))
+    implementation(Libs.Android.timber)
     implementation(Libs.AndroidX.core)
     implementation(Libs.AndroidX.appcompat)
     implementation(Libs.AndroidX.activity)
     implementation(Libs.AndroidX.Compose.foundation)
-    implementation(Libs.AndroidX.Compose.tooling)
     implementation(Libs.AndroidX.Compose.material)
-    implementation(Libs.AndroidX.Compose.Foundation.layout)
-    implementation(Libs.AndroidX.Compose.Runtime.savedState)
-    implementation(Libs.AndroidX.Compose.Material.icons)
+    implementation(Libs.AndroidX.Compose.layout)
+    implementation(Libs.AndroidX.Compose.savedState)
+    implementation(Libs.AndroidX.Compose.icons)
     implementation(Libs.Android.materialComponents)
     implementation(Libs.KotlinX.coroutinesAndroid)
     implementation(Libs.Android.coil)
-    implementation(Libs.Android.accompanistCoil)
+    implementation(Libs.AndroidX.Compose.coil)
+    implementation(Libs.AndroidX.Compose.insets)
+    implementation(Libs.AndroidX.Compose.tooling)
 }
