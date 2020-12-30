@@ -43,6 +43,35 @@ fun <E : Pokedex.Entry> Pokedex.setEntry(entry: E, mapper: Pokedex.EntryMapper<E
     return selectEntry(entry.speciesId, mapper)
 }
 
+fun Pokedex.setAllCaught() {
+    val reusableEntry = object : Pokedex.Entry {
+        override val isSeen: Boolean = true
+        override val isOwned: Boolean = true
+        override var speciesId: Int = 0
+    }
+    for (i in pokemonSpeciesIds) {
+        reusableEntry.speciesId = i
+        setEntry(reusableEntry)
+    }
+}
+
+fun Pokedex.setAllSeen() {
+    val reusableEntry = object : Pokedex.Entry {
+        override val isSeen: Boolean = true
+        override var isOwned: Boolean = false
+        override var speciesId: Int = 0
+    }
+    val updateEntry = Pokedex.EntryMapper { speciesId, _, isOwned ->
+        reusableEntry.speciesId = speciesId
+        reusableEntry.isOwned = isOwned
+    }
+    for (i in pokemonSpeciesIds) {
+        selectEntry(speciesId = i, updateEntry)
+        setEntry(reusableEntry)
+    }
+}
+
+
 /**
  * Set a pokemon as both seen and owned in the pokedex
  */

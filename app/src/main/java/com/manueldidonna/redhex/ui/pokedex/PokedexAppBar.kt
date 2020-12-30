@@ -23,6 +23,8 @@ fun PokedexAppBar(
     modifier: Modifier = Modifier,
     goBack: () -> Unit,
     filterPokemonNames: (query: String) -> Unit,
+    setAllPokemonSeen: () -> Unit,
+    setAllPokemonCaught: () -> Unit
 ) {
     Surface(elevation = AppBarElevation, modifier = modifier) {
         Row(
@@ -36,13 +38,16 @@ fun PokedexAppBar(
             Providers(AmbientContentAlpha provides ContentAlpha.disabled) {
                 Text("Search...", modifier = Modifier.weight(1f))
             }
-            MoreOptionsButton()
+            MoreOptionsButton(setAllPokemonSeen, setAllPokemonCaught)
         }
     }
 }
 
 @Composable
-private fun MoreOptionsButton() {
+private fun MoreOptionsButton(
+    setAllPokemonSeen: () -> Unit,
+    setAllPokemonCaught: () -> Unit
+) {
     var expandMenu by rememberMutableState(init = { false })
     // dropdown items are inserted in a card
     // TODO: find a better solution
@@ -54,10 +59,10 @@ private fun MoreOptionsButton() {
                 AppBarIconButton(icon = DefaultIcons.MoreVert, onClick = { expandMenu = true })
             },
         ) {
-            DropdownMenuItem(onClick = { /*TODO*/ }) {
+            DropdownMenuItem(onClick = { setAllPokemonSeen(); expandMenu = false }) {
                 Text(text = "Set all pokemon seen")
             }
-            DropdownMenuItem(onClick = { /*TODO*/ }) {
+            DropdownMenuItem(onClick = { setAllPokemonCaught(); expandMenu = false }) {
                 Text(text = "Set all pokemon caught")
             }
         }

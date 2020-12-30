@@ -34,8 +34,8 @@ class StatefulPokedex(
     val pokemonSeenCount get() = _pokemonSeenCount.value
 
     override fun setEntry(entry: Pokedex.Entry) {
-        pokedex.setEntry(entry)
         val oldEntry = _entries[entry.speciesId - 1]
+        pokedex.setEntry(entry)
         val newEntry = pokedex.selectEntry(entry.speciesId, entryMapper)
         updateSeenCount(oldEntry = oldEntry, newEntry = newEntry)
         _entries[entry.speciesId - 1] = newEntry
