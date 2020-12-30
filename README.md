@@ -9,17 +9,11 @@ A :construction: **work-in-progress** :construction: Pokémon core series save e
 - [ ] Ruby/Sapphire/Emerald **(planned)**
 - [ ] FireRed/LeafGreen **(planned)**
 
- ## :man_technologist: Android Development
- > You require the latest Android Studio 4.2 Canary to build the app
- 
- This app attempts to use the latest cutting edge libraries and tools
+ ## :man_technologist: Android Development 
  - Entirely written in [Kotlin](https://kotlinlang.org/)
  - UI built with [Jetpack Compose](https://developer.android.com/jetpack/compose)
  - Asynchronous  streams with [Flow & Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
  - Image loading with [Coil](https://github.com/coil-kt/coil), backed by Coroutines
-
- ## :rescue_worker_helmet: Contributions
-Patches/new features are encouraged, and may be submitted by forking this project and submitting a pull request. If your change is substantial, please raise an issue first to discuss it.
 
 ## :scroll: License
 <pre><code>Copyright (C) 2020 Manuel Di Donna
